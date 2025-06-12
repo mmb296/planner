@@ -1,0 +1,11 @@
+{
+  "name": "calendar-backend",
+  "version": "1.0.0",
+  "main": "server.ts",
+  "scripts": {
+    "start": "node server.ts"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}
