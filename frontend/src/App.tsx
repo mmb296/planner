@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import CalendarMonth from '@mui/icons-material/CalendarMonth';
 import './App.css';
 
@@ -7,11 +7,16 @@ const SCOPES = 'https://www.googleapis.com/auth/calendar.readonly';
 function App() {
   const clientId = process.env.REACT_APP_CLIENT_ID as string;
 
+  const [tokenClient, setTokenClient] = useState<any>(null);
+
   useEffect(() => {
-    (window as any).google.accounts.oauth2.initTokenClient({
+    const tokenClientInstance = (
+      window as any
+    ).google.accounts.oauth2.initTokenClient({
       client_id: clientId,
       scope: SCOPES
     });
+    setTokenClient(tokenClientInstance);
   }, [clientId]);
 
   return (
