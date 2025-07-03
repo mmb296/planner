@@ -8,13 +8,20 @@ function App() {
   const clientId = process.env.REACT_APP_CLIENT_ID as string;
 
   const [tokenClient, setTokenClient] = useState<any>(null);
+  const [events, setEvents] = useState<string>('No events loaded.');
 
   useEffect(() => {
     const tokenClientInstance = (
       window as any
     ).google.accounts.oauth2.initTokenClient({
       client_id: clientId,
-      scope: SCOPES
+      scope: SCOPES,
+      callback: (resp: any) => {
+        if (resp.error !== undefined) {
+          setEvents('Error during authentication.');
+          return;
+        }
+      }
     });
     setTokenClient(tokenClientInstance);
   }, [clientId]);
