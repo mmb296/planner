@@ -10,7 +10,7 @@ function App() {
   useEffect(() => {
     (window as any).google.accounts.oauth2.initTokenClient({
       client_id: clientId,
-      scope: SCOPES,
+      scope: SCOPES
     });
   }, [clientId]);
 
