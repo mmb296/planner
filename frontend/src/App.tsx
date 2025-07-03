@@ -19,10 +19,15 @@ function App() {
     setTokenClient(tokenClientInstance);
   }, [clientId]);
 
+  const handleAuthClick = () => {
+    tokenClient.requestAccessToken();
+  };
+
   return (
     <div className="App">
       <header className="App-header">
         <CalendarMonth className="App-logo" style={{ fontSize: 200 }} />
+        {tokenClient && <button onClick={handleAuthClick}>Authorize</button>}
       </header>
     </div>
   );
