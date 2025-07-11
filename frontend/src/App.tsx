@@ -37,9 +37,10 @@ function App() {
     );
     const params = {
       calendarId: 'primary',
-      timeMin: new Date().toISOString(),
+      maxResults: '10',
+      orderBy: 'startTime',
       singleEvents: 'true',
-      orderBy: 'startTime'
+      timeMin: new Date().toISOString()
     };
     url.search = new URLSearchParams(params).toString();
 
