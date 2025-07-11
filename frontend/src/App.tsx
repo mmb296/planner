@@ -21,6 +21,7 @@ function App() {
           setEvents('Error during authentication.');
           return;
         }
+        listUpcomingEvents(resp.access_token);
       }
     });
     setTokenClient(tokenClientInstance);
@@ -28,6 +29,28 @@ function App() {
 
   const handleAuthClick = () => {
     tokenClient.requestAccessToken();
+  };
+
+  const listUpcomingEvents = async (token: any) => {
+    const url = new URL(
+      'https://www.googleapis.com/calendar/v3/calendars/primary/events'
+    );
+    const params = {
+      calendarId: 'primary',
+      timeMin: new Date().toISOString(),
+      singleEvents: 'true',
+      orderBy: 'startTime'
+    };
+    url.search = new URLSearchParams(params).toString();
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    const data = await response.json();
+    console.log(data);
   };
 
   return (
