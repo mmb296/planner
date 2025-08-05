@@ -11,19 +11,26 @@ function App() {
   const [events, setEvents] = useState<string>('No events loaded.');
 
   useEffect(() => {
-    const tokenClientInstance = (
-      window as any
-    ).google.accounts.oauth2.initTokenClient({
-      client_id: clientId,
-      scope: SCOPES,
-      callback: (resp: any) => {
-        if (resp.error !== undefined) {
-          setEvents('Error during authentication.');
-          return;
+    let tokenClientInstance;
+    const savedToken = sessionStorage.getItem('access_token');
+    if (savedToken) {
+      listUpcomingEvents(savedToken);
+    } else {
+      tokenClientInstance = (
+        window as any
+      ).google.accounts.oauth2.initTokenClient({
+        client_id: clientId,
+        scope: SCOPES,
+        callback: (resp: any) => {
+          if (resp.error !== undefined) {
+            setEvents('Error during authentication.');
+            return;
+          }
+          sessionStorage.setItem('access_token', resp.access_token);
+          listUpcomingEvents(resp.access_token);
         }
-        listUpcomingEvents(resp.access_token);
-      }
-    });
+      });
+    }
     setTokenClient(tokenClientInstance);
   }, [clientId]);
 
