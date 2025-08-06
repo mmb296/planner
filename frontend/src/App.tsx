@@ -8,29 +8,31 @@ function App() {
   const clientId = process.env.REACT_APP_CLIENT_ID as string;
 
   const [tokenClient, setTokenClient] = useState<any>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [events, setEvents] = useState<string>('No events loaded.');
 
   useEffect(() => {
-    let tokenClientInstance;
     const savedToken = sessionStorage.getItem('access_token');
     if (savedToken) {
+      setIsAuthenticated(true);
       listUpcomingEvents(savedToken);
-    } else {
-      tokenClientInstance = (
-        window as any
-      ).google.accounts.oauth2.initTokenClient({
-        client_id: clientId,
-        scope: SCOPES,
-        callback: (resp: any) => {
-          if (resp.error !== undefined) {
-            setEvents('Error during authentication.');
-            return;
-          }
-          sessionStorage.setItem('access_token', resp.access_token);
-          listUpcomingEvents(resp.access_token);
-        }
-      });
     }
+    const tokenClientInstance = (
+      window as any
+    ).google.accounts.oauth2.initTokenClient({
+      client_id: clientId,
+      scope: SCOPES,
+      callback: (resp: any) => {
+        if (resp.error !== undefined) {
+          setEvents('Error during authentication.');
+          setIsAuthenticated(false);
+          return;
+        }
+        sessionStorage.setItem('access_token', resp.access_token);
+        setIsAuthenticated(true);
+        listUpcomingEvents(resp.access_token);
+      }
+    });
     setTokenClient(tokenClientInstance);
   }, [clientId]);
 
@@ -51,21 +53,34 @@ function App() {
     };
     url.search = new URLSearchParams(params).toString();
 
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${token}`
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      if (response.status === 401 || response.status === 403) {
+        setIsAuthenticated(false);
+        sessionStorage.removeItem('access_token');
+        return;
       }
-    });
-    const data = await response.json();
-    console.log(data);
+      const data = await response.json();
+      console.log(data);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   return (
     <div className="App">
       <header className="App-header">
         <CalendarMonth className="App-logo" style={{ fontSize: 200 }} />
-        {tokenClient && <button onClick={handleAuthClick}>Authorize</button>}
+        {tokenClient && (
+          <button onClick={handleAuthClick}>
+            {isAuthenticated ? 'Refresh' : 'Authorize'}
+          </button>
+        )}
       </header>
     </div>
   );
