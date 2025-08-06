@@ -38,7 +38,7 @@ function App() {
     tokenClient.requestAccessToken();
   };
 
-  const listUpcomingEvents = async (token: any) => {
+  const listUpcomingEvents = async (token: string) => {
     const url = new URL(
       'https://www.googleapis.com/calendar/v3/calendars/primary/events'
     );
