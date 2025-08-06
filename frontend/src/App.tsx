@@ -11,12 +11,8 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [events, setEvents] = useState<string>('No events loaded.');
 
-  useEffect(() => {
-    const savedToken = sessionStorage.getItem('access_token');
-    if (savedToken) {
-      setIsAuthenticated(true);
-      listUpcomingEvents(savedToken);
-    }
+  const initTokenClient = () => {
+    if (tokenClient) return tokenClient;
     const tokenClientInstance = (
       window as any
     ).google.accounts.oauth2.initTokenClient({
@@ -34,10 +30,12 @@ function App() {
       }
     });
     setTokenClient(tokenClientInstance);
-  }, [clientId]);
+    return tokenClientInstance;
+  };
 
   const handleAuthClick = () => {
-    tokenClient.requestAccessToken();
+    const client = initTokenClient();
+    client.requestAccessToken();
   };
 
   const listUpcomingEvents = async (token: string) => {
@@ -72,15 +70,21 @@ function App() {
     }
   };
 
+  useEffect(() => {
+    const savedToken = sessionStorage.getItem('access_token');
+    if (savedToken) {
+      setIsAuthenticated(true);
+      listUpcomingEvents(savedToken);
+    }
+  }, []);
+
   return (
     <div className="App">
       <header className="App-header">
         <CalendarMonth className="App-logo" style={{ fontSize: 200 }} />
-        {tokenClient && (
-          <button onClick={handleAuthClick}>
-            {isAuthenticated ? 'Refresh' : 'Authorize'}
-          </button>
-        )}
+        <button onClick={handleAuthClick}>
+          {isAuthenticated ? 'Refresh' : 'Authorize'}
+        </button>
       </header>
     </div>
   );
