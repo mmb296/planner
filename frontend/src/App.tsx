@@ -8,7 +8,9 @@ function App() {
   const clientId = process.env.REACT_APP_CLIENT_ID as string;
 
   const [tokenClient, setTokenClient] = useState<any>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(
+    !!sessionStorage.getItem('access_token')
+  );
   const [events, setEvents] = useState<string>('No events loaded.');
 
   const initTokenClient = () => {
@@ -72,10 +74,8 @@ function App() {
 
   useEffect(() => {
     const savedToken = sessionStorage.getItem('access_token');
-    if (savedToken) {
-      setIsAuthenticated(true);
-      listUpcomingEvents(savedToken);
-    }
+    if (!savedToken) return;
+    listUpcomingEvents(savedToken);
   }, []);
 
   return (
