@@ -90,6 +90,7 @@ function App() {
         <button onClick={handleAuthClick}>
           {isAuthenticated ? 'Refresh' : 'Authorize'}
         </button>
+        {events}
       </header>
     </div>
   );
