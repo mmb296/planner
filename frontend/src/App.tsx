@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import CalendarMonth from '@mui/icons-material/CalendarMonth';
 import './App.css';
 
@@ -7,15 +7,15 @@ const SCOPES = 'https://www.googleapis.com/auth/calendar.readonly';
 function App() {
   const clientId = process.env.REACT_APP_CLIENT_ID as string;
 
-  const [tokenClient, setTokenClient] = useState<any>(null);
+  const tokenClient = useRef<any>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(
     !!sessionStorage.getItem('access_token')
   );
   const [events, setEvents] = useState<string>('No events loaded.');
 
   const initTokenClient = () => {
-    if (tokenClient) return tokenClient;
-    const tokenClientInstance = (
+    if (tokenClient.current) return tokenClient.current;
+    tokenClient.current = (
       window as any
     ).google.accounts.oauth2.initTokenClient({
       client_id: clientId,
@@ -31,8 +31,7 @@ function App() {
         listUpcomingEvents(resp.access_token);
       }
     });
-    setTokenClient(tokenClientInstance);
-    return tokenClientInstance;
+    return tokenClient.current;
   };
 
   const handleAuthClick = () => {
