@@ -43,12 +43,18 @@ function App() {
     const url = new URL(
       'https://www.googleapis.com/calendar/v3/calendars/primary/events'
     );
+    const todayDate = new Date();
+    todayDate.setHours(0, 0, 0, 0); // Start of today
+
+    const twoWeeksDate = new Date(todayDate);
+    twoWeeksDate.setDate(twoWeeksDate.getDate() + 14);
+
     const params = {
       calendarId: 'primary',
-      maxResults: '10',
       orderBy: 'startTime',
       singleEvents: 'true',
-      timeMin: new Date().toISOString()
+      timeMin: todayDate.toISOString(),
+      timeMax: twoWeeksDate.toISOString()
     };
     url.search = new URLSearchParams(params).toString();
 
