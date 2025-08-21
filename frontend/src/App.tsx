@@ -106,10 +106,8 @@ function App() {
       <ul>
         {events.map((event, idx) => (
           <li key={event.id || idx}>
-            <strong>
-              {event.start?.dateTime || event.start?.date || 'No time'}
-            </strong>{' '}
-            - {event.summary || 'No title'}
+            <strong>{event.start?.dateTime || event.start?.date}</strong> -{' '}
+            {event.summary || 'No title'}
           </li>
         ))}
       </ul>
