@@ -4,6 +4,16 @@ import './App.css';
 
 const SCOPES = 'https://www.googleapis.com/auth/calendar.readonly';
 
+type CalendarEvent = {
+  id: string;
+  summary?: string;
+  start: {
+    dateTime?: string;
+    date?: string;
+  };
+  [key: string]: any; // For any additional properties
+};
+
 function App() {
   const clientId = process.env.REACT_APP_CLIENT_ID as string;
 
@@ -11,7 +21,7 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(
     !!sessionStorage.getItem('access_token')
   );
-  const [events, setEvents] = useState<string>('No events loaded.');
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
 
   const initTokenClient = () => {
     if (tokenClient.current) return tokenClient.current;
@@ -22,7 +32,7 @@ function App() {
       scope: SCOPES,
       callback: (resp: any) => {
         if (resp.error !== undefined) {
-          setEvents('Error during authentication.');
+          setEvents([]);
           setIsAuthenticated(false);
           return;
         }
@@ -72,6 +82,7 @@ function App() {
       }
       const data = await response.json();
       console.log(data);
+      setEvents(data.items || []);
     } catch (error) {
       console.error(error);
     }
@@ -91,6 +102,15 @@ function App() {
           {isAuthenticated ? 'Refresh' : 'Authorize'}
         </button>
       </header>
+      {events.length === 0 && <div>No events loaded.</div>}
+      <ul>
+        {events.map((event, idx) => (
+          <li key={event.id || idx}>
+            <strong>{event.start?.dateTime || event.start?.date}</strong> -{' '}
+            {event.summary || 'No title'}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
