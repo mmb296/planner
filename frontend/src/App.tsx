@@ -11,7 +11,7 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(
     !!sessionStorage.getItem('access_token')
   );
-  const [events, setEvents] = useState<string>('No events loaded.');
+  const [events, setEvents] = useState<any[]>([]);
 
   const initTokenClient = () => {
     if (tokenClient.current) return tokenClient.current;
@@ -22,7 +22,7 @@ function App() {
       scope: SCOPES,
       callback: (resp: any) => {
         if (resp.error !== undefined) {
-          setEvents('Error during authentication.');
+          setEvents([]);
           setIsAuthenticated(false);
           return;
         }
@@ -72,6 +72,7 @@ function App() {
       }
       const data = await response.json();
       console.log(data);
+      setEvents(data.items || []);
     } catch (error) {
       console.error(error);
     }
@@ -90,8 +91,18 @@ function App() {
         <button onClick={handleAuthClick}>
           {isAuthenticated ? 'Refresh' : 'Authorize'}
         </button>
-        {events}
       </header>
+      {events.length === 0 && <div>No events loaded.</div>}
+      <ul>
+        {events.map((event, idx) => (
+          <li key={event.id || idx}>
+            <strong>
+              {event.start?.dateTime || event.start?.date || 'No time'}
+            </strong>{' '}
+            - {event.summary || 'No title'}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
