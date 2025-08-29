@@ -14,6 +14,8 @@ type CalendarEvent = {
   [key: string]: any; // For any additional properties
 };
 
+type EventsMap = Map<number, CalendarEvent[]>;
+
 function App() {
   const clientId = process.env.REACT_APP_CLIENT_ID as string;
 
@@ -21,7 +23,7 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(
     !!sessionStorage.getItem('access_token')
   );
-  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [eventsByDay, setEventsByDay] = useState<EventsMap>(new Map());
 
   const initTokenClient = () => {
     if (tokenClient.current) return tokenClient.current;
@@ -32,7 +34,7 @@ function App() {
       scope: SCOPES,
       callback: (resp: any) => {
         if (resp.error !== undefined) {
-          setEvents([]);
+          setEventsByDay(new Map());
           setIsAuthenticated(false);
           return;
         }
@@ -48,6 +50,22 @@ function App() {
     const client = initTokenClient();
     client.requestAccessToken();
   };
+
+  // Helper to group events
+  function groupEvents(events: CalendarEvent[]) {
+    const groupedEvents: EventsMap = new Map();
+    const today = new Date();
+    events.forEach((event) => {
+      const start = event.start.dateTime || event.start.date;
+      const eventDate = new Date(start as string);
+      const diffDays = Math.floor(
+        (eventDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+      );
+      if (!groupedEvents.get(diffDays)) groupedEvents.set(diffDays, []);
+      (groupedEvents.get(diffDays) as CalendarEvent[]).push(event);
+    });
+    return groupedEvents;
+  }
 
   const listUpcomingEvents = async (token: string) => {
     const url = new URL(
@@ -81,8 +99,10 @@ function App() {
         return;
       }
       const data = await response.json();
-      console.log(data);
-      setEvents(data.items || []);
+      if (data.items) {
+        const groupedEvents = groupEvents(data.items);
+        setEventsByDay(groupedEvents);
+      }
     } catch (error) {
       console.error(error);
     }
@@ -94,6 +114,12 @@ function App() {
     listUpcomingEvents(savedToken);
   }, []);
 
+  // Helper to format time
+  function formatTime(dateStr: string) {
+    const date = new Date(dateStr);
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+
   return (
     <div className="App">
       <header className="App-header">
@@ -102,12 +128,23 @@ function App() {
           {isAuthenticated ? 'Refresh' : 'Authorize'}
         </button>
       </header>
-      {events.length === 0 && <div>No events loaded.</div>}
+      {eventsByDay.size === 0 && <div>No events loaded.</div>}
       <ul>
-        {events.map((event, idx) => (
-          <li key={event.id || idx}>
-            <strong>{event.start?.dateTime || event.start?.date}</strong> -{' '}
-            {event.summary || 'No title'}
+        {Array.from(eventsByDay.entries()).map(([dayLabel, events]) => (
+          <li key={dayLabel}>
+            <div>{dayLabel}</div>
+            <ul>
+              {events.map((event: CalendarEvent, idx: number) => (
+                <li key={event.id || idx}>
+                  <span>
+                    {event.start.dateTime
+                      ? formatTime(event.start.dateTime)
+                      : 'All Day'}
+                  </span>
+                  <span> - {event.summary}</span>
+                </li>
+              ))}
+            </ul>
           </li>
         ))}
       </ul>
