@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import CalendarMonth from '@mui/icons-material/CalendarMonth';
 import './App.css';
-import { getTodayDate, getDaysFromNow } from './utils/dateTime';
+import { getTodayDate, getDaysFromNow, formatTime } from './utils/dateTime';
 
 const SCOPES = 'https://www.googleapis.com/auth/calendar.readonly';
 
@@ -113,12 +113,6 @@ function App() {
     if (!savedToken) return;
     listUpcomingEvents(savedToken);
   }, []);
-
-  // Helper to format time
-  function formatTime(dateStr: string) {
-    const date = new Date(dateStr);
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  }
 
   return (
     <div className="App">
