@@ -4,7 +4,7 @@ export function getTodayDate(): Date {
   return now;
 }
 
-export function getDaysFromNow(dateA: Date): number {
+export function daysFromNow(dateA: Date): number {
   return Math.floor(
     (dateA.getTime() - getTodayDate().getTime()) / (1000 * 60 * 60 * 24)
   );

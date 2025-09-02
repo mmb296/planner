@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import CalendarMonth from '@mui/icons-material/CalendarMonth';
 import './App.css';
-import { getTodayDate, getDaysFromNow, formatTime } from './utils/dateTime';
+import { getTodayDate, daysFromNow, formatTime } from './utils/dateTime';
 
 const SCOPES = 'https://www.googleapis.com/auth/calendar.readonly';
 
@@ -59,10 +59,10 @@ function App() {
     events.forEach((event) => {
       const start = event.start.dateTime || event.start.date;
       const eventDate = new Date(start as string);
-      const daysFromNow = getDaysFromNow(eventDate);
+      const diffDays = daysFromNow(eventDate);
 
-      if (!groupedEvents.get(daysFromNow)) groupedEvents.set(daysFromNow, []);
-      (groupedEvents.get(daysFromNow) as CalendarEvent[]).push(event);
+      if (!groupedEvents.get(diffDays)) groupedEvents.set(diffDays, []);
+      (groupedEvents.get(diffDays) as CalendarEvent[]).push(event);
     });
 
     return groupedEvents;
