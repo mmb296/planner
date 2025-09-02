@@ -55,15 +55,19 @@ function App() {
   function groupEvents(events: CalendarEvent[]) {
     const groupedEvents: EventsMap = new Map();
     const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
     events.forEach((event) => {
       const start = event.start.dateTime || event.start.date;
       const eventDate = new Date(start as string);
       const diffDays = Math.floor(
         (eventDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
       );
+
       if (!groupedEvents.get(diffDays)) groupedEvents.set(diffDays, []);
       (groupedEvents.get(diffDays) as CalendarEvent[]).push(event);
     });
+
     return groupedEvents;
   }
 
