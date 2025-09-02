@@ -15,7 +15,7 @@ type CalendarEvent = {
   [key: string]: any; // For any additional properties
 };
 
-type EventsMap = Map<number, CalendarEvent[]>;
+type EventsMap = Map<string, CalendarEvent[]>;
 
 function App() {
   const clientId = process.env.REACT_APP_CLIENT_ID as string;
@@ -60,9 +60,13 @@ function App() {
       const start = event.start.dateTime || event.start.date;
       const eventDate = new Date(start as string);
       const diffDays = daysFromNow(eventDate);
+      let dayLabel = diffDays.toString();
+      if (diffDays === 0) dayLabel = 'Today';
+      else if (diffDays === 1) dayLabel = 'Tomorrow';
+      else dayLabel += ' days';
 
-      if (!groupedEvents.get(diffDays)) groupedEvents.set(diffDays, []);
-      (groupedEvents.get(diffDays) as CalendarEvent[]).push(event);
+      if (!groupedEvents.get(dayLabel)) groupedEvents.set(dayLabel, []);
+      (groupedEvents.get(dayLabel) as CalendarEvent[]).push(event);
     });
 
     return groupedEvents;
