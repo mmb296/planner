@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import CalendarMonth from '@mui/icons-material/CalendarMonth';
 import './App.css';
+import { getTodayDate } from './utils/dateTime';
 
 const SCOPES = 'https://www.googleapis.com/auth/calendar.readonly';
 
@@ -54,14 +55,12 @@ function App() {
   // Helper to group events
   function groupEvents(events: CalendarEvent[]) {
     const groupedEvents: EventsMap = new Map();
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
 
     events.forEach((event) => {
       const start = event.start.dateTime || event.start.date;
       const eventDate = new Date(start as string);
       const diffDays = Math.floor(
-        (eventDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+        (eventDate.getTime() - getTodayDate().getTime()) / (1000 * 60 * 60 * 24)
       );
 
       if (!groupedEvents.get(diffDays)) groupedEvents.set(diffDays, []);
@@ -75,8 +74,7 @@ function App() {
     const url = new URL(
       'https://www.googleapis.com/calendar/v3/calendars/primary/events'
     );
-    const todayDate = new Date();
-    todayDate.setHours(0, 0, 0, 0); // Start of today
+    const todayDate = getTodayDate();
 
     const twoWeeksDate = new Date(todayDate);
     twoWeeksDate.setDate(twoWeeksDate.getDate() + 14);
