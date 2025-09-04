@@ -9,10 +9,30 @@ import { daysFromNow, formatTime, getTodayDate } from './utils/dateTime';
 
 const SCOPES = 'https://www.googleapis.com/auth/calendar.readonly';
 
+function groupEvents(events: CalendarEvent[]): EventsMap {
+  const groupedEvents: EventsMap = new Map();
+
+  events.forEach((event) => {
+    const start = event.start.dateTime || event.start.date;
+    const eventDate = new Date(start as string);
+    const diffDays = daysFromNow(eventDate);
+
+    let dayLabel: string;
+    if (diffDays === 0) dayLabel = 'Today';
+    else if (diffDays === 1) dayLabel = 'Tomorrow';
+    else dayLabel = `${diffDays} days`;
+
+    if (!groupedEvents.has(dayLabel)) groupedEvents.set(dayLabel, []);
+    groupedEvents.get(dayLabel)!.push(event);
+  });
+
+  return groupedEvents;
+}
+
 function App() {
   const clientId = process.env.REACT_APP_CLIENT_ID as string;
-
   const tokenClient = useRef<any>(null);
+
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(
     !!sessionStorage.getItem('access_token')
   );
@@ -40,36 +60,14 @@ function App() {
   };
 
   const handleAuthClick = () => {
-    const client = initTokenClient();
-    client.requestAccessToken();
+    initTokenClient().requestAccessToken();
   };
-
-  // Helper to group events
-  function groupEvents(events: CalendarEvent[]) {
-    const groupedEvents: EventsMap = new Map();
-
-    events.forEach((event) => {
-      const start = event.start.dateTime || event.start.date;
-      const eventDate = new Date(start as string);
-      const diffDays = daysFromNow(eventDate);
-      let dayLabel = diffDays.toString();
-      if (diffDays === 0) dayLabel = 'Today';
-      else if (diffDays === 1) dayLabel = 'Tomorrow';
-      else dayLabel += ' days';
-
-      if (!groupedEvents.get(dayLabel)) groupedEvents.set(dayLabel, []);
-      (groupedEvents.get(dayLabel) as CalendarEvent[]).push(event);
-    });
-
-    return groupedEvents;
-  }
 
   const listUpcomingEvents = async (token: string) => {
     const url = new URL(
       'https://www.googleapis.com/calendar/v3/calendars/primary/events'
     );
     const todayDate = getTodayDate();
-
     const twoWeeksDate = new Date(todayDate);
     twoWeeksDate.setDate(twoWeeksDate.getDate() + 14);
 
@@ -96,8 +94,7 @@ function App() {
       }
       const data = await response.json();
       if (data.items) {
-        const groupedEvents = groupEvents(data.items);
-        setEventsByDay(groupedEvents);
+        setEventsByDay(groupEvents(data.items));
       }
     } catch (error) {
       console.error(error);
@@ -124,7 +121,7 @@ function App() {
           <li key={dayLabel}>
             <div>{dayLabel}</div>
             <ul>
-              {events.map((event: CalendarEvent, idx: number) => (
+              {events.map((event, idx) => (
                 <li key={event.id || idx}>
                   <span>
                     {event.start.dateTime
