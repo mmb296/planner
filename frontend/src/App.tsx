@@ -18,9 +18,9 @@ function groupEvents(events: CalendarEvent[]): EventsMap {
     const diffDays = daysFromNow(eventDate);
 
     let dayLabel: string;
-    if (diffDays === 0) dayLabel = 'Today';
-    else if (diffDays === 1) dayLabel = 'Tomorrow';
-    else dayLabel = `${diffDays} days`;
+    if (diffDays === 0) dayLabel = 'TODAY';
+    else if (diffDays === 1) dayLabel = 'TOMORROW';
+    else dayLabel = `${diffDays} DAYS`;
 
     if (!groupedEvents.has(dayLabel)) groupedEvents.set(dayLabel, []);
     groupedEvents.get(dayLabel)!.push(event);
