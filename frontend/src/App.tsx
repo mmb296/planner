@@ -2,20 +2,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import CalendarMonth from '@mui/icons-material/CalendarMonth';
 import './App.css';
 import { getTodayDate, daysFromNow, formatTime } from './utils/dateTime';
+import { CalendarEvent, EventsMap } from './types';
 
 const SCOPES = 'https://www.googleapis.com/auth/calendar.readonly';
-
-type CalendarEvent = {
-  id: string;
-  summary?: string;
-  start: {
-    dateTime?: string;
-    date?: string;
-  };
-  [key: string]: any; // For any additional properties
-};
-
-type EventsMap = Map<string, CalendarEvent[]>;
 
 function App() {
   const clientId = process.env.REACT_APP_CLIENT_ID as string;
