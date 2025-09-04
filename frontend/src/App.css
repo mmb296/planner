@@ -4,3 +4,24 @@
   align-items: center;
   font-size: calc(10px + 2vmin);
 }
+
+ul {
+  list-style: none;
+  max-width: 1040px;
+  margin: 0 auto;
+  padding-inline: 40px;
+}
+
+li {
+  margin-bottom: 32px;
+}
+
+.day-header {
+  background: #d7e3f4;
+  padding: 8px 16px;
+  font-weight: 900;
+  font-size: 48px;
+  color: #1b3899;
+  border-radius: 10px;
+  margin-bottom: 12px;
+}

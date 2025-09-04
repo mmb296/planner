@@ -119,7 +119,7 @@ function App() {
       <ul>
         {Array.from(eventsByDay.entries()).map(([dayLabel, events]) => (
           <li key={dayLabel}>
-            <div>{dayLabel}</div>
+            <div className="day-header">{dayLabel}</div>
             <ul>
               {events.map((event, idx) => (
                 <li key={event.id || idx}>
