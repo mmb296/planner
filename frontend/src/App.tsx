@@ -1,8 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
-import CalendarMonth from '@mui/icons-material/CalendarMonth';
 import './App.css';
-import { getTodayDate, daysFromNow, formatTime } from './utils/dateTime';
+
+import React, { useEffect, useRef, useState } from 'react';
+
+import CalendarMonth from '@mui/icons-material/CalendarMonth';
+
 import { CalendarEvent, EventsMap } from './types';
+import { daysFromNow, formatTime, getTodayDate } from './utils/dateTime';
 
 const SCOPES = 'https://www.googleapis.com/auth/calendar.readonly';
 
