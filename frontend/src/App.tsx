@@ -122,6 +122,7 @@ function App() {
             <ul>
               {events.map((event, idx) => (
                 <li key={event.id || idx}>
+                  <span className="event-dot" />
                   <span className="event-time">
                     {event.start.dateTime
                       ? formatTime(event.start.dateTime)

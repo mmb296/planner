@@ -45,6 +45,16 @@ ul {
   margin-bottom: 10px;
 }
 
+.event-dot {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: #b8b8b8;
+  display: inline-block;
+  margin-right: 8px;
+  vertical-align: -1px;
+}
+
 .event-time {
   font-weight: 600;
 }
