@@ -24,11 +24,8 @@ li {
 }
 
 .day-header {
-  background: #d7e3f4;
-  padding: 8px 16px;
-  font-weight: 900;
-  font-size: 48px;
+  font-weight: 700;
+  font-size: 30px;
   color: #1b3899;
-  border-radius: 10px;
   margin-bottom: 12px;
 }
