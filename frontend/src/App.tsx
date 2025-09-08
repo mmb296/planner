@@ -107,7 +107,13 @@ function App() {
 
   return (
     <div className="App">
-      <header className="App-header"></header>
+      <header className="App-header">
+        {new Date().toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        })}
+      </header>
       {eventsByDay.size === 0 && <div>No events loaded.</div>}
       <ul>
         {Array.from(eventsByDay.entries()).map(([dayLabel, events]) => (
