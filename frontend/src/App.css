@@ -28,4 +28,6 @@ li {
   font-size: 30px;
   color: #1b3899;
   margin-bottom: 12px;
+  border-bottom: 1px solid #b8b8b8;
+  padding-bottom: 4px;
 }
