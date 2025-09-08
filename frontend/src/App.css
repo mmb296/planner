@@ -41,5 +41,10 @@ ul {
 }
 
 .event-list ul > li {
+  font-size: 18px;
   margin-bottom: 10px;
+}
+
+.event-time {
+  font-weight: 600;
 }

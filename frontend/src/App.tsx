@@ -122,7 +122,7 @@ function App() {
             <ul>
               {events.map((event, idx) => (
                 <li key={event.id || idx}>
-                  <span>
+                  <span className="event-time">
                     {event.start.dateTime
                       ? formatTime(event.start.dateTime)
                       : 'All Day'}
