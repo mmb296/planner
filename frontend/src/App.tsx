@@ -107,11 +107,7 @@ function App() {
 
   return (
     <div className="App">
-      <header className="App-header">
-        <button onClick={handleAuthClick}>
-          {isAuthenticated ? 'Refresh' : 'Authorize'}
-        </button>
-      </header>
+      <header className="App-header"></header>
       {eventsByDay.size === 0 && <div>No events loaded.</div>}
       <ul>
         {Array.from(eventsByDay.entries()).map(([dayLabel, events]) => (
@@ -132,6 +128,9 @@ function App() {
           </li>
         ))}
       </ul>
+      <button onClick={handleAuthClick}>
+        {isAuthenticated ? 'Refresh' : 'Authorize'}
+      </button>
     </div>
   );
 }
