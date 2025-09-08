@@ -1,3 +1,8 @@
+.App {
+  background-color: #f9fafd;
+  min-height: 100vh;
+}
+
 .App-header {
   display: flex;
   flex-direction: column;
