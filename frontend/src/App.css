@@ -20,10 +20,6 @@ ul {
   padding-inline-start: 0;
 }
 
-li {
-  margin-bottom: 10px;
-}
-
 .day-header {
   font-weight: 700;
   font-size: 30px;
@@ -33,9 +29,17 @@ li {
   padding-bottom: 4px;
 }
 
-.day-list {
+.event-list {
   background-color: #ffffff;
   border-radius: 20px;
   padding: 24px 120px;
   max-width: 1060px;
+}
+
+.event-list li {
+  margin-bottom: 32px;
+}
+
+.event-list ul > li {
+  margin-bottom: 10px;
 }
