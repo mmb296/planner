@@ -115,7 +115,7 @@ function App() {
         })}
       </header>
       {eventsByDay.size === 0 && <div>No events loaded.</div>}
-      <ul>
+      <ul className="day-list">
         {Array.from(eventsByDay.entries()).map(([dayLabel, events]) => (
           <li key={dayLabel}>
             <div className="day-header">{dayLabel}</div>

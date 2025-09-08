@@ -31,3 +31,10 @@ li {
   border-bottom: 1px solid #b8b8b8;
   padding-bottom: 4px;
 }
+
+.day-list {
+  background-color: #ffffff;
+  border-radius: 20px;
+  padding: 24px;
+  max-width: 1300px;
+}
