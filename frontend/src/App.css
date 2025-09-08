@@ -17,18 +17,18 @@ ul {
   list-style: none;
   max-width: 1040px;
   margin: 0 auto;
-  padding-inline: 40px;
+  padding-inline-start: 0;
 }
 
 li {
-  margin-bottom: 32px;
+  margin-bottom: 10px;
 }
 
 .day-header {
   font-weight: 700;
   font-size: 30px;
   color: #1b3899;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
   border-bottom: 1px solid #b8b8b8;
   padding-bottom: 4px;
 }
