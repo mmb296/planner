@@ -2,8 +2,6 @@ import './App.css';
 
 import React, { useEffect, useRef, useState } from 'react';
 
-import CalendarMonth from '@mui/icons-material/CalendarMonth';
-
 import { CalendarEvent, EventsMap } from './types';
 import { daysFromNow, formatTime, getTodayDate } from './utils/dateTime';
 
@@ -18,9 +16,9 @@ function groupEvents(events: CalendarEvent[]): EventsMap {
     const diffDays = daysFromNow(eventDate);
 
     let dayLabel: string;
-    if (diffDays === 0) dayLabel = 'Today';
-    else if (diffDays === 1) dayLabel = 'Tomorrow';
-    else dayLabel = `${diffDays} days`;
+    if (diffDays === 0) dayLabel = 'TODAY';
+    else if (diffDays === 1) dayLabel = 'TOMORROW';
+    else dayLabel = `${diffDays} DAYS`;
 
     if (!groupedEvents.has(dayLabel)) groupedEvents.set(dayLabel, []);
     groupedEvents.get(dayLabel)!.push(event);
@@ -107,23 +105,37 @@ function App() {
     listUpcomingEvents(savedToken);
   }, []);
 
+  function getDotColor(event: CalendarEvent): string {
+    if (!event.start.dateTime) return '#f4d9e8'; // All Day
+
+    const hour = new Date(event.start.dateTime).getHours();
+    if (hour < 12) return '#d9e2f2'; // Morning
+    if (hour < 17) return '#f8e9bd'; // Afternoon
+    return '#cec8f7'; // Night
+  }
+
   return (
     <div className="App">
       <header className="App-header">
-        <CalendarMonth className="App-logo" style={{ fontSize: 200 }} />
-        <button onClick={handleAuthClick}>
-          {isAuthenticated ? 'Refresh' : 'Authorize'}
-        </button>
+        {new Date().toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        })}
       </header>
       {eventsByDay.size === 0 && <div>No events loaded.</div>}
-      <ul>
+      <ul className="event-list">
         {Array.from(eventsByDay.entries()).map(([dayLabel, events]) => (
           <li key={dayLabel}>
-            <div>{dayLabel}</div>
+            <div className="day-header">{dayLabel}</div>
             <ul>
               {events.map((event, idx) => (
                 <li key={event.id || idx}>
-                  <span>
+                  <span
+                    className="event-dot"
+                    style={{ backgroundColor: getDotColor(event) }}
+                  />
+                  <span className="event-time">
                     {event.start.dateTime
                       ? formatTime(event.start.dateTime)
                       : 'All Day'}
@@ -135,6 +147,9 @@ function App() {
           </li>
         ))}
       </ul>
+      <button onClick={handleAuthClick}>
+        {isAuthenticated ? 'Refresh' : 'Authorize'}
+      </button>
     </div>
   );
 }

@@ -13,5 +13,5 @@ export function daysFromNow(dateA: Date): number {
 // Returns a formatted time string (e.g., "10:30 AM") for a given ISO date string
 export function formatTime(dateStr: string): string {
   const date = new Date(dateStr);
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 }
