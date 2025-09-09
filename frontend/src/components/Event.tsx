@@ -17,10 +17,10 @@ const Event: React.FC<{ event: CalendarEvent }> = ({ event }) => (
       className="event-dot"
       style={{ backgroundColor: getDotColor(event) }}
     />
-    <span className="event-time">
-      {event.start.dateTime ? formatTime(event.start.dateTime) : 'All Day'}
-    </span>
-    <span> - {event.summary}</span>
+    {event.start.dateTime && (
+      <span className="event-time">{formatTime(event.start.dateTime)} - </span>
+    )}
+    <span>{event.summary}</span>
   </li>
 );
 
