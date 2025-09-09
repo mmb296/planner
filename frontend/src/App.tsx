@@ -123,30 +123,31 @@ function App() {
           day: 'numeric'
         })}
       </header>
-      {eventsByDay.size === 0 && <div>No events loaded.</div>}
-      <ul className="event-list">
-        {Array.from(eventsByDay.entries()).map(([dayLabel, events]) => (
-          <li key={dayLabel}>
-            <div className="day-header">{dayLabel}</div>
-            <ul>
-              {events.map((event, idx) => (
-                <li key={event.id || idx}>
-                  <span
-                    className="event-dot"
-                    style={{ backgroundColor: getDotColor(event) }}
-                  />
-                  <span className="event-time">
-                    {event.start.dateTime
-                      ? formatTime(event.start.dateTime)
-                      : 'All Day'}
-                  </span>
-                  <span> - {event.summary}</span>
-                </li>
-              ))}
-            </ul>
-          </li>
-        ))}
-      </ul>
+      {eventsByDay.size > 0 && (
+        <ul className="event-list">
+          {Array.from(eventsByDay.entries()).map(([dayLabel, events]) => (
+            <li key={dayLabel}>
+              <div className="day-header">{dayLabel}</div>
+              <ul>
+                {events.map((event, idx) => (
+                  <li key={event.id || idx}>
+                    <span
+                      className="event-dot"
+                      style={{ backgroundColor: getDotColor(event) }}
+                    />
+                    <span className="event-time">
+                      {event.start.dateTime
+                        ? formatTime(event.start.dateTime)
+                        : 'All Day'}
+                    </span>
+                    <span> - {event.summary}</span>
+                  </li>
+                ))}
+              </ul>
+            </li>
+          ))}
+        </ul>
+      )}
       <button onClick={handleAuthClick}>
         {isAuthenticated ? 'Refresh' : 'Authorize'}
       </button>
