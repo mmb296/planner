@@ -2,31 +2,11 @@ import './App.css';
 
 import React, { useEffect, useRef, useState } from 'react';
 
-import Event from './components/Event';
-import { CalendarEvent, EventsMap } from './types';
-import { daysFromNow, getTodayDate } from './utils/dateTime';
+import EventList from './components/EventList';
+import { CalendarEvent } from './types';
+import { getTodayDate } from './utils/dateTime';
 
 const SCOPES = 'https://www.googleapis.com/auth/calendar.readonly';
-
-function groupEvents(events: CalendarEvent[]): EventsMap {
-  const groupedEvents: EventsMap = new Map();
-
-  events.forEach((event) => {
-    const start = event.start.dateTime || `${event.start.date}T00:00:00`;
-    const eventDate = new Date(start as string);
-    const diffDays = daysFromNow(eventDate);
-
-    let dayLabel: string;
-    if (diffDays === 0) dayLabel = 'TODAY';
-    else if (diffDays === 1) dayLabel = 'TOMORROW';
-    else dayLabel = `${diffDays} DAYS`;
-
-    if (!groupedEvents.has(dayLabel)) groupedEvents.set(dayLabel, []);
-    groupedEvents.get(dayLabel)!.push(event);
-  });
-
-  return groupedEvents;
-}
 
 function App() {
   const clientId = process.env.REACT_APP_CLIENT_ID as string;
@@ -35,7 +15,7 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(
     !!sessionStorage.getItem('access_token')
   );
-  const [eventsByDay, setEventsByDay] = useState<EventsMap>(new Map());
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
 
   const initTokenClient = () => {
     if (tokenClient.current) return tokenClient.current;
@@ -46,7 +26,7 @@ function App() {
       scope: SCOPES,
       callback: (resp: any) => {
         if (resp.error !== undefined) {
-          setEventsByDay(new Map());
+          setEvents([]);
           setIsAuthenticated(false);
           return;
         }
@@ -93,7 +73,7 @@ function App() {
       }
       const data = await response.json();
       if (data.items) {
-        setEventsByDay(groupEvents(data.items));
+        setEvents(data.items);
       }
     } catch (error) {
       console.error(error);
@@ -115,20 +95,7 @@ function App() {
           day: 'numeric'
         })}
       </header>
-      {eventsByDay.size > 0 && (
-        <ul className="event-list">
-          {Array.from(eventsByDay.entries()).map(([dayLabel, events]) => (
-            <li key={dayLabel}>
-              <div className="day-header">{dayLabel}</div>
-              <ul>
-                {events.map((event, idx) => (
-                  <Event key={event.id || idx} event={event} />
-                ))}
-              </ul>
-            </li>
-          ))}
-        </ul>
-      )}
+      {events.length > 0 && <EventList events={events} />}
       <button onClick={handleAuthClick}>
         {isAuthenticated ? 'Refresh' : 'Authorize'}
       </button>
