@@ -12,7 +12,7 @@ function groupEvents(events: CalendarEvent[]): EventsMap {
   const groupedEvents: EventsMap = new Map();
 
   events.forEach((event) => {
-    const start = event.start.dateTime || event.start.date;
+    const start = event.start.dateTime || `${event.start.date}T00:00:00`;
     const eventDate = new Date(start as string);
     const diffDays = daysFromNow(eventDate);
 
