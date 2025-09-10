@@ -20,7 +20,9 @@ const EventList: React.FC<{ events: CalendarEvent[] }> = ({ events }) => {
   events.forEach((event) => {
     const dayLabel = getDayLabel(event);
 
-    if (!eventsByDay.has(dayLabel)) eventsByDay.set(dayLabel, []);
+    if (!eventsByDay.has(dayLabel)) {
+      eventsByDay.set(dayLabel, []);
+    }
     eventsByDay.get(dayLabel)!.push(event);
   });
 
