@@ -2,8 +2,9 @@ import './App.css';
 
 import React, { useEffect, useRef, useState } from 'react';
 
+import Event from './components/Event';
 import { CalendarEvent, EventsMap } from './types';
-import { daysFromNow, formatTime, getTodayDate } from './utils/dateTime';
+import { daysFromNow, getTodayDate } from './utils/dateTime';
 
 const SCOPES = 'https://www.googleapis.com/auth/calendar.readonly';
 
@@ -105,15 +106,6 @@ function App() {
     listUpcomingEvents(savedToken);
   }, []);
 
-  function getDotColor(event: CalendarEvent): string {
-    if (!event.start.dateTime) return '#f4d9e8'; // All Day
-
-    const hour = new Date(event.start.dateTime).getHours();
-    if (hour < 12) return '#d9e2f2'; // Morning
-    if (hour < 17) return '#f8e9bd'; // Afternoon
-    return '#cec8f7'; // Night
-  }
-
   return (
     <div className="App">
       <header className="App-header">
@@ -130,18 +122,7 @@ function App() {
               <div className="day-header">{dayLabel}</div>
               <ul>
                 {events.map((event, idx) => (
-                  <li key={event.id || idx}>
-                    <span
-                      className="event-dot"
-                      style={{ backgroundColor: getDotColor(event) }}
-                    />
-                    <span className="event-time">
-                      {event.start.dateTime
-                        ? formatTime(event.start.dateTime)
-                        : 'All Day'}
-                    </span>
-                    <span> - {event.summary}</span>
-                  </li>
+                  <Event key={event.id || idx} event={event} />
                 ))}
               </ul>
             </li>
