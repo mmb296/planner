@@ -2,7 +2,7 @@ import './App.css';
 
 import React, { useEffect, useRef, useState } from 'react';
 
-import Event from './components/Event';
+import Day from './components/Day';
 import { CalendarEvent, EventsMap } from './types';
 import { daysFromNow, getTodayDate } from './utils/dateTime';
 
@@ -118,14 +118,7 @@ function App() {
       {eventsByDay.size > 0 && (
         <ul className="event-list">
           {Array.from(eventsByDay.entries()).map(([dayLabel, events]) => (
-            <li key={dayLabel}>
-              <div className="day-header">{dayLabel}</div>
-              <ul>
-                {events.map((event, idx) => (
-                  <Event key={event.id || idx} event={event} />
-                ))}
-              </ul>
-            </li>
+            <Day key={dayLabel} dayLabel={dayLabel} events={events} />
           ))}
         </ul>
       )}
