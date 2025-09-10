@@ -19,7 +19,7 @@ export function formatTime(dateStr: string): string {
 }
 
 export function isEventPast(event: CalendarEvent): boolean {
-  const startTime = event.start.dateTime;
-  if (!startTime) return false; // All-day events are not considered past
-  return new Date() > new Date(startTime);
+  const endTime = event.end.dateTime;
+  if (!endTime) return false;
+  return new Date() > new Date(endTime);
 }
