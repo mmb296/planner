@@ -1,12 +1,12 @@
 export function getTodayDate(): Date {
-  const now = new Date();
-  now.setHours(0, 0, 0, 0);
-  return now;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return today;
 }
 
-export function daysFromNow(dateA: Date): number {
+export function daysFromNow(date: Date): number {
   return Math.floor(
-    (dateA.getTime() - getTodayDate().getTime()) / (1000 * 60 * 60 * 24)
+    (date.getTime() - getTodayDate().getTime()) / (1000 * 60 * 60 * 24)
   );
 }
 
