@@ -2,7 +2,7 @@ import './App.css';
 
 import React, { useEffect, useRef, useState } from 'react';
 
-import Day from './components/Day';
+import EventList from './components/EventList';
 import { CalendarEvent, EventsMap } from './types';
 import { daysFromNow, getTodayDate } from './utils/dateTime';
 
@@ -115,13 +115,7 @@ function App() {
           day: 'numeric'
         })}
       </header>
-      {eventsByDay.size > 0 && (
-        <ul className="event-list">
-          {Array.from(eventsByDay.entries()).map(([label, events]) => (
-            <Day key={label} label={label} events={events} />
-          ))}
-        </ul>
-      )}
+      {eventsByDay.size > 0 && <EventList eventsByDay={eventsByDay} />}
       <button onClick={handleAuthClick}>
         {isAuthenticated ? 'Refresh' : 'Authorize'}
       </button>
