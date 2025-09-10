@@ -4,13 +4,13 @@ import { CalendarEvent } from '../types';
 import Event from './Event';
 
 type DayProps = {
-  dayLabel: string;
+  label: string;
   events: CalendarEvent[];
 };
 
-const Day: React.FC<DayProps> = ({ dayLabel, events }) => (
+const Day: React.FC<DayProps> = ({ label, events }) => (
   <li>
-    <div className="day-header">{dayLabel}</div>
+    <div className="day-header">{label}</div>
     <ul>
       {events.map((event, idx) => (
         <Event key={event.id || idx} event={event} />

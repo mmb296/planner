@@ -117,8 +117,8 @@ function App() {
       </header>
       {eventsByDay.size > 0 && (
         <ul className="event-list">
-          {Array.from(eventsByDay.entries()).map(([dayLabel, events]) => (
-            <Day key={dayLabel} dayLabel={dayLabel} events={events} />
+          {Array.from(eventsByDay.entries()).map(([label, events]) => (
+            <Day key={label} label={label} events={events} />
           ))}
         </ul>
       )}
