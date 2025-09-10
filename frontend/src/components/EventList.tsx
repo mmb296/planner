@@ -4,8 +4,8 @@ import { CalendarEvent, EventsMap } from '../types';
 import { daysFromNow } from '../utils/dateTime';
 import Day from './Day';
 
-function groupEvents(events: CalendarEvent[]): EventsMap {
-  const groupedEvents: EventsMap = new Map();
+const EventList: React.FC<{ events: CalendarEvent[] }> = ({ events }) => {
+  const eventsByDay: EventsMap = new Map();
 
   events.forEach((event) => {
     const start = event.start.dateTime || `${event.start.date}T00:00:00`;
@@ -17,15 +17,9 @@ function groupEvents(events: CalendarEvent[]): EventsMap {
     else if (diffDays === 1) dayLabel = 'TOMORROW';
     else dayLabel = `${diffDays} DAYS`;
 
-    if (!groupedEvents.has(dayLabel)) groupedEvents.set(dayLabel, []);
-    groupedEvents.get(dayLabel)!.push(event);
+    if (!eventsByDay.has(dayLabel)) eventsByDay.set(dayLabel, []);
+    eventsByDay.get(dayLabel)!.push(event);
   });
-
-  return groupedEvents;
-}
-
-const EventList: React.FC<{ events: CalendarEvent[] }> = ({ events }) => {
-  const eventsByDay = groupEvents(events);
 
   return (
     <ul className="event-list">
