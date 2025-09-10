@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { CalendarEvent } from '../types';
-import { formatTime } from '../utils/dateTime';
+import { formatTime, isEventPast } from '../utils/dateTime';
 
 function getDotColor(event: CalendarEvent): string {
   if (!event.start.dateTime) return '#f4d9e8'; // All Day
@@ -12,7 +12,7 @@ function getDotColor(event: CalendarEvent): string {
 }
 
 const Event: React.FC<{ event: CalendarEvent }> = ({ event }) => (
-  <li>
+  <li style={isEventPast(event) ? { textDecoration: 'line-through' } : {}}>
     <span
       className="event-dot"
       style={{ backgroundColor: getDotColor(event) }}

@@ -1,3 +1,5 @@
+import { CalendarEvent } from '../types';
+
 export function getTodayDate(): Date {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -14,4 +16,10 @@ export function daysFromNow(date: Date): number {
 export function formatTime(dateStr: string): string {
   const date = new Date(dateStr);
   return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+}
+
+export function isEventPast(event: CalendarEvent): boolean {
+  const startTime = event.start.dateTime;
+  if (!startTime) return false; // All-day events are not considered past
+  return new Date() > new Date(startTime);
 }
