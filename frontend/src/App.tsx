@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import EventList from './components/EventList';
 import { CalendarEvent } from './types';
-import { getTodayDate } from './utils/dateTime';
+import { getFutureDate, getTodayDate } from './utils/dateTime';
 
 const SCOPES = 'https://www.googleapis.com/auth/calendar.readonly';
 
@@ -46,16 +46,13 @@ function App() {
     const url = new URL(
       'https://www.googleapis.com/calendar/v3/calendars/primary/events'
     );
-    const todayDate = getTodayDate();
-    const twoWeeksDate = new Date(todayDate);
-    twoWeeksDate.setDate(twoWeeksDate.getDate() + 14);
 
     const params = {
       calendarId: 'primary',
       orderBy: 'startTime',
       singleEvents: 'true',
-      timeMin: todayDate.toISOString(),
-      timeMax: twoWeeksDate.toISOString()
+      timeMin: getTodayDate().toISOString(),
+      timeMax: getFutureDate(14).toISOString()
     };
     url.search = new URLSearchParams(params).toString();
 
