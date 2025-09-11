@@ -16,6 +16,7 @@ function App() {
     !!sessionStorage.getItem('access_token')
   );
   const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [days, setDays] = useState<number>(14);
 
   const initTokenClient = () => {
     if (tokenClient.current) return tokenClient.current;
@@ -24,25 +25,27 @@ function App() {
     ).google.accounts.oauth2.initTokenClient({
       client_id: clientId,
       scope: SCOPES,
-      callback: (resp: any) => {
-        if (resp.error !== undefined) {
-          setEvents([]);
-          setIsAuthenticated(false);
-          return;
-        }
-        sessionStorage.setItem('access_token', resp.access_token);
-        setIsAuthenticated(true);
-        listUpcomingEvents(resp.access_token);
-      }
+      callback: ''
     });
     return tokenClient.current;
   };
 
   const handleAuthClick = () => {
-    initTokenClient().requestAccessToken();
+    const client = initTokenClient();
+    client.callback = (resp: any) => {
+      if (resp.error !== undefined) {
+        setEvents([]);
+        setIsAuthenticated(false);
+        return;
+      }
+      sessionStorage.setItem('access_token', resp.access_token);
+      setIsAuthenticated(true);
+      listUpcomingEvents(resp.access_token, days);
+    };
+    client.requestAccessToken();
   };
 
-  const listUpcomingEvents = async (token: string) => {
+  const listUpcomingEvents = async (token: string, daysToFetch = days) => {
     const url = new URL(
       'https://www.googleapis.com/calendar/v3/calendars/primary/events'
     );
@@ -52,7 +55,7 @@ function App() {
       orderBy: 'startTime',
       singleEvents: 'true',
       timeMin: getTodayDate().toISOString(),
-      timeMax: getFutureDate(14).toISOString()
+      timeMax: getFutureDate(daysToFetch).toISOString()
     };
     url.search = new URLSearchParams(params).toString();
 
@@ -80,8 +83,9 @@ function App() {
   useEffect(() => {
     const savedToken = sessionStorage.getItem('access_token');
     if (!savedToken) return;
-    listUpcomingEvents(savedToken);
-  }, []);
+    listUpcomingEvents(savedToken, days);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [days]);
 
   return (
     <div className="App">
@@ -92,6 +96,15 @@ function App() {
           day: 'numeric'
         })}
       </header>
+      <div>
+        <select value={days} onChange={(e) => setDays(Number(e.target.value))}>
+          <option value={1}>1 day</option>
+          <option value={3}>3 days</option>
+          <option value={7}>7 days</option>
+          <option value={14}>14 days</option>
+          <option value={30}>30 days</option>
+        </select>
+      </div>
       {events.length > 0 && <EventList events={events} />}
       <button onClick={handleAuthClick}>
         {isAuthenticated ? 'Refresh' : 'Authorize'}
