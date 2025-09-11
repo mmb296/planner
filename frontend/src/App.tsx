@@ -9,7 +9,6 @@ import { getFutureDate, getTodayDate } from './utils/dateTime';
 const SCOPES = 'https://www.googleapis.com/auth/calendar.readonly';
 
 function App() {
-  const clientId = process.env.REACT_APP_CLIENT_ID as string;
   const tokenClient = useRef<any>(null);
 
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(
@@ -18,20 +17,23 @@ function App() {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [days, setDays] = useState<number>(14);
 
-  const initTokenClient = () => {
-    if (tokenClient.current) return tokenClient.current;
-    tokenClient.current = (
-      window as any
-    ).google.accounts.oauth2.initTokenClient({
-      client_id: clientId,
-      scope: SCOPES,
-      callback: ''
-    });
+  // Only initializes once and returns the client
+  const getTokenClient = () => {
+    if (!tokenClient.current) {
+      tokenClient.current = (
+        window as any
+      ).google.accounts.oauth2.initTokenClient({
+        client_id: process.env.REACT_APP_CLIENT_ID,
+        scope: SCOPES,
+        callback: '' // Will be set before requesting token
+      });
+    }
     return tokenClient.current;
   };
 
+  // Handle authentication and fetch events
   const handleAuthClick = () => {
-    const client = initTokenClient();
+    const client = getTokenClient();
     client.callback = (resp: any) => {
       if (resp.error !== undefined) {
         setEvents([]);
