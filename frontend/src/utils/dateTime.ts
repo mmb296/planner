@@ -23,3 +23,9 @@ export function isEventPast(event: CalendarEvent): boolean {
   if (!endTime) return false;
   return new Date() > new Date(endTime);
 }
+
+export function getFutureDate(days: number) {
+  const futureDate = new Date(getTodayDate());
+  futureDate.setDate(futureDate.getDate() + days);
+  return futureDate;
+}
