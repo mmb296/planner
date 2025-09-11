@@ -11,13 +11,13 @@ const SCOPES = 'https://www.googleapis.com/auth/calendar.readonly';
 function App() {
   const tokenClient = useRef<any>(null);
 
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(
+  const [isAuthenticated, setIsAuthenticated] = useState(
     !!sessionStorage.getItem('access_token')
   );
   const [events, setEvents] = useState<CalendarEvent[]>([]);
-  const [days, setDays] = useState<number>(14);
+  const [days, setDays] = useState(14);
 
-  // Only initializes once and returns the client
+  // Returns the token client, initializing if needed
   const getTokenClient = () => {
     if (!tokenClient.current) {
       tokenClient.current = (
@@ -47,11 +47,11 @@ function App() {
     client.requestAccessToken();
   };
 
+  // Fetch events from Google Calendar API
   const listUpcomingEvents = async (token: string, daysToFetch = days) => {
     const url = new URL(
       'https://www.googleapis.com/calendar/v3/calendars/primary/events'
     );
-
     const params = {
       calendarId: 'primary',
       orderBy: 'startTime',
@@ -74,14 +74,13 @@ function App() {
         return;
       }
       const data = await response.json();
-      if (data.items) {
-        setEvents(data.items);
-      }
+      setEvents(data.items || []);
     } catch (error) {
       console.error(error);
     }
   };
 
+  // Fetch events when days changes or on initial load (if authenticated)
   useEffect(() => {
     const savedToken = sessionStorage.getItem('access_token');
     if (!savedToken) return;
