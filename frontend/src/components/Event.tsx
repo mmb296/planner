@@ -13,10 +13,9 @@ function getDotColor(event: CalendarEvent): string {
 
 const Event: React.FC<{ event: CalendarEvent }> = ({ event }) => (
   <li style={isEventPast(event) ? { textDecoration: 'line-through' } : {}}>
-    <span
-      className="event-dot"
-      style={{ backgroundColor: getDotColor(event) }}
-    />
+    <span className="event-dot" style={{ backgroundColor: getDotColor(event) }}>
+      {event.calendarId ? event.calendarId[0].toUpperCase() : ''}
+    </span>
     {event.start.dateTime && (
       <span className="event-time">{formatTime(event.start.dateTime)} - </span>
     )}

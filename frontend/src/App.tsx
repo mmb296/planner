@@ -71,7 +71,12 @@ function App() {
         headers: { Authorization: `Bearer ${token}` }
       })
         .then((res) => res.json())
-        .then((data) => data.items || []);
+        .then((data) =>
+          (data.items || []).map((event: CalendarEvent) => ({
+            ...event,
+            calendarId
+          }))
+        );
     };
 
     try {
