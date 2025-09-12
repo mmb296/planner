@@ -1,12 +1,12 @@
 import React from 'react';
 
-import { CalendarEvent, EventsMap } from '../types';
+import { CalendarEvent } from '../types';
 import { daysFromNow, getEventStart } from '../utils/dateTime';
 import Day from './Day';
 
-const getDayLabel = (event: CalendarEvent): string => {
-  const diffDays = daysFromNow(getEventStart(event));
+export type EventsMap = Map<number, CalendarEvent[]>;
 
+const getDayLabel = (diffDays: number): string => {
   if (diffDays === 0) return 'TODAY';
   if (diffDays === 1) return 'TOMORROW';
   return `${diffDays} DAYS`;
@@ -14,17 +14,19 @@ const getDayLabel = (event: CalendarEvent): string => {
 
 const EventList: React.FC<{ events: CalendarEvent[] }> = ({ events }) => {
   const eventsByDay: EventsMap = events.reduce((acc, event) => {
-    const dayLabel = getDayLabel(event);
-    if (!acc.has(dayLabel)) acc.set(dayLabel, []);
-    acc.get(dayLabel)!.push(event);
+    const diffDays = daysFromNow(getEventStart(event));
+    if (!acc.has(diffDays)) acc.set(diffDays, []);
+    acc.get(diffDays)!.push(event);
     return acc;
   }, new Map() as EventsMap);
 
   return (
     <ul className="event-list">
-      {Array.from(eventsByDay.entries()).map(([label, events]) => (
-        <Day key={label} label={label} events={events} />
-      ))}
+      {Array.from(eventsByDay.entries())
+        .sort((a, b) => a[0] - b[0])
+        .map(([diffDays, events]) => (
+          <Day key={diffDays} label={getDayLabel(diffDays)} events={events} />
+        ))}
     </ul>
   );
 };
