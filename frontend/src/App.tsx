@@ -53,7 +53,6 @@ function App() {
       'https://www.googleapis.com/calendar/v3/calendars/primary/events'
     );
     const params = {
-      calendarId: 'primary',
       orderBy: 'startTime',
       singleEvents: 'true',
       timeMin: getTodayDate().toISOString(),
