@@ -13,16 +13,12 @@ const getDayLabel = (event: CalendarEvent): string => {
 };
 
 const EventList: React.FC<{ events: CalendarEvent[] }> = ({ events }) => {
-  const eventsByDay: EventsMap = new Map();
-
-  events.forEach((event) => {
+  const eventsByDay: EventsMap = events.reduce((acc, event) => {
     const dayLabel = getDayLabel(event);
-
-    if (!eventsByDay.has(dayLabel)) {
-      eventsByDay.set(dayLabel, []);
-    }
-    eventsByDay.get(dayLabel)!.push(event);
-  });
+    if (!acc.has(dayLabel)) acc.set(dayLabel, []);
+    acc.get(dayLabel)!.push(event);
+    return acc;
+  }, new Map() as EventsMap);
 
   return (
     <ul className="event-list">
