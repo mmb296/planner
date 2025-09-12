@@ -1,13 +1,11 @@
 import React from 'react';
 
 import { CalendarEvent, EventsMap } from '../types';
-import { daysFromNow } from '../utils/dateTime';
+import { daysFromNow, getEventStart } from '../utils/dateTime';
 import Day from './Day';
 
 const getDayLabel = (event: CalendarEvent): string => {
-  const start = event.start.dateTime || `${event.start.date}T00:00:00`;
-  const eventDate = new Date(start as string);
-  const diffDays = daysFromNow(eventDate);
+  const diffDays = daysFromNow(getEventStart(event));
 
   if (diffDays === 0) return 'TODAY';
   if (diffDays === 1) return 'TOMORROW';

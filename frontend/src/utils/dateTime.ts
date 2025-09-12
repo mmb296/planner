@@ -6,10 +6,8 @@ export function getTodayDate(): Date {
   return today;
 }
 
-export function daysFromNow(date: Date): number {
-  return Math.floor(
-    (date.getTime() - getTodayDate().getTime()) / (1000 * 60 * 60 * 24)
-  );
+export function daysFromNow(time: number): number {
+  return Math.floor((time - getTodayDate().getTime()) / (1000 * 60 * 60 * 24));
 }
 
 // Returns a formatted time string (e.g., "10:30 AM") for a given ISO date string
@@ -28,4 +26,10 @@ export function getFutureDate(days: number) {
   const futureDate = new Date(getTodayDate());
   futureDate.setDate(futureDate.getDate() + days);
   return futureDate;
+}
+
+export function getEventStart(event: CalendarEvent) {
+  return new Date(
+    event.start.dateTime || `${event.start.date}T00:00:00`
+  ).getTime();
 }
