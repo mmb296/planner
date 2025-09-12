@@ -8,6 +8,11 @@ import { getFutureDate, getTodayDate } from './utils/dateTime';
 
 const SCOPES = 'https://www.googleapis.com/auth/calendar.readonly';
 
+// Read calendar IDs from environment variable and split into an array
+const CALENDAR_IDS = (process.env.REACT_APP_CALENDAR_IDS || 'primary')
+  .split(',')
+  .map((id) => id.trim());
+
 function App() {
   const tokenClient = useRef<any>(null);
 
@@ -49,31 +54,30 @@ function App() {
 
   // Fetch events from Google Calendar API
   const listUpcomingEvents = async (token: string, daysToFetch = days) => {
-    const url = new URL(
-      'https://www.googleapis.com/calendar/v3/calendars/primary/events'
-    );
     const params = {
       orderBy: 'startTime',
       singleEvents: 'true',
       timeMin: getTodayDate().toISOString(),
       timeMax: getFutureDate(daysToFetch).toISOString()
     };
-    url.search = new URLSearchParams(params).toString();
+
+    const fetchEvents = (calendarId: string) => {
+      const url = new URL(
+        `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events`
+      );
+      url.search = new URLSearchParams(params).toString();
+      return fetch(url.toString(), {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${token}` }
+      })
+        .then((res) => res.json())
+        .then((data) => data.items || []);
+    };
 
     try {
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-      if (response.status === 401 || response.status === 403) {
-        setIsAuthenticated(false);
-        sessionStorage.removeItem('access_token');
-        return;
-      }
-      const data = await response.json();
-      setEvents(data.items || []);
+      const results = await Promise.all(CALENDAR_IDS.map(fetchEvents));
+      const allEvents = results.flat();
+      setEvents(allEvents);
     } catch (error) {
       console.error(error);
     }
