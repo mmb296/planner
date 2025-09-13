@@ -46,12 +46,16 @@ ul {
 }
 
 .event-dot {
-  width: 15px;
-  height: 15px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
-  display: inline-block;
   margin-right: 8px;
   vertical-align: -1px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 0.8em;
 }
 
 .event-time {
