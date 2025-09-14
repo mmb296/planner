@@ -8,6 +8,11 @@ import { getFutureDate, getTodayDate } from './utils/dateTime';
 
 const SCOPES = 'https://www.googleapis.com/auth/calendar.readonly';
 
+// Read calendar IDs from environment variable and split into an array
+const CALENDAR_IDS = (process.env.REACT_APP_CALENDAR_IDS || 'primary')
+  .split(',')
+  .map((id) => id.trim());
+
 function App() {
   const tokenClient = useRef<any>(null);
 
@@ -16,6 +21,7 @@ function App() {
   );
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [days, setDays] = useState(14);
+  const [showAllCals, setShowAllCals] = useState(false);
 
   // Returns the token client, initializing if needed
   const getTokenClient = () => {
@@ -49,32 +55,35 @@ function App() {
 
   // Fetch events from Google Calendar API
   const listUpcomingEvents = async (token: string, daysToFetch = days) => {
-    const url = new URL(
-      'https://www.googleapis.com/calendar/v3/calendars/primary/events'
-    );
     const params = {
-      calendarId: 'primary',
       orderBy: 'startTime',
       singleEvents: 'true',
       timeMin: getTodayDate().toISOString(),
       timeMax: getFutureDate(daysToFetch).toISOString()
     };
-    url.search = new URLSearchParams(params).toString();
+
+    const fetchEvents = (calendarId: string) => {
+      const url = new URL(
+        `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events`
+      );
+      url.search = new URLSearchParams(params).toString();
+      return fetch(url.toString(), {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${token}` }
+      })
+        .then((res) => res.json())
+        .then((data) =>
+          (data.items || []).map((event: CalendarEvent) => ({
+            ...event,
+            calendarId
+          }))
+        );
+    };
 
     try {
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-      if (response.status === 401 || response.status === 403) {
-        setIsAuthenticated(false);
-        sessionStorage.removeItem('access_token');
-        return;
-      }
-      const data = await response.json();
-      setEvents(data.items || []);
+      const results = await Promise.all(CALENDAR_IDS.map(fetchEvents));
+      const allEvents = results.flat();
+      setEvents(allEvents);
     } catch (error) {
       console.error(error);
     }
@@ -88,6 +97,11 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [days]);
 
+  // Filter events based on toggle
+  const filteredEvents = showAllCals
+    ? events
+    : events.filter((event) => event.calendarId === 'primary');
+
   return (
     <div className="App">
       <header className="App-header">
@@ -98,7 +112,11 @@ function App() {
         })}
       </header>
       <div>
-        <select value={days} onChange={(e) => setDays(Number(e.target.value))}>
+        <select
+          id="days-select"
+          value={days}
+          onChange={(e) => setDays(Number(e.target.value))}
+        >
           <option value={1}>1 day</option>
           <option value={3}>3 days</option>
           <option value={7}>7 days</option>
@@ -106,7 +124,17 @@ function App() {
           <option value={30}>30 days</option>
         </select>
       </div>
-      {events.length > 0 && <EventList events={events} />}
+      <div style={{ margin: '16px 0' }}>
+        <label>
+          Show all:
+          <input
+            type="checkbox"
+            checked={showAllCals}
+            onChange={(e) => setShowAllCals(e.target.checked)}
+          />
+        </label>
+      </div>
+      {filteredEvents.length > 0 && <EventList events={filteredEvents} />}
       <button onClick={handleAuthClick}>
         {isAuthenticated ? 'Refresh' : 'Authorize'}
       </button>

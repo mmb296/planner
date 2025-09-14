@@ -7,5 +7,3 @@ export type CalendarEvent = {
   };
   [key: string]: any;
 };
-
-export type EventsMap = Map<string, CalendarEvent[]>;
