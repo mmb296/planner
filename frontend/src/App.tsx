@@ -21,6 +21,7 @@ function App() {
   );
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [days, setDays] = useState(14);
+  const [showAllCals, setShowAllCals] = useState(false);
 
   // Returns the token client, initializing if needed
   const getTokenClient = () => {
@@ -96,6 +97,11 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [days]);
 
+  // Filter events based on toggle
+  const filteredEvents = showAllCals
+    ? events
+    : events.filter((event) => event.calendarId === 'primary');
+
   return (
     <div className="App">
       <header className="App-header">
@@ -114,7 +120,17 @@ function App() {
           <option value={30}>30 days</option>
         </select>
       </div>
-      {events.length > 0 && <EventList events={events} />}
+      <div style={{ margin: '16px 0' }}>
+        <label>
+          Show all:
+          <input
+            type="checkbox"
+            checked={showAllCals}
+            onChange={(e) => setShowAllCals(e.target.checked)}
+          />
+        </label>
+      </div>
+      {filteredEvents.length > 0 && <EventList events={filteredEvents} />}
       <button onClick={handleAuthClick}>
         {isAuthenticated ? 'Refresh' : 'Authorize'}
       </button>
