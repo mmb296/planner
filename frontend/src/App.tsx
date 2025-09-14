@@ -112,7 +112,11 @@ function App() {
         })}
       </header>
       <div>
-        <select value={days} onChange={(e) => setDays(Number(e.target.value))}>
+        <select
+          id="days-select"
+          value={days}
+          onChange={(e) => setDays(Number(e.target.value))}
+        >
           <option value={1}>1 day</option>
           <option value={3}>3 days</option>
           <option value={7}>7 days</option>
