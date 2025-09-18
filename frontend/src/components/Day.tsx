@@ -17,16 +17,9 @@ const Day: React.FC<DayProps> = ({ label, date, events }) => {
 
   return (
     <li>
-      <div
-        className="day-header"
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
-        }}
-      >
-        <span>{label}</span>
-        <span>{formatHeaderDate(date)}</span>
+      <div className="day-header">
+        <span className="day-label">{label}</span>
+        <span className="day-date">{formatHeaderDate(date)}</span>
       </div>
       <ul>
         {sortedEvents.map((event, idx) => (
