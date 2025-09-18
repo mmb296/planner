@@ -33,3 +33,11 @@ export function getEventStart(event: CalendarEvent) {
     event.start.dateTime || `${event.start.date}T00:00:00`
   ).getTime();
 }
+
+export function formatHeaderDate(date: Date): string {
+  return date.toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'short',
+    day: 'numeric'
+  });
+}

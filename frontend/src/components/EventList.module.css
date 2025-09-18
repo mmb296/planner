@@ -1,0 +1,10 @@
+.eventList {
+  background-color: #ffffff;
+  border-radius: 20px;
+  padding: 24px 120px;
+  max-width: 1060px;
+}
+
+.eventList > li {
+  margin-bottom: 32px;
+}
