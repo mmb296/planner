@@ -37,7 +37,7 @@ export function getEventStart(event: CalendarEvent) {
 // Returns a formatted date string for day headers (e.g., "Thu, Sep 18")
 export function formatHeaderDate(date: Date): string {
   return date.toLocaleDateString('en-US', {
-    weekday: 'short',
+    weekday: 'long',
     month: 'short',
     day: 'numeric'
   });
