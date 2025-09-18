@@ -4,7 +4,7 @@ import { CalendarEvent } from '../types';
 import { daysFromNow, getEventStart, getFutureDate } from '../utils/dateTime';
 import Day from './Day';
 
-export type EventsMap = Map<number, CalendarEvent[]>;
+type EventsMap = Map<number, CalendarEvent[]>;
 
 const getDayLabel = (diffDays: number): string => {
   if (diffDays === 0) return 'TODAY';
