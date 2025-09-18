@@ -33,3 +33,12 @@ export function getEventStart(event: CalendarEvent) {
     event.start.dateTime || `${event.start.date}T00:00:00`
   ).getTime();
 }
+
+// Returns a formatted date string for day headers (e.g., "Thu, Sep 18")
+export function formatHeaderDate(date: Date): string {
+  return date.toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric'
+  });
+}

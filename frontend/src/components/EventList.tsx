@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { CalendarEvent } from '../types';
-import { daysFromNow, getEventStart } from '../utils/dateTime';
+import { daysFromNow, getEventStart, getFutureDate } from '../utils/dateTime';
 import Day from './Day';
 
 export type EventsMap = Map<number, CalendarEvent[]>;
@@ -25,7 +25,12 @@ const EventList: React.FC<{ events: CalendarEvent[] }> = ({ events }) => {
       {Array.from(eventsByDay.entries())
         .sort((a, b) => a[0] - b[0])
         .map(([diffDays, events]) => (
-          <Day key={diffDays} label={getDayLabel(diffDays)} events={events} />
+          <Day
+            key={diffDays}
+            label={getDayLabel(diffDays)}
+            date={getFutureDate(diffDays)}
+            events={events}
+          />
         ))}
     </ul>
   );
