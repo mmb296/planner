@@ -2,6 +2,7 @@ import React from 'react';
 
 import { CalendarEvent } from '../types';
 import { formatHeaderDate, getEventStart } from '../utils/dateTime';
+import styles from './Day.module.css';
 import Event from './Event';
 
 type DayProps = {
@@ -17,9 +18,9 @@ const Day: React.FC<DayProps> = ({ label, date, events }) => {
 
   return (
     <li>
-      <div className="day-header">
-        <span className="day-label">{label}</span>
-        <span className="day-date">{formatHeaderDate(date)}</span>
+      <div className={styles.dayHeader}>
+        <span className={styles.dayLabel}>{label}</span>
+        <span className={styles.dayDate}>{formatHeaderDate(date)}</span>
       </div>
       <ul>
         {sortedEvents.map((event, idx) => (

@@ -1,0 +1,19 @@
+.dayHeader {
+  margin-bottom: 16px;
+  border-bottom: 1px solid #b8b8b8;
+  padding-bottom: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dayLabel {
+  font-weight: 700;
+  font-size: 30px;
+  color: #1b3899;
+}
+
+.dayDate {
+  font-weight: 500;
+  font-size: 18px;
+}
