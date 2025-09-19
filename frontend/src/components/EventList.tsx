@@ -20,8 +20,7 @@ const EventList: React.FC<{ events: CalendarEvent[]; maxDays: number }> = ({
   const eventsByDay: EventsMap = events.reduce((acc, event) => {
     const spanDays = getEventSpanDays(event);
     spanDays.forEach((day) => {
-      if (day < 0) return;
-      if (day > maxDays) return;
+      if (day < 0 || day > maxDays - 1) return;
       if (!acc.has(day)) acc.set(day, []);
       acc.get(day)!.push(event);
     });
