@@ -5,6 +5,9 @@ import { formatTime, isEventPast } from '../utils/dateTime';
 import styles from './Event.module.css';
 
 function getDotColor(event: CalendarEvent): string {
+  // Special color for events starting with 'NO '
+  if (event.summary?.startsWith('NO ')) return '#ff6d70';
+
   if (!event.start.dateTime) return '#f4d9e8'; // All Day
   const hour = new Date(event.start.dateTime).getHours();
   if (hour < 12) return '#d9e2f2'; // Morning
