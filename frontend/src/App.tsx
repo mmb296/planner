@@ -134,7 +134,9 @@ function App() {
           />
         </label>
       </div>
-      {filteredEvents.length > 0 && <EventList events={filteredEvents} />}
+      {filteredEvents.length > 0 && (
+        <EventList events={filteredEvents} maxDays={days} />
+      )}
       <button onClick={handleAuthClick}>
         {isAuthenticated ? 'Refresh' : 'Authorize'}
       </button>

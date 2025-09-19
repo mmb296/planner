@@ -28,10 +28,22 @@ export function getFutureDate(days: number) {
   return futureDate;
 }
 
-export function getEventStart(event: CalendarEvent) {
+export function getStartTime(event: CalendarEvent) {
   return new Date(
     event.start.dateTime || `${event.start.date}T00:00:00`
   ).getTime();
+}
+
+export function getEndTime(event: CalendarEvent): number {
+  if (event.end.dateTime) {
+    return new Date(event.end.dateTime).getTime();
+  }
+
+  // All-day event - end.date is exclusive (day after event ends)
+  // So we subtract 1 day to get the actual last day
+  const endDate = new Date(`${event.end.date}T00:00:00`);
+  endDate.setDate(endDate.getDate() - 1);
+  return endDate.getTime();
 }
 
 export function formatHeaderDate(date: Date): string {
@@ -40,4 +52,16 @@ export function formatHeaderDate(date: Date): string {
     month: 'short',
     day: 'numeric'
   });
+}
+
+export function getEventSpanDays(event: CalendarEvent): number[] {
+  const startTime = getStartTime(event);
+  const endTime = getEndTime(event);
+
+  const spanDays: number[] = [];
+  for (let day = daysFromNow(startTime); day <= daysFromNow(endTime); day++) {
+    spanDays.push(day);
+  }
+
+  return spanDays;
 }
