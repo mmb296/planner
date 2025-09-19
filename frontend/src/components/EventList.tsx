@@ -13,9 +13,12 @@ const getDayLabel = (diffDays: number): string => {
   return `${diffDays} DAYS`;
 };
 
-const EventList: React.FC<{ events: CalendarEvent[] }> = ({ events }) => {
+const EventList: React.FC<{ events: CalendarEvent[]; maxDays: number }> = ({
+  events,
+  maxDays
+}) => {
   const eventsByDay: EventsMap = events.reduce((acc, event) => {
-    const spanDays = getEventSpanDays(event);
+    const spanDays = getEventSpanDays(event, maxDays);
     spanDays.forEach((day) => {
       if (!acc.has(day)) acc.set(day, []);
       acc.get(day)!.push(event);

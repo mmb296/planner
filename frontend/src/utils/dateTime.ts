@@ -51,7 +51,10 @@ export function formatHeaderDate(date: Date): string {
 }
 
 // Returns the days an event spans, starting from today (0) going forward
-export function getEventSpanDays(event: CalendarEvent): number[] {
+export function getEventSpanDays(
+  event: CalendarEvent,
+  maxDays: number
+): number[] {
   const startTime = getStartTime(event);
   const endTime = getEndTime(event);
   const today = getTodayDate().getTime();
@@ -60,8 +63,12 @@ export function getEventSpanDays(event: CalendarEvent): number[] {
   const endDay = Math.floor((endTime - today) / (24 * 60 * 60 * 1000));
 
   const spanDays: number[] = [];
-  // Start from today (0) going forward
-  for (let day = Math.max(0, startDay); day <= endDay; day++) {
+  // Start from today (0) going forward, but don't exceed maxDays
+  for (
+    let day = Math.max(0, startDay);
+    day <= Math.min(endDay, maxDays - 1);
+    day++
+  ) {
     spanDays.push(day);
   }
 
