@@ -24,7 +24,7 @@ app.use((req, res, next) => {
 
 // Routes
 app.get('/', (req, res) => {
-  res.json({ message: 'Calendar API is running!' });
+  res.json({ message: 'Planner API is running!' });
 });
 
 // Get all recurring tasks

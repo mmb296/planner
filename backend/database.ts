@@ -2,7 +2,7 @@ const sqlite3 = require('sqlite3');
 const { promisify } = require('util');
 
 // Create database connection
-const db = new sqlite3.Database('./calendar.db');
+const db = new sqlite3.Database('./planner.db');
 
 // Promisify database methods for async/await
 const dbRun = promisify(db.run.bind(db));
