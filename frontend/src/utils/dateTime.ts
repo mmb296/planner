@@ -6,6 +6,10 @@ export function getTodayDate(): Date {
   return today;
 }
 
+export function daysFromNow(time: number): number {
+  return Math.floor((time - getTodayDate().getTime()) / (1000 * 60 * 60 * 24));
+}
+
 // Returns a formatted time string (e.g., "10:30 AM") for a given ISO date string
 export function formatTime(dateStr: string): string {
   const date = new Date(dateStr);
@@ -53,13 +57,9 @@ export function formatHeaderDate(date: Date): string {
 export function getEventSpanDays(event: CalendarEvent): number[] {
   const startTime = getStartTime(event);
   const endTime = getEndTime(event);
-  const today = getTodayDate().getTime();
-
-  const startDay = Math.floor((startTime - today) / (24 * 60 * 60 * 1000));
-  const endDay = Math.floor((endTime - today) / (24 * 60 * 60 * 1000));
 
   const spanDays: number[] = [];
-  for (let day = startDay; day <= endDay; day++) {
+  for (let day = daysFromNow(startTime); day <= daysFromNow(endTime); day++) {
     spanDays.push(day);
   }
 
