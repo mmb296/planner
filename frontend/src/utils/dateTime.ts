@@ -24,13 +24,13 @@ export function getFutureDate(days: number) {
   return futureDate;
 }
 
-export function getEventStart(event: CalendarEvent) {
+export function getStartTime(event: CalendarEvent) {
   return new Date(
     event.start.dateTime || `${event.start.date}T00:00:00`
   ).getTime();
 }
 
-export function getEventEnd(event: CalendarEvent): number {
+export function getEndTime(event: CalendarEvent): number {
   if (event.end.dateTime) {
     return new Date(event.end.dateTime).getTime();
   }
@@ -52,8 +52,8 @@ export function formatHeaderDate(date: Date): string {
 
 // Returns the days an event spans, starting from today (0) going forward
 export function getEventSpanDays(event: CalendarEvent): number[] {
-  const startTime = getEventStart(event);
-  const endTime = getEventEnd(event);
+  const startTime = getStartTime(event);
+  const endTime = getEndTime(event);
   const today = getTodayDate().getTime();
 
   const startDay = Math.floor((startTime - today) / (24 * 60 * 60 * 1000));
