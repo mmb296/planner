@@ -18,6 +18,11 @@ function getCalendarLetter(event: CalendarEvent): string {
   return event.calendarId[0].toUpperCase();
 }
 
+function getFontWeight(event: CalendarEvent): number {
+  if (event.start.dateTime) return 400;
+  return 600;
+}
+
 const Event: React.FC<{ event: CalendarEvent }> = ({ event }) => (
   <li
     className={styles.eventItem}
@@ -34,7 +39,7 @@ const Event: React.FC<{ event: CalendarEvent }> = ({ event }) => (
         {formatTime(event.start.dateTime)} -{' '}
       </span>
     )}
-    <span>{event.summary}</span>
+    <span style={{ fontWeight: getFontWeight(event) }}>{event.summary}</span>
   </li>
 );
 
