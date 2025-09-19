@@ -27,6 +27,10 @@ const EventList: React.FC<{ events: CalendarEvent[]; maxDays: number }> = ({
     return acc;
   }, new Map() as EventsMap);
 
+  // Ensure TODAY and TOMORROW are always shown
+  if (!eventsByDay.has(0)) eventsByDay.set(0, []);
+  if (!eventsByDay.has(1)) eventsByDay.set(1, []);
+
   return (
     <ul className={styles.eventList}>
       {Array.from(eventsByDay.entries())

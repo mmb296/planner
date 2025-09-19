@@ -23,9 +23,13 @@ const Day: React.FC<DayProps> = ({ label, date, events }) => {
         <span className={styles.dayDate}>{formatHeaderDate(date)}</span>
       </div>
       <ul>
-        {sortedEvents.map((event, idx) => (
-          <Event key={event.id || idx} event={event} />
-        ))}
+        {sortedEvents.length > 0 ? (
+          sortedEvents.map((event, idx) => (
+            <Event key={event.id || idx} event={event} />
+          ))
+        ) : (
+          <li style={{ color: '#999', fontStyle: 'italic' }}>No events</li>
+        )}
       </ul>
     </li>
   );
