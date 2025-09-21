@@ -71,30 +71,29 @@ function App() {
       timeMax: getFutureDate(daysToFetch).toISOString()
     };
 
-    const fetchEvents = (calendarId: string) => {
+    const fetchEvents = async (calendarId: string) => {
       const url = new URL(
         `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events`
       );
       url.search = new URLSearchParams(params).toString();
-      return fetch(url.toString(), {
+
+      const response = await fetch(url.toString(), {
         method: 'GET',
         headers: { Authorization: `Bearer ${token}` }
-      })
-        .then((res) => {
-          if (!res.ok) {
-            if (res.status === 401 || res.status === 403) {
-              throw new AuthenticationError('Authentication failed');
-            }
-            throw new Error(`HTTP error! status: ${res.status}`);
-          }
-          return res.json();
-        })
-        .then((data) =>
-          (data.items || []).map((event: CalendarEvent) => ({
-            ...event,
-            calendarId
-          }))
-        );
+      });
+
+      if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          throw new AuthenticationError('Authentication failed');
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return (data.items || []).map((event: CalendarEvent) => ({
+        ...event,
+        calendarId
+      }));
     };
 
     try {
