@@ -42,7 +42,6 @@ app.get('/api/tasks', async (req, res) => {
 app.post('/api/tasks', async (req, res) => {
   try {
     const { title, repeat_days } = req.body;
-    console.log(title, repeat_days);
     if (!title || repeat_days === undefined) {
       return res
         .status(400)
