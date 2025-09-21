@@ -1,0 +1,12 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+backend/dist/
+frontend/build/
+
+# Database files
+*.db
+
+# Logs
+*.log
