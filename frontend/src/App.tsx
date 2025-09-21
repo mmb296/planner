@@ -72,7 +72,15 @@ function App() {
         method: 'GET',
         headers: { Authorization: `Bearer ${token}` }
       })
-        .then((res) => res.json())
+        .then((res) => {
+          if (!res.ok) {
+            if (res.status === 401 || res.status === 403) {
+              throw new Error('Authentication failed');
+            }
+            throw new Error(`HTTP error! status: ${res.status}`);
+          }
+          return res.json();
+        })
         .then((data) =>
           (data.items || []).map((event: CalendarEvent) => ({
             ...event,
@@ -87,6 +95,11 @@ function App() {
       setEvents(allEvents);
     } catch (error) {
       console.error(error);
+      if (error instanceof Error && error.message === 'Authentication failed') {
+        setIsAuthenticated(false);
+        sessionStorage.removeItem('access_token');
+        setEvents([]);
+      }
     }
   };
 
