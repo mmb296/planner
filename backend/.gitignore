@@ -2,3 +2,9 @@
 
 # dependencies
 /node_modules
+
+# compiled output
+/dist
+
+# database
+/planner.db
