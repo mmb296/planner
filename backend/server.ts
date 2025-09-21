@@ -1,5 +1,6 @@
-const express = require('express');
-const { closeDatabase, initDatabase, RecurringTaskDB } = require('./database');
+import express from 'express';
+
+import { closeDatabase, initDatabase, RecurringTaskDB } from './database.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -50,7 +51,7 @@ app.post('/api/tasks', async (req, res) => {
     const result = await RecurringTaskDB.create({ title, repeat_days });
     res
       .status(201)
-      .json({ id: result.lastID, message: 'Task created successfully' });
+      .json({ id: (result as any).lastID, message: 'Task created successfully' });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Failed to create task' });

@@ -1,13 +1,38 @@
-const sqlite3 = require('sqlite3');
-const { promisify } = require('util');
+import sqlite3 from 'sqlite3';
 
 // Create database connection
 const db = new sqlite3.Database('./planner.db');
 
 // Promisify database methods for async/await
-const dbRun = promisify(db.run.bind(db));
-const dbGet = promisify(db.get.bind(db));
-const dbAll = promisify(db.all.bind(db));
+const dbGet = (sql: string, params: any[] = []) => {
+  return new Promise((resolve, reject) => {
+    db.get(sql, params, (err, row) => {
+      if (err) reject(err);
+      else resolve(row);
+    });
+  });
+};
+
+const dbAll = (sql: string, params: any[] = []) => {
+  return new Promise((resolve, reject) => {
+    db.all(sql, params, (err, rows) => {
+      if (err) reject(err);
+      else resolve(rows);
+    });
+  });
+};
+
+const dbRun = (sql: string, params: any[] = []) => {
+  return new Promise((resolve, reject) => {
+    db.run(sql, params, function (err) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve({ lastID: this.lastID, changes: this.changes });
+      }
+    });
+  });
+};
 
 // Initialize database with tables
 export async function initDatabase() {
@@ -34,20 +59,11 @@ export async function initDatabase() {
 export const RecurringTaskDB = {
   // Create a new recurring task
   async create(task: { title: string; repeat_days: number }) {
-    return new Promise((resolve, reject) => {
-      db.run(
-        `INSERT INTO recurring_tasks (title, repeat_days)
-         VALUES (?, ?)`,
-        [task.title, task.repeat_days],
-        function (err) {
-          if (err) {
-            reject(err);
-          } else {
-            resolve({ lastID: this.lastID, changes: this.changes });
-          }
-        }
-      );
-    });
+    return await dbRun(
+      `INSERT INTO recurring_tasks (title, repeat_days)
+       VALUES (?, ?)`,
+      [task.title, task.repeat_days]
+    );
   },
 
   // Get all recurring tasks
