@@ -2,6 +2,7 @@ import './App.css';
 
 import React, { useEffect, useRef, useState } from 'react';
 
+import DaysSelect from './components/DaysSelect';
 import EventList from './components/EventList';
 import { CalendarEvent } from './types';
 import { getFutureDate, getTodayDate } from './utils/dateTime';
@@ -111,19 +112,7 @@ function App() {
           day: 'numeric'
         })}
       </header>
-      <div>
-        <select
-          id="days-select"
-          value={days}
-          onChange={(e) => setDays(Number(e.target.value))}
-        >
-          <option value={1}>1 day</option>
-          <option value={3}>3 days</option>
-          <option value={7}>7 days</option>
-          <option value={14}>14 days</option>
-          <option value={30}>30 days</option>
-        </select>
-      </div>
+      <DaysSelect value={days} onChange={setDays} />
       <div style={{ margin: '16px 0' }}>
         <label>
           Show all:
