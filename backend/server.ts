@@ -50,7 +50,7 @@ app.post('/api/tasks', async (req, res) => {
     }
     const result = await RecurringTaskDB.create({ title, repeat_days });
     res.status(201).json({
-      id: (result as any).lastID,
+      id: result.lastID,
       message: 'Task created successfully'
     });
   } catch (error) {

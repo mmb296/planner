@@ -1,5 +1,11 @@
 import sqlite3 from 'sqlite3';
 
+// Types
+type DbResult = {
+  lastID: number;
+  changes: number;
+};
+
 // Create database connection
 const db = new sqlite3.Database('./planner.db');
 
@@ -22,7 +28,7 @@ const dbAll = (sql: string, params: any[] = []) => {
   });
 };
 
-const dbRun = (sql: string, params: any[] = []) => {
+const dbRun = (sql: string, params: any[] = []): Promise<DbResult> => {
   return new Promise((resolve, reject) => {
     db.run(sql, params, function (err) {
       if (err) {
