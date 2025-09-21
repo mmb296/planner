@@ -2,9 +2,18 @@ import './App.css';
 
 import React, { useEffect, useRef, useState } from 'react';
 
+import DaysSelect from './components/DaysSelect';
 import EventList from './components/EventList';
 import { CalendarEvent } from './types';
 import { getFutureDate, getTodayDate } from './utils/dateTime';
+
+// Custom error class for authentication failures
+class AuthenticationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'AuthenticationError';
+  }
+}
 
 const SCOPES = 'https://www.googleapis.com/auth/calendar.readonly';
 
@@ -37,13 +46,19 @@ function App() {
     return tokenClient.current;
   };
 
+  // Clear authentication state and stored token
+  const clearAuthentication = () => {
+    sessionStorage.removeItem('access_token');
+    setIsAuthenticated(false);
+    setEvents([]);
+  };
+
   // Handle authentication and fetch events
   const handleAuthClick = () => {
     const client = getTokenClient();
     client.callback = (resp: any) => {
       if (resp.error !== undefined) {
-        setEvents([]);
-        setIsAuthenticated(false);
+        clearAuthentication();
         return;
       }
       sessionStorage.setItem('access_token', resp.access_token);
@@ -62,22 +77,29 @@ function App() {
       timeMax: getFutureDate(daysToFetch).toISOString()
     };
 
-    const fetchEvents = (calendarId: string) => {
+    const fetchEvents = async (calendarId: string) => {
       const url = new URL(
         `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events`
       );
       url.search = new URLSearchParams(params).toString();
-      return fetch(url.toString(), {
+
+      const response = await fetch(url.toString(), {
         method: 'GET',
         headers: { Authorization: `Bearer ${token}` }
-      })
-        .then((res) => res.json())
-        .then((data) =>
-          (data.items || []).map((event: CalendarEvent) => ({
-            ...event,
-            calendarId
-          }))
-        );
+      });
+
+      if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          throw new AuthenticationError('Authentication failed');
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return (data.items || []).map((event: CalendarEvent) => ({
+        ...event,
+        calendarId
+      }));
     };
 
     try {
@@ -86,6 +108,9 @@ function App() {
       setEvents(allEvents);
     } catch (error) {
       console.error(error);
+      if (error instanceof AuthenticationError) {
+        clearAuthentication();
+      }
     }
   };
 
@@ -111,30 +136,22 @@ function App() {
           day: 'numeric'
         })}
       </header>
-      <div>
-        <select
-          id="days-select"
-          value={days}
-          onChange={(e) => setDays(Number(e.target.value))}
-        >
-          <option value={1}>1 day</option>
-          <option value={3}>3 days</option>
-          <option value={7}>7 days</option>
-          <option value={14}>14 days</option>
-          <option value={30}>30 days</option>
-        </select>
-      </div>
-      <div style={{ margin: '16px 0' }}>
-        <label>
-          Show all:
-          <input
-            type="checkbox"
-            checked={showAllCals}
-            onChange={(e) => setShowAllCals(e.target.checked)}
-          />
-        </label>
-      </div>
-      <EventList events={filteredEvents} maxDays={days} />
+      {isAuthenticated && (
+        <>
+          <DaysSelect value={days} onChange={setDays} />
+          <div style={{ margin: '16px 0' }}>
+            <label>
+              Show all:
+              <input
+                type="checkbox"
+                checked={showAllCals}
+                onChange={(e) => setShowAllCals(e.target.checked)}
+              />
+            </label>
+          </div>
+          <EventList events={filteredEvents} maxDays={days} />
+        </>
+      )}
       <button onClick={handleAuthClick}>
         {isAuthenticated ? 'Refresh' : 'Authorize'}
       </button>
