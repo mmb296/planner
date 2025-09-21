@@ -49,9 +49,10 @@ app.post('/api/tasks', async (req, res) => {
         .json({ error: 'title and repeat_days are required' });
     }
     const result = await RecurringTaskDB.create({ title, repeat_days });
-    res
-      .status(201)
-      .json({ id: (result as any).lastID, message: 'Task created successfully' });
+    res.status(201).json({
+      id: (result as any).lastID,
+      message: 'Task created successfully'
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Failed to create task' });
@@ -82,16 +83,14 @@ app.delete('/api/tasks/:id', async (req, res) => {
 });
 
 // Initialize database and start server
-async function startServer() {
-  try {
-    await initDatabase();
-    app.listen(PORT, () => {
-      console.log(`Server listening on port ${PORT}`);
-    });
-  } catch (error) {
-    console.error('Failed to start server:', error);
-    process.exit(1);
-  }
+try {
+  await initDatabase();
+  app.listen(PORT, () => {
+    console.log(`Server listening on port ${PORT}`);
+  });
+} catch (error) {
+  console.error('Failed to start server:', error);
+  process.exit(1);
 }
 
 // Graceful shutdown
@@ -100,5 +99,3 @@ process.on('SIGINT', async () => {
   await closeDatabase();
   process.exit(0);
 });
-
-startServer();
