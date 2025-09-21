@@ -7,6 +7,14 @@ import EventList from './components/EventList';
 import { CalendarEvent } from './types';
 import { getFutureDate, getTodayDate } from './utils/dateTime';
 
+// Custom error class for authentication failures
+class AuthenticationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'AuthenticationError';
+  }
+}
+
 const SCOPES = 'https://www.googleapis.com/auth/calendar.readonly';
 
 // Read calendar IDs from environment variable and split into an array
@@ -75,7 +83,7 @@ function App() {
         .then((res) => {
           if (!res.ok) {
             if (res.status === 401 || res.status === 403) {
-              throw new Error('Authentication failed');
+              throw new AuthenticationError('Authentication failed');
             }
             throw new Error(`HTTP error! status: ${res.status}`);
           }
@@ -95,7 +103,7 @@ function App() {
       setEvents(allEvents);
     } catch (error) {
       console.error(error);
-      if (error instanceof Error && error.message === 'Authentication failed') {
+      if (error instanceof AuthenticationError) {
         setIsAuthenticated(false);
         sessionStorage.removeItem('access_token');
         setEvents([]);
