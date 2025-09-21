@@ -125,18 +125,22 @@ function App() {
           day: 'numeric'
         })}
       </header>
-      <DaysSelect value={days} onChange={setDays} />
-      <div style={{ margin: '16px 0' }}>
-        <label>
-          Show all:
-          <input
-            type="checkbox"
-            checked={showAllCals}
-            onChange={(e) => setShowAllCals(e.target.checked)}
-          />
-        </label>
-      </div>
-      <EventList events={filteredEvents} maxDays={days} />
+      {isAuthenticated && (
+        <>
+          <DaysSelect value={days} onChange={setDays} />
+          <div style={{ margin: '16px 0' }}>
+            <label>
+              Show all:
+              <input
+                type="checkbox"
+                checked={showAllCals}
+                onChange={(e) => setShowAllCals(e.target.checked)}
+              />
+            </label>
+          </div>
+          <EventList events={filteredEvents} maxDays={days} />
+        </>
+      )}
       <button onClick={handleAuthClick}>
         {isAuthenticated ? 'Refresh' : 'Authorize'}
       </button>
