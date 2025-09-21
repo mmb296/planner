@@ -46,13 +46,19 @@ function App() {
     return tokenClient.current;
   };
 
+  // Clear authentication state and stored token
+  const clearAuthentication = () => {
+    sessionStorage.removeItem('access_token');
+    setIsAuthenticated(false);
+    setEvents([]);
+  };
+
   // Handle authentication and fetch events
   const handleAuthClick = () => {
     const client = getTokenClient();
     client.callback = (resp: any) => {
       if (resp.error !== undefined) {
-        setEvents([]);
-        setIsAuthenticated(false);
+        clearAuthentication();
         return;
       }
       sessionStorage.setItem('access_token', resp.access_token);
@@ -103,9 +109,7 @@ function App() {
     } catch (error) {
       console.error(error);
       if (error instanceof AuthenticationError) {
-        setIsAuthenticated(false);
-        sessionStorage.removeItem('access_token');
-        setEvents([]);
+        clearAuthentication();
       }
     }
   };
