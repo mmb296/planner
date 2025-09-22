@@ -4,7 +4,8 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import DaysSelect from './components/DaysSelect';
 import EventList from './components/EventList';
-import { CalendarEvent } from './types';
+import TaskList from './components/TaskList';
+import { CalendarEvent, Task } from './types';
 import { getFutureDate, getTodayDate } from './utils/dateTime';
 
 // Custom error class for authentication failures
@@ -29,6 +30,7 @@ function App() {
     !!sessionStorage.getItem('access_token')
   );
   const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [days, setDays] = useState(14);
   const [showAllCals, setShowAllCals] = useState(false);
 
@@ -51,6 +53,21 @@ function App() {
     sessionStorage.removeItem('access_token');
     setIsAuthenticated(false);
     setEvents([]);
+  };
+
+  // Fetch tasks from backend API
+  const fetchTasks = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/tasks');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const tasksData = await response.json();
+      setTasks(tasksData);
+    } catch (error) {
+      console.error('Failed to fetch tasks:', error);
+      setTasks([]);
+    }
   };
 
   // Handle authentication and fetch events
@@ -114,6 +131,11 @@ function App() {
     }
   };
 
+  // Fetch tasks on component mount
+  useEffect(() => {
+    fetchTasks();
+  }, []);
+
   // Fetch events when days changes or on initial load (if authenticated)
   useEffect(() => {
     const savedToken = sessionStorage.getItem('access_token');
@@ -149,7 +171,10 @@ function App() {
               />
             </label>
           </div>
-          <EventList events={filteredEvents} maxDays={days} />
+          <div className="main-content">
+            <TaskList tasks={tasks} />
+            <EventList events={filteredEvents} maxDays={days} />
+          </div>
         </>
       )}
       <button onClick={handleAuthClick}>

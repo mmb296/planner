@@ -1,0 +1,10 @@
+.taskList {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 24px;
+  flex: 0 0 300px;
+}
+
+.taskListTitle {
+  margin: 0 0 12px 0;
+}

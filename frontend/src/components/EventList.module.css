@@ -3,6 +3,7 @@
   border-radius: 20px;
   padding: 24px 120px;
   max-width: 1060px;
+  flex: 1;
 }
 
 .eventList > li {
