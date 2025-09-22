@@ -5,16 +5,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import DaysSelect from './components/DaysSelect';
 import EventList from './components/EventList';
 import TaskList from './components/TaskList';
+import { AuthenticationError, HttpError } from './errors';
 import { CalendarEvent, Task } from './types';
 import { getFutureDate, getTodayDate } from './utils/dateTime';
-
-// Custom error class for authentication failures
-class AuthenticationError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'AuthenticationError';
-  }
-}
 
 const SCOPES = 'https://www.googleapis.com/auth/calendar.readonly';
 
@@ -60,7 +53,10 @@ function App() {
     try {
       const response = await fetch('http://localhost:5000/api/tasks');
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new HttpError(
+          `Failed to fetch tasks: ${response.statusText}`,
+          response.status
+        );
       }
       const tasksData = await response.json();
       setTasks(tasksData);
@@ -107,9 +103,15 @@ function App() {
 
       if (!response.ok) {
         if (response.status === 401 || response.status === 403) {
-          throw new AuthenticationError('Authentication failed');
+          throw new AuthenticationError(
+            'Authentication failed',
+            response.status
+          );
         }
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new HttpError(
+          `Failed to fetch events: ${response.statusText}`,
+          response.status
+        );
       }
 
       const data = await response.json();
