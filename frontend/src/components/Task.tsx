@@ -1,19 +1,14 @@
 import React from 'react';
 
-import { Task, TaskCompletion } from '../types';
+import { Task } from '../types';
 import styles from './Task.module.css';
 
 type TaskProps = {
   task: Task;
-  completions: TaskCompletion[];
   onTaskComplete: (taskId: number) => void;
 };
 
-const TaskComponent: React.FC<TaskProps> = ({
-  task,
-  completions,
-  onTaskComplete
-}) => {
+const TaskComponent: React.FC<TaskProps> = ({ task, onTaskComplete }) => {
   const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.checked) {
       onTaskComplete(task.id);
@@ -21,13 +16,9 @@ const TaskComponent: React.FC<TaskProps> = ({
   };
 
   // Check if this task has been completed recently (within the last 24 hours)
-  const latestCompletion = completions.find(
-    (completion) => completion.task_id === task.id
-  );
-
-  const isRecentlyCompleted = latestCompletion
+  const isRecentlyCompleted = task.completed_at
     ? (() => {
-        const completionTime = new Date(latestCompletion.completed_at);
+        const completionTime = new Date(task.completed_at);
         const now = new Date();
         const hoursDiff =
           (now.getTime() - completionTime.getTime()) / (1000 * 60 * 60);

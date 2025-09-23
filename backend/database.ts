@@ -84,7 +84,19 @@ export const RecurringTaskDB = {
 
   // Get all recurring tasks
   async getAll() {
-    return await dbAll('SELECT * FROM recurring_tasks ORDER BY title');
+    return await dbAll(`
+      SELECT 
+        rt.id,
+        rt.title,
+        rt.repeat_days,
+        rt.created_at,
+        rt.updated_at,
+        MAX(tc.completed_at) as completed_at
+      FROM recurring_tasks rt
+      LEFT JOIN task_completions tc ON rt.id = tc.task_id
+      GROUP BY rt.id, rt.title, rt.repeat_days, rt.created_at, rt.updated_at
+      ORDER BY rt.title
+    `);
   },
 
   // Get recurring task by ID
@@ -134,22 +146,6 @@ export const TaskCompletionDB = {
     return await dbRun('INSERT INTO task_completions (task_id) VALUES (?)', [
       taskId
     ]);
-  },
-
-  // Get latest completion for each task
-  async getLatestForEachTask() {
-    return await dbAll(`
-      SELECT 
-        tc.id,
-        tc.task_id,
-        tc.completed_at
-      FROM task_completions tc
-      INNER JOIN (
-        SELECT task_id, MAX(completed_at) as latest_completion
-        FROM task_completions
-        GROUP BY task_id
-      ) latest ON tc.task_id = latest.task_id AND tc.completed_at = latest.latest_completion
-    `);
   },
 
   // Delete a specific completion
