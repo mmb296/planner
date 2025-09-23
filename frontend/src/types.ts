@@ -14,6 +14,7 @@ export type Task = {
   repeat_days: number;
   created_at: string;
   updated_at: string;
+  completed_at?: string;
 };
 
 export type TaskCompletion = {

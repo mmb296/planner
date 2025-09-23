@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from 'react';
 
 import { HttpError } from '../errors';
-import { Task, TaskCompletion } from '../types';
+import { Task } from '../types';
 import TaskComponent from './Task';
 import styles from './TaskList.module.css';
 
 const TaskList: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [completions, setCompletions] = useState<TaskCompletion[]>([]);
 
   // Fetch tasks from backend API
   const fetchTasks = async () => {
@@ -24,26 +23,6 @@ const TaskList: React.FC = () => {
     } catch (error) {
       console.error('Failed to fetch tasks:', error);
       setTasks([]);
-    }
-  };
-
-  // Fetch latest completion for each task from backend API
-  const fetchLatestCompletions = async () => {
-    try {
-      const response = await fetch(
-        'http://localhost:5000/api/completions/latest'
-      );
-      if (!response.ok) {
-        throw new HttpError(
-          `Failed to fetch latest completions: ${response.statusText}`,
-          response.status
-        );
-      }
-      const completionsData = await response.json();
-      setCompletions(completionsData);
-    } catch (error) {
-      console.error('Failed to fetch latest completions:', error);
-      setCompletions([]);
     }
   };
 
@@ -65,8 +44,8 @@ const TaskList: React.FC = () => {
         );
       }
 
-      // Refresh completions to get the latest data
-      await fetchLatestCompletions();
+      // Refresh tasks to get the latest data
+      await fetchTasks();
     } catch (error) {
       console.error('Failed to record task completion:', error);
     }
@@ -75,7 +54,6 @@ const TaskList: React.FC = () => {
   // Fetch data on component mount
   useEffect(() => {
     fetchTasks();
-    fetchLatestCompletions();
   }, []);
 
   return (
@@ -86,7 +64,6 @@ const TaskList: React.FC = () => {
           <TaskComponent
             key={task.id}
             task={task}
-            completions={completions}
             onTaskComplete={recordTaskCompletion}
           />
         ))}
