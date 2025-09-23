@@ -2,9 +2,9 @@ import './App.css';
 
 import { useEffect, useRef, useState } from 'react';
 
-import DaysSelect from './components/DaysSelect';
-import EventList from './components/EventList';
-import TaskList from './components/TaskList';
+import DaysSelect from './components/calendar/DaysSelect';
+import EventList from './components/calendar/EventList';
+import TaskList from './components/tasks/TaskList';
 import { AuthenticationError, HttpError } from './errors';
 import { CalendarEvent } from './types';
 import { getFutureDate, getTodayDate } from './utils/dateTime';

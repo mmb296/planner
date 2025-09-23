@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 
-import { HttpError } from '../errors';
-import { Task } from '../types';
+import { HttpError } from '../../errors';
+import { Task } from '../../types';
 import TaskComponent from './Task';
 import styles from './TaskList.module.css';
 

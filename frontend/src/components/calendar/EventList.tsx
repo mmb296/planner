@@ -1,7 +1,7 @@
 import React from 'react';
 
-import { CalendarEvent } from '../types';
-import { getEventSpanDays, getFutureDate } from '../utils/dateTime';
+import { CalendarEvent } from '../../types';
+import { getEventSpanDays, getFutureDate } from '../../utils/dateTime';
 import Day from './Day';
 import styles from './EventList.module.css';
 
