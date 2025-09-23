@@ -54,6 +54,16 @@ export async function initDatabase() {
       )
     `);
 
+    // Create task_completions table
+    await dbRun(`
+      CREATE TABLE IF NOT EXISTS task_completions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        task_id INTEGER NOT NULL,
+        completed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (task_id) REFERENCES recurring_tasks (id) ON DELETE CASCADE
+      )
+    `);
+
     console.log('Database initialized successfully');
   } catch (error) {
     console.error('Error initializing database:', error);
@@ -114,6 +124,37 @@ export const RecurringTaskDB = {
   // Delete recurring task
   async delete(id: number) {
     await dbRun('DELETE FROM recurring_tasks WHERE id = ?', [id]);
+  }
+};
+
+// Task Completion operations
+export const TaskCompletionDB = {
+  // Create a new task completion
+  async create(taskId: number) {
+    return await dbRun('INSERT INTO task_completions (task_id) VALUES (?)', [
+      taskId
+    ]);
+  },
+
+  // Get latest completion for each task
+  async getLatestForEachTask() {
+    return await dbAll(`
+      SELECT 
+        tc.id,
+        tc.task_id,
+        tc.completed_at
+      FROM task_completions tc
+      INNER JOIN (
+        SELECT task_id, MAX(completed_at) as latest_completion
+        FROM task_completions
+        GROUP BY task_id
+      ) latest ON tc.task_id = latest.task_id AND tc.completed_at = latest.latest_completion
+    `);
+  },
+
+  // Delete a specific completion
+  async delete(id: number) {
+    await dbRun('DELETE FROM task_completions WHERE id = ?', [id]);
   }
 };
 

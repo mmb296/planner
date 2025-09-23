@@ -4,11 +4,7 @@
   padding: 8px 0;
 }
 
-.taskDot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  margin-right: 12px;
-  flex-shrink: 0;
-  background-color: #c3e4c0;
+.taskCheckbox {
+  margin-right: 8px;
+  cursor: pointer;
 }
