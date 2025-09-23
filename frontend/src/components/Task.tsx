@@ -21,14 +21,19 @@ const TaskComponent: React.FC<TaskProps> = ({
   };
 
   // Check if this task has been completed recently (within the last 24 hours)
-  const isRecentlyCompleted = completions.some((completion) => {
-    if (completion.task_id !== task.id) return false;
-    const completionTime = new Date(completion.completed_at);
-    const now = new Date();
-    const hoursDiff =
-      (now.getTime() - completionTime.getTime()) / (1000 * 60 * 60);
-    return hoursDiff < 24;
-  });
+  const latestCompletion = completions.find(
+    (completion) => completion.task_id === task.id
+  );
+
+  const isRecentlyCompleted = latestCompletion
+    ? (() => {
+        const completionTime = new Date(latestCompletion.completed_at);
+        const now = new Date();
+        const hoursDiff =
+          (now.getTime() - completionTime.getTime()) / (1000 * 60 * 60);
+        return hoursDiff < 24;
+      })()
+    : false;
 
   return (
     <li className={styles.taskItem}>

@@ -67,20 +67,22 @@ function App() {
     }
   };
 
-  // Fetch task completions from backend API
-  const fetchCompletions = async () => {
+  // Fetch latest completion for each task from backend API
+  const fetchLatestCompletions = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/completions');
+      const response = await fetch(
+        'http://localhost:5000/api/completions/latest'
+      );
       if (!response.ok) {
         throw new HttpError(
-          `Failed to fetch completions: ${response.statusText}`,
+          `Failed to fetch latest completions: ${response.statusText}`,
           response.status
         );
       }
       const completionsData = await response.json();
       setCompletions(completionsData);
     } catch (error) {
-      console.error('Failed to fetch completions:', error);
+      console.error('Failed to fetch latest completions:', error);
       setCompletions([]);
     }
   };
@@ -104,7 +106,7 @@ function App() {
       }
 
       // Refresh completions to get the latest data
-      await fetchCompletions();
+      await fetchLatestCompletions();
     } catch (error) {
       console.error('Failed to record task completion:', error);
     }
@@ -177,10 +179,10 @@ function App() {
     }
   };
 
-  // Fetch tasks and completions on component mount
+  // Fetch tasks and latest completions on component mount
   useEffect(() => {
     fetchTasks();
-    fetchCompletions();
+    fetchLatestCompletions();
   }, []);
 
   // Fetch events when days changes or on initial load (if authenticated)

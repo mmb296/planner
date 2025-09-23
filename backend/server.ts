@@ -86,13 +86,13 @@ app.delete('/api/tasks/:id', async (req, res) => {
   }
 });
 
-// Get all task completions
-app.get('/api/completions', async (req, res) => {
+// Get latest completion for each task
+app.get('/api/completions/latest', async (req, res) => {
   try {
-    const completions = await TaskCompletionDB.getAll();
+    const completions = await TaskCompletionDB.getLatestForEachTask();
     res.json(completions);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch completions' });
+    res.status(500).json({ error: 'Failed to fetch latest completions' });
   }
 });
 

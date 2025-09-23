@@ -136,15 +136,19 @@ export const TaskCompletionDB = {
     ]);
   },
 
-  // Get all completions
-  async getAll() {
+  // Get latest completion for each task
+  async getLatestForEachTask() {
     return await dbAll(`
       SELECT 
-        id,
-        task_id,
-        completed_at
-      FROM task_completions
-      ORDER BY completed_at DESC
+        tc.id,
+        tc.task_id,
+        tc.completed_at
+      FROM task_completions tc
+      INNER JOIN (
+        SELECT task_id, MAX(completed_at) as latest_completion
+        FROM task_completions
+        GROUP BY task_id
+      ) latest ON tc.task_id = latest.task_id AND tc.completed_at = latest.latest_completion
     `);
   },
 
