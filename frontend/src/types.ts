@@ -7,3 +7,11 @@ export type CalendarEvent = {
   };
   [key: string]: any;
 };
+
+export type Task = {
+  id: number;
+  title: string;
+  repeat_days: number;
+  created_at: string;
+  updated_at: string;
+};

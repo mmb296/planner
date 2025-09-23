@@ -4,16 +4,10 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import DaysSelect from './components/DaysSelect';
 import EventList from './components/EventList';
-import { CalendarEvent } from './types';
+import TaskList from './components/TaskList';
+import { AuthenticationError, HttpError } from './errors';
+import { CalendarEvent, Task } from './types';
 import { getFutureDate, getTodayDate } from './utils/dateTime';
-
-// Custom error class for authentication failures
-class AuthenticationError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'AuthenticationError';
-  }
-}
 
 const SCOPES = 'https://www.googleapis.com/auth/calendar.readonly';
 
@@ -29,6 +23,7 @@ function App() {
     !!sessionStorage.getItem('access_token')
   );
   const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [days, setDays] = useState(14);
   const [showAllCals, setShowAllCals] = useState(false);
 
@@ -51,6 +46,24 @@ function App() {
     sessionStorage.removeItem('access_token');
     setIsAuthenticated(false);
     setEvents([]);
+  };
+
+  // Fetch tasks from backend API
+  const fetchTasks = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/tasks');
+      if (!response.ok) {
+        throw new HttpError(
+          `Failed to fetch tasks: ${response.statusText}`,
+          response.status
+        );
+      }
+      const tasksData = await response.json();
+      setTasks(tasksData);
+    } catch (error) {
+      console.error('Failed to fetch tasks:', error);
+      setTasks([]);
+    }
   };
 
   // Handle authentication and fetch events
@@ -90,9 +103,15 @@ function App() {
 
       if (!response.ok) {
         if (response.status === 401 || response.status === 403) {
-          throw new AuthenticationError('Authentication failed');
+          throw new AuthenticationError(
+            'Authentication failed',
+            response.status
+          );
         }
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new HttpError(
+          `Failed to fetch events: ${response.statusText}`,
+          response.status
+        );
       }
 
       const data = await response.json();
@@ -113,6 +132,11 @@ function App() {
       }
     }
   };
+
+  // Fetch tasks on component mount
+  useEffect(() => {
+    fetchTasks();
+  }, []);
 
   // Fetch events when days changes or on initial load (if authenticated)
   useEffect(() => {
@@ -149,7 +173,10 @@ function App() {
               />
             </label>
           </div>
-          <EventList events={filteredEvents} maxDays={days} />
+          <div className="main-content">
+            <TaskList tasks={tasks} />
+            <EventList events={filteredEvents} maxDays={days} />
+          </div>
         </>
       )}
       <button onClick={handleAuthClick}>
