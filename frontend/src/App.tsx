@@ -1,12 +1,12 @@
 import './App.css';
 
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import DaysSelect from './components/DaysSelect';
 import EventList from './components/EventList';
 import TaskList from './components/TaskList';
 import { AuthenticationError, HttpError } from './errors';
-import { CalendarEvent, Task } from './types';
+import { CalendarEvent, Task, TaskCompletion } from './types';
 import { getFutureDate, getTodayDate } from './utils/dateTime';
 
 const SCOPES = 'https://www.googleapis.com/auth/calendar.readonly';
@@ -24,6 +24,7 @@ function App() {
   );
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [completions, setCompletions] = useState<TaskCompletion[]>([]);
   const [days, setDays] = useState(14);
   const [showAllCals, setShowAllCals] = useState(false);
 
@@ -63,6 +64,49 @@ function App() {
     } catch (error) {
       console.error('Failed to fetch tasks:', error);
       setTasks([]);
+    }
+  };
+
+  // Fetch task completions from backend API
+  const fetchCompletions = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/completions');
+      if (!response.ok) {
+        throw new HttpError(
+          `Failed to fetch completions: ${response.statusText}`,
+          response.status
+        );
+      }
+      const completionsData = await response.json();
+      setCompletions(completionsData);
+    } catch (error) {
+      console.error('Failed to fetch completions:', error);
+      setCompletions([]);
+    }
+  };
+
+  // Record a task completion
+  const recordTaskCompletion = async (taskId: number) => {
+    try {
+      const response = await fetch('http://localhost:5000/api/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ task_id: taskId })
+      });
+
+      if (!response.ok) {
+        throw new HttpError(
+          `Failed to record completion: ${response.statusText}`,
+          response.status
+        );
+      }
+
+      // Refresh completions to get the latest data
+      await fetchCompletions();
+    } catch (error) {
+      console.error('Failed to record task completion:', error);
     }
   };
 
@@ -133,9 +177,10 @@ function App() {
     }
   };
 
-  // Fetch tasks on component mount
+  // Fetch tasks and completions on component mount
   useEffect(() => {
     fetchTasks();
+    fetchCompletions();
   }, []);
 
   // Fetch events when days changes or on initial load (if authenticated)
@@ -174,7 +219,11 @@ function App() {
             </label>
           </div>
           <div className="main-content">
-            <TaskList tasks={tasks} />
+            <TaskList
+              tasks={tasks}
+              completions={completions}
+              onTaskComplete={recordTaskCompletion}
+            />
             <EventList events={filteredEvents} maxDays={days} />
           </div>
         </>
