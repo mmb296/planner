@@ -54,6 +54,16 @@ export async function initDatabase() {
       )
     `);
 
+    // Create task_completions table
+    await dbRun(`
+      CREATE TABLE IF NOT EXISTS task_completions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        task_id INTEGER NOT NULL,
+        completed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (task_id) REFERENCES recurring_tasks (id) ON DELETE CASCADE
+      )
+    `);
+
     console.log('Database initialized successfully');
   } catch (error) {
     console.error('Error initializing database:', error);
@@ -114,6 +124,33 @@ export const RecurringTaskDB = {
   // Delete recurring task
   async delete(id: number) {
     await dbRun('DELETE FROM recurring_tasks WHERE id = ?', [id]);
+  }
+};
+
+// Task Completion operations
+export const TaskCompletionDB = {
+  // Create a new task completion
+  async create(taskId: number) {
+    return await dbRun('INSERT INTO task_completions (task_id) VALUES (?)', [
+      taskId
+    ]);
+  },
+
+  // Get all completions
+  async getAll() {
+    return await dbAll(`
+      SELECT 
+        id,
+        task_id,
+        completed_at
+      FROM task_completions
+      ORDER BY completed_at DESC
+    `);
+  },
+
+  // Delete a specific completion
+  async delete(id: number) {
+    await dbRun('DELETE FROM task_completions WHERE id = ?', [id]);
   }
 };
 

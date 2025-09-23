@@ -1,6 +1,11 @@
 import express from 'express';
 
-import { closeDatabase, initDatabase, RecurringTaskDB } from './database.js';
+import {
+  closeDatabase,
+  initDatabase,
+  RecurringTaskDB,
+  TaskCompletionDB
+} from './database.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -78,6 +83,45 @@ app.delete('/api/tasks/:id', async (req, res) => {
     res.json({ message: 'Task deleted successfully' });
   } catch (error) {
     res.status(500).json({ error: 'Failed to delete task' });
+  }
+});
+
+// Get all task completions
+app.get('/api/completions', async (req, res) => {
+  try {
+    const completions = await TaskCompletionDB.getAll();
+    res.json(completions);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch completions' });
+  }
+});
+
+// Create new task completion
+app.post('/api/completions', async (req, res) => {
+  try {
+    const { task_id } = req.body;
+    if (!task_id) {
+      return res.status(400).json({ error: 'task_id is required' });
+    }
+    const result = await TaskCompletionDB.create(task_id);
+    res.status(201).json({
+      id: result.lastID,
+      message: 'Completion recorded successfully'
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to record completion' });
+  }
+});
+
+// Delete task completion
+app.delete('/api/completions/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await TaskCompletionDB.delete(parseInt(id));
+    res.json({ message: 'Completion deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete completion' });
   }
 });
 
