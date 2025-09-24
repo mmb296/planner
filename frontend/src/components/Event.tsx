@@ -10,8 +10,8 @@ function getDotColor(event: CalendarEvent): string {
 
   if (!event.start.dateTime) return '#f4d9e8'; // All Day
   const hour = new Date(event.start.dateTime).getHours();
-  if (hour < 12) return '#d9e2f2'; // Morning
-  if (hour < 17) return '#f8e9bd'; // Afternoon
+  if (hour < 12) return '#f8e9bd'; // Morning
+  if (hour < 17) return '#d9e2f2'; // Afternoon
   return '#cec8f7'; // Night
 }
 
