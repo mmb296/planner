@@ -22,9 +22,9 @@ export function isEventPast(event: CalendarEvent): boolean {
   return new Date() > new Date(endTime);
 }
 
-export function getFutureDate(days: number) {
+export function getFutureDate(daysOut: number) {
   const futureDate = new Date(getTodayDate());
-  futureDate.setDate(futureDate.getDate() + days);
+  futureDate.setDate(futureDate.getDate() + daysOut);
   return futureDate;
 }
 

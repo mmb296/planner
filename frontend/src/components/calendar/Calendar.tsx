@@ -22,7 +22,7 @@ const Calendar: React.FC = () => {
     !!sessionStorage.getItem('access_token')
   );
   const [events, setEvents] = useState<CalendarEvent[]>([]);
-  const [days, setDays] = useState(14);
+  const [numDays, setNumDays] = useState(14);
   const [showAllCals, setShowAllCals] = useState(false);
 
   // Returns the token client, initializing if needed
@@ -47,7 +47,7 @@ const Calendar: React.FC = () => {
   };
 
   // Fetch events from Google Calendar API
-  const fetchUpcomingEvents = async (token: string, daysToFetch = days) => {
+  const fetchUpcomingEvents = async (token: string, daysToFetch = numDays) => {
     const params = {
       orderBy: 'startTime',
       singleEvents: 'true',
@@ -108,7 +108,7 @@ const Calendar: React.FC = () => {
       }
       sessionStorage.setItem('access_token', resp.access_token);
       setIsAuthenticated(true);
-      fetchUpcomingEvents(resp.access_token, days);
+      fetchUpcomingEvents(resp.access_token, numDays);
     };
     client.requestAccessToken();
   };
@@ -117,21 +117,21 @@ const Calendar: React.FC = () => {
   useEffect(() => {
     const savedToken = sessionStorage.getItem('access_token');
     if (!savedToken) return;
-    fetchUpcomingEvents(savedToken, days);
+    fetchUpcomingEvents(savedToken, numDays);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [days]);
+  }, [numDays]);
 
   // Filter and group events
   const eventsByDay = CalendarService.filterAndGroupEventsByDay(
     events,
     showAllCals,
-    days
+    numDays
   );
 
   if (isAuthenticated) {
     return (
       <div className={styles.calendarSection}>
-        <DaysSelect value={days} onChange={setDays} />
+        <DaysSelect value={numDays} onChange={setNumDays} />
         <div className={styles.calendarToggle}>
           <label>
             Show all calendars:
@@ -145,11 +145,11 @@ const Calendar: React.FC = () => {
         <ul className={styles.calendar}>
           {Array.from(eventsByDay.entries())
             .sort((a, b) => a[0] - b[0])
-            .map(([diffDays, events]) => (
+            .map(([daysOut, events]) => (
               <Day
-                key={diffDays}
-                label={CalendarService.getDayLabel(diffDays)}
-                date={getFutureDate(diffDays)}
+                key={daysOut}
+                label={CalendarService.getDayLabel(daysOut)}
+                date={getFutureDate(daysOut)}
                 events={events}
               />
             ))}

@@ -2,7 +2,7 @@ import React from 'react';
 
 type DaysSelectProps = {
   value: number;
-  onChange: (days: number) => void;
+  onChange: (numDays: number) => void;
 };
 
 const DaysSelect: React.FC<DaysSelectProps> = ({ value, onChange }) => {
