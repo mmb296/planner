@@ -1,12 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 import { AuthenticationError, HttpError } from '../../errors';
+import { CalendarService } from '../../services/calendarService';
 import { CalendarEvent } from '../../types';
-import {
-  getEventSpanDays,
-  getFutureDate,
-  getTodayDate
-} from '../../utils/dateTime';
+import { getFutureDate, getTodayDate } from '../../utils/dateTime';
 import styles from './Calendar.module.css';
 import Day from './Day';
 import DaysSelect from './DaysSelect';
@@ -17,14 +14,6 @@ const SCOPES = 'https://www.googleapis.com/auth/calendar.readonly';
 const CALENDAR_IDS = (process.env.REACT_APP_CALENDAR_IDS || 'primary')
   .split(',')
   .map((id) => id.trim());
-
-type EventsMap = Map<number, CalendarEvent[]>;
-
-const getDayLabel = (diffDays: number): string => {
-  if (diffDays === 0) return 'TODAY';
-  if (diffDays === 1) return 'TOMORROW';
-  return `${diffDays} DAYS`;
-};
 
 const Calendar: React.FC = () => {
   const tokenClient = useRef<any>(null);
@@ -57,23 +46,8 @@ const Calendar: React.FC = () => {
     setEvents([]);
   };
 
-  // Handle authentication
-  const handleAuthClick = () => {
-    const client = getTokenClient();
-    client.callback = (resp: any) => {
-      if (resp.error !== undefined) {
-        clearAuthentication();
-        return;
-      }
-      sessionStorage.setItem('access_token', resp.access_token);
-      setIsAuthenticated(true);
-      listUpcomingEvents(resp.access_token, days);
-    };
-    client.requestAccessToken();
-  };
-
   // Fetch events from Google Calendar API
-  const listUpcomingEvents = async (token: string, daysToFetch = days) => {
+  const fetchUpcomingEvents = async (token: string, daysToFetch = days) => {
     const params = {
       orderBy: 'startTime',
       singleEvents: 'true',
@@ -124,39 +98,35 @@ const Calendar: React.FC = () => {
     }
   };
 
+  // Handle authentication
+  const handleAuthClick = () => {
+    const client = getTokenClient();
+    client.callback = (resp: any) => {
+      if (resp.error !== undefined) {
+        clearAuthentication();
+        return;
+      }
+      sessionStorage.setItem('access_token', resp.access_token);
+      setIsAuthenticated(true);
+      fetchUpcomingEvents(resp.access_token, days);
+    };
+    client.requestAccessToken();
+  };
+
   // Fetch events when days changes or on initial load (if authenticated)
   useEffect(() => {
     const savedToken = sessionStorage.getItem('access_token');
     if (!savedToken) return;
-    listUpcomingEvents(savedToken, days);
+    fetchUpcomingEvents(savedToken, days);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [days]);
 
-  // Filter events based on toggle
-  const filteredEvents = showAllCals
-    ? events
-    : events.filter((event) => event.calendarId === 'primary');
-
-  // Group events by day
-  const eventsByDay: EventsMap = filteredEvents.reduce((acc, event) => {
-    const spanDays = getEventSpanDays(event);
-    spanDays.forEach((day) => {
-      if (day < 0 || day > days - 1) return;
-      if (!acc.has(day)) acc.set(day, []);
-      acc.get(day)!.push(event);
-    });
-    return acc;
-  }, new Map() as EventsMap);
-
-  // Fill in empty days from today up to the first event
-  const fillDaysUntil =
-    eventsByDay.size > 0 ? Math.min(...Array.from(eventsByDay.keys())) : days;
-  for (let day = 0; day < fillDaysUntil; day++) {
-    eventsByDay.set(day, []);
-  }
-
-  // Also show TOMORROW even if TODAY has events but it does not
-  if (!eventsByDay.has(1) && days > 1) eventsByDay.set(1, []);
+  // Filter and group events
+  const eventsByDay = CalendarService.filterAndGroupEventsByDay(
+    events,
+    showAllCals,
+    days
+  );
 
   if (isAuthenticated) {
     return (
@@ -178,7 +148,7 @@ const Calendar: React.FC = () => {
             .map(([diffDays, events]) => (
               <Day
                 key={diffDays}
-                label={getDayLabel(diffDays)}
+                label={CalendarService.getDayLabel(diffDays)}
                 date={getFutureDate(diffDays)}
                 events={events}
               />
