@@ -9,3 +9,43 @@
 .calendar > li {
   margin-bottom: 32px;
 }
+
+.calendarSection {
+  flex: 1;
+}
+
+.calendarToggle {
+  margin: 16px 0;
+}
+
+.placeholder {
+  padding: 20px;
+  text-align: center;
+  color: #666;
+  border: 1px dashed #ccc;
+  border-radius: 8px;
+}
+
+.placeholder h3 {
+  margin: 0 0 8px 0;
+  color: #333;
+}
+
+.placeholder p {
+  margin: 0 0 16px 0;
+}
+
+.signInButton {
+  padding: 10px 20px;
+  font-size: 16px;
+  background-color: #4285f4;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.signInButton:hover {
+  background-color: #3367d6;
+}
