@@ -2,8 +2,8 @@ import React from 'react';
 
 import { CalendarEvent } from '../../types';
 import { getEventSpanDays, getFutureDate } from '../../utils/dateTime';
+import styles from './Calendar.module.css';
 import Day from './Day';
-import styles from './EventList.module.css';
 
 type EventsMap = Map<number, CalendarEvent[]>;
 
@@ -13,7 +13,7 @@ const getDayLabel = (diffDays: number): string => {
   return `${diffDays} DAYS`;
 };
 
-const EventList: React.FC<{ events: CalendarEvent[]; maxDays: number }> = ({
+const Calendar: React.FC<{ events: CalendarEvent[]; maxDays: number }> = ({
   events,
   maxDays
 }) => {
@@ -40,7 +40,7 @@ const EventList: React.FC<{ events: CalendarEvent[]; maxDays: number }> = ({
   if (!eventsByDay.has(1) && maxDays > 1) eventsByDay.set(1, []);
 
   return (
-    <ul className={styles.eventList}>
+    <ul className={styles.calendar}>
       {Array.from(eventsByDay.entries())
         .sort((a, b) => a[0] - b[0])
         .map(([diffDays, events]) => (
@@ -55,4 +55,4 @@ const EventList: React.FC<{ events: CalendarEvent[]; maxDays: number }> = ({
   );
 };
 
-export default EventList;
+export default Calendar;

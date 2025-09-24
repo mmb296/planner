@@ -2,8 +2,8 @@ import './App.css';
 
 import { useEffect, useRef, useState } from 'react';
 
+import Calendar from './components/calendar/Calendar';
 import DaysSelect from './components/calendar/DaysSelect';
-import EventList from './components/calendar/EventList';
 import TaskList from './components/tasks/TaskList';
 import { AuthenticationError, HttpError } from './errors';
 import { CalendarEvent } from './types';
@@ -151,7 +151,7 @@ function App() {
           </div>
           <div className="main-content">
             <TaskList />
-            <EventList events={filteredEvents} maxDays={days} />
+            <Calendar events={filteredEvents} maxDays={days} />
           </div>
         </>
       )}
