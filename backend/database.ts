@@ -99,9 +99,24 @@ export const RecurringTaskDB = {
     `);
   },
 
-  // Get recurring task by ID
+  // Get a specific recurring task by ID
   async getById(id: number) {
-    return await dbGet('SELECT * FROM recurring_tasks WHERE id = ?', [id]);
+    return await dbGet(
+      `
+      SELECT 
+        rt.id,
+        rt.title,
+        rt.repeat_days,
+        rt.created_at,
+        rt.updated_at,
+        MAX(tc.completed_at) as completed_at
+      FROM recurring_tasks rt
+      LEFT JOIN task_completions tc ON rt.id = tc.task_id
+      WHERE rt.id = ?
+      GROUP BY rt.id, rt.title, rt.repeat_days, rt.created_at, rt.updated_at
+    `,
+      [id]
+    );
   },
 
   // Update recurring task

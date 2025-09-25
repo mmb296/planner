@@ -43,6 +43,20 @@ app.get('/api/tasks', async (req, res) => {
   }
 });
 
+// Get a specific recurring task by ID
+app.get('/api/tasks/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const task = await RecurringTaskDB.getById(parseInt(id));
+    if (!task) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+    res.json(task);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch task' });
+  }
+});
+
 // Create new recurring task
 app.post('/api/tasks', async (req, res) => {
   try {
