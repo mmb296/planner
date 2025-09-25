@@ -1,17 +1,12 @@
-.calendar {
+.eventsList {
   background-color: #ffffff;
-  border-radius: 20px;
+  border-radius: 32px;
   padding: 24px 120px;
   max-width: 1060px;
-  flex: 1;
 }
 
-.calendar > li {
+.eventsList > li {
   margin-bottom: 32px;
-}
-
-.calendarSection {
-  flex: 1;
 }
 
 .calendarToggle {

@@ -1,10 +1,11 @@
 .App {
+  display: flex;
   background-color: #f9fafd;
   min-height: 100vh;
   color: #3f3f3f;
 }
 
-.App-header {
+.calendar header {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -18,9 +19,7 @@ ul {
   padding-inline-start: 0;
 }
 
-.main-content {
-  display: flex;
-  gap: 20px;
-  margin: 0 auto;
-  padding: 0 20px;
+.calendar {
+  padding: 0 40px;
+  flex: 1;
 }

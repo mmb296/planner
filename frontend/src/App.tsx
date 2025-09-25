@@ -6,16 +6,16 @@ import TaskList from './components/tasks/TaskList';
 function App() {
   return (
     <div className="App">
-      <header className="App-header">
-        {new Date().toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
-        })}
-      </header>
+      <TaskList />
 
-      <div className="main-content">
-        <TaskList />
+      <div className="calendar">
+        <header>
+          {new Date().toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          })}
+        </header>
         <Calendar />
       </div>
     </div>

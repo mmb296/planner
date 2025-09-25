@@ -130,7 +130,7 @@ const Calendar: React.FC = () => {
 
   if (isAuthenticated) {
     return (
-      <div className={styles.calendarSection}>
+      <>
         <DaysSelect value={numDays} onChange={setNumDays} />
         <div className={styles.calendarToggle}>
           <label>
@@ -142,7 +142,7 @@ const Calendar: React.FC = () => {
             />
           </label>
         </div>
-        <ul className={styles.calendar}>
+        <ul className={styles.eventsList}>
           {Array.from(eventsByDay.entries())
             .sort((a, b) => a[0] - b[0])
             .map(([daysOut, events]) => (
@@ -154,18 +154,16 @@ const Calendar: React.FC = () => {
               />
             ))}
         </ul>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className={styles.calendarSection}>
-      <div className={styles.placeholder}>
-        <p>Sign in with Google Calendar to view your events</p>
-        <button onClick={handleAuthClick} className={styles.signInButton}>
-          Sign In with Google Calendar
-        </button>
-      </div>
+    <div className={styles.placeholder}>
+      <p>Sign in with Google Calendar to view your events</p>
+      <button onClick={handleAuthClick} className={styles.signInButton}>
+        Sign In with Google Calendar
+      </button>
     </div>
   );
 };
