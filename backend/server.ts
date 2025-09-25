@@ -43,6 +43,20 @@ app.get('/api/tasks', async (req, res) => {
   }
 });
 
+// Get a specific recurring task by ID
+app.get('/api/tasks/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const task = await RecurringTaskDB.getById(parseInt(id));
+    if (!task) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+    res.json(task);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch task' });
+  }
+});
+
 // Create new recurring task
 app.post('/api/tasks', async (req, res) => {
   try {
@@ -89,11 +103,11 @@ app.delete('/api/tasks/:id', async (req, res) => {
 // Create new task completion
 app.post('/api/completions', async (req, res) => {
   try {
-    const { task_id } = req.body;
+    const { task_id, completed_at } = req.body;
     if (!task_id) {
       return res.status(400).json({ error: 'task_id is required' });
     }
-    const result = await TaskCompletionDB.create(task_id);
+    const result = await TaskCompletionDB.create(task_id, completed_at);
     res.status(201).json({
       id: result.lastID,
       message: 'Completion recorded successfully'
