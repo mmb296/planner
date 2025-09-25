@@ -157,10 +157,12 @@ export const RecurringTaskDB = {
 // Task Completion operations
 export const TaskCompletionDB = {
   // Create a new task completion
-  async create(taskId: number) {
-    return await dbRun('INSERT INTO task_completions (task_id) VALUES (?)', [
-      taskId
-    ]);
+  async create(taskId: number, completedAt?: string) {
+    const timestamp = completedAt || new Date().toISOString();
+    return await dbRun(
+      'INSERT INTO task_completions (task_id, completed_at) VALUES (?, ?)',
+      [taskId, timestamp]
+    );
   },
 
   // Delete a specific completion

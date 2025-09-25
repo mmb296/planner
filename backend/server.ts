@@ -103,11 +103,11 @@ app.delete('/api/tasks/:id', async (req, res) => {
 // Create new task completion
 app.post('/api/completions', async (req, res) => {
   try {
-    const { task_id } = req.body;
+    const { task_id, completed_at } = req.body;
     if (!task_id) {
       return res.status(400).json({ error: 'task_id is required' });
     }
-    const result = await TaskCompletionDB.create(task_id);
+    const result = await TaskCompletionDB.create(task_id, completed_at);
     res.status(201).json({
       id: result.lastID,
       message: 'Completion recorded successfully'
