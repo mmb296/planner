@@ -1,7 +1,7 @@
 import React from 'react';
 
-import { CalendarEvent } from '../types';
-import { formatTime, isEventPast } from '../utils/dateTime';
+import { CalendarEvent } from '../../types';
+import { formatTime, isEventPast } from '../../utils/dateTime';
 import styles from './Event.module.css';
 
 function getDotColor(event: CalendarEvent): string {

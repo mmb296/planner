@@ -1,7 +1,7 @@
 import React from 'react';
 
-import { CalendarEvent } from '../types';
-import { formatHeaderDate, getStartTime } from '../utils/dateTime';
+import { CalendarEvent } from '../../types';
+import { formatHeaderDate, getStartTime } from '../../utils/dateTime';
 import styles from './Day.module.css';
 import Event from './Event';
 

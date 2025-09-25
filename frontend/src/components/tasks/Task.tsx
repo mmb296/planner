@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { Task } from '../types';
+import { Task } from '../../types';
 import styles from './Task.module.css';
 
 type TaskProps = {
