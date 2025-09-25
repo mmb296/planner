@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 
 import { HttpError } from '../../errors';
 import { Task } from '../../types';
+import { daysFromNow } from '../../utils/dateTime';
 import TaskComponent from './Task';
 import styles from './TaskList.module.css';
 
@@ -56,18 +57,14 @@ const TaskList: React.FC = () => {
     fetchTasks();
   }, []);
 
-  // Filter out tasks that were completed more than 24 hours ago
   const visibleTasks = tasks.filter((task) => {
     if (!task.completed_at) {
       return true; // Show incomplete tasks
     }
 
-    // Show completed tasks only if they were completed within the last 24 hours
-    const completionTime = new Date(task.completed_at);
-    const now = new Date();
-    const hoursDiff =
-      (now.getTime() - completionTime.getTime()) / (1000 * 60 * 60);
-    return hoursDiff < 24;
+    // Show completed tasks only if they were completed today
+    const completionTime = new Date(task.completed_at).getTime();
+    return daysFromNow(completionTime) === 0;
   });
 
   return (
