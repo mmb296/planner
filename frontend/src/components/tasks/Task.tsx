@@ -15,29 +15,20 @@ const TaskComponent: React.FC<TaskProps> = ({ task, onTaskComplete }) => {
     }
   };
 
-  // Check if this task has been completed recently (within the last 24 hours)
-  const isRecentlyCompleted = task.completed_at
-    ? (() => {
-        const completionTime = new Date(task.completed_at);
-        const now = new Date();
-        const hoursDiff =
-          (now.getTime() - completionTime.getTime()) / (1000 * 60 * 60);
-        return hoursDiff < 24;
-      })()
-    : false;
+  const completed = !!task.completed_at;
 
   return (
     <li className={styles.taskItem}>
       <input
         type="checkbox"
-        checked={isRecentlyCompleted}
+        checked={completed}
         onChange={handleCheckboxChange}
         className={styles.taskCheckbox}
       />
       <span
         style={{
-          textDecoration: isRecentlyCompleted ? 'line-through' : 'none',
-          opacity: isRecentlyCompleted ? 0.6 : 1
+          textDecoration: completed ? 'line-through' : 'none',
+          opacity: completed ? 0.6 : 1
         }}
       >
         {task.title}
