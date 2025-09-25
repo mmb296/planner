@@ -25,7 +25,7 @@ const Day: React.FC<DayProps> = ({ label, date, events }) => {
       <ul>
         {sortedEvents.length > 0 ? (
           sortedEvents.map((event, idx) => (
-            <Event key={event.id || idx} event={event} />
+            <Event key={event.calendarId + (event.id || idx)} event={event} />
           ))
         ) : (
           <li style={{ color: '#999', fontStyle: 'italic' }}>No events</li>
