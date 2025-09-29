@@ -5,21 +5,7 @@
   color: #3f3f3f;
 }
 
-.calendar header {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  font-weight: 500;
-  font-size: 40px;
-  padding: 20px;
-}
-
 ul {
   list-style: none;
   padding-inline-start: 0;
-}
-
-.calendar {
-  padding: 0 40px;
-  flex: 1;
 }
