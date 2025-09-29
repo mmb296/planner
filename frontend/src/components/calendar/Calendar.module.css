@@ -1,6 +1,6 @@
 .calendar {
   --header-padding: 32px;
-  padding: 20px 40px;
+  margin: 20px 40px;
   flex: 1;
 }
 

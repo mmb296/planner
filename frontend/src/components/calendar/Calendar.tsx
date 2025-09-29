@@ -168,7 +168,7 @@ const Calendar: React.FC = () => {
   }
 
   return (
-    <div className={styles.placeholder}>
+    <div className={`${styles.calendar} ${styles.placeholder}`}>
       <p>Sign in with Google Calendar to view your events</p>
       <button onClick={handleAuthClick} className={styles.signInButton}>
         Sign In with Google Calendar
