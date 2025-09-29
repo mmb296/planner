@@ -130,19 +130,28 @@ const Calendar: React.FC = () => {
 
   if (isAuthenticated) {
     return (
-      <div className={styles.calendarSection}>
-        <DaysSelect value={numDays} onChange={setNumDays} />
-        <div className={styles.calendarToggle}>
-          <label>
-            Show all calendars:
-            <input
-              type="checkbox"
-              checked={showAllCals}
-              onChange={(e) => setShowAllCals(e.target.checked)}
-            />
-          </label>
-        </div>
-        <ul className={styles.calendar}>
+      <div className={styles.calendar}>
+        <header>
+          <h1>
+            {new Date().toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            })}
+          </h1>
+          <div className={styles.calendarOptions}>
+            <label>
+              Show all calendars:
+              <input
+                type="checkbox"
+                checked={showAllCals}
+                onChange={(e) => setShowAllCals(e.target.checked)}
+              />
+            </label>
+            <DaysSelect value={numDays} onChange={setNumDays} />
+          </div>
+        </header>
+        <ul className={styles.eventsList}>
           {Array.from(eventsByDay.entries())
             .sort((a, b) => a[0] - b[0])
             .map(([daysOut, events]) => (
@@ -159,13 +168,11 @@ const Calendar: React.FC = () => {
   }
 
   return (
-    <div className={styles.calendarSection}>
-      <div className={styles.placeholder}>
-        <p>Sign in with Google Calendar to view your events</p>
-        <button onClick={handleAuthClick} className={styles.signInButton}>
-          Sign In with Google Calendar
-        </button>
-      </div>
+    <div className={`${styles.calendar} ${styles.placeholder}`}>
+      <p>Sign in with Google Calendar to view your events</p>
+      <button onClick={handleAuthClick} className={styles.signInButton}>
+        Sign In with Google Calendar
+      </button>
     </div>
   );
 };

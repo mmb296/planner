@@ -1,8 +1,9 @@
 .taskList {
   background: #ffffff;
-  border-radius: 20px;
   padding: 24px;
   flex: 0 0 240px;
+  box-shadow: 3px 0 5px rgba(0, 0, 0, 0.1);
+  outline: 1px solid #e0e0e0;
 }
 
 .taskListTitle {
