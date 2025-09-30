@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
 
-import { AuthenticationError, HttpError } from '../../errors';
 import { CalendarService } from '../../services/calendarService';
 import { CalendarEvent } from '../../types';
 import { getFutureDate, getTodayDate } from '../../utils/dateTime';
@@ -68,15 +67,9 @@ const Calendar: React.FC = () => {
 
       if (!response.ok) {
         if (response.status === 401 || response.status === 403) {
-          throw new AuthenticationError(
-            'Authentication failed',
-            response.status
-          );
+          clearAuthentication();
         }
-        throw new HttpError(
-          `Failed to fetch events: ${response.statusText}`,
-          response.status
-        );
+        return [];
       }
 
       const data = await response.json();
@@ -86,16 +79,9 @@ const Calendar: React.FC = () => {
       }));
     };
 
-    try {
-      const results = await Promise.all(CALENDAR_IDS.map(fetchEvents));
-      const allEvents = results.flat();
-      setEvents(allEvents);
-    } catch (error) {
-      console.error(error);
-      if (error instanceof AuthenticationError) {
-        clearAuthentication();
-      }
-    }
+    const results = await Promise.all(CALENDAR_IDS.map(fetchEvents));
+    const allEvents = results.flat();
+    setEvents(allEvents);
   };
 
   // Handle authentication
