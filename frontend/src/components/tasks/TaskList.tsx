@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 
 import { Task } from '../../types';
 import { daysFromNow } from '../../utils/dateTime';
+import AddTask from './AddTask';
 import TaskComponent from './Task';
 import styles from './TaskList.module.css';
 
@@ -53,6 +54,9 @@ const TaskList: React.FC = () => {
   return (
     <div className={styles.taskList}>
       <h3 className={styles.taskListTitle}>Recurring Tasks</h3>
+
+      <AddTask onTaskAdded={fetchTasks} />
+
       <ul>
         {visibleTasks.map((task) => (
           <TaskComponent

@@ -8,3 +8,16 @@
   margin-right: 8px;
   cursor: pointer;
 }
+
+.input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: inherit;
+  font-size: inherit;
+}
+
+.input::placeholder {
+  color: #c7c7cd;
+}
