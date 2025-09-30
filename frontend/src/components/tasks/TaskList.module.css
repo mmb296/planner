@@ -1,11 +1,12 @@
 .taskList {
   background: #ffffff;
-  padding: 24px;
-  flex: 0 0 240px;
+  flex: 0 0 300px;
   box-shadow: 3px 0 5px rgba(0, 0, 0, 0.1);
-  outline: 1px solid #e0e0e0;
+  outline: 0.5px solid #e0e0e0;
 }
 
 .taskListTitle {
   margin: 0 0 12px 0;
+  padding: 24px 24px 12px 24px;
+  border-bottom: 0.5px solid #e0e0e0;
 }
