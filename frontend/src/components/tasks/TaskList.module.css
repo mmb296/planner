@@ -1,4 +1,5 @@
 .taskList {
+  --horizontal-padding: 24px;
   background: #ffffff;
   flex: 0 0 300px;
   box-shadow: 3px 0 5px rgba(0, 0, 0, 0.1);
@@ -7,6 +8,7 @@
 
 .taskListTitle {
   margin: 0 0 12px 0;
-  padding: 24px 24px 12px 24px;
+  padding: var(--horizontal-padding) var(--horizontal-padding) 12px
+    var(--horizontal-padding);
   border-bottom: 0.5px solid #e0e0e0;
 }

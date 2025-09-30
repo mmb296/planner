@@ -1,7 +1,7 @@
 .taskItem {
   display: flex;
   align-items: center;
-  padding: 8px 24px;
+  padding: 8px var(--horizontal-padding);
 }
 
 .taskCheckbox {
