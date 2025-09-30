@@ -1,8 +1,9 @@
 .App {
   display: flex;
   background-color: #f9fafd;
-  min-height: 100vh;
+  height: 100vh;
   color: #3c3c43;
+  overflow: hidden;
 }
 
 ul {
