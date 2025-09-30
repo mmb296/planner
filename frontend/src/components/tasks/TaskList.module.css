@@ -5,6 +5,8 @@
   flex: 0 0 300px;
   box-shadow: 3px 0 5px rgba(0, 0, 0, 0.1);
   outline: var(--border-style);
+  display: flex;
+  flex-direction: column;
 }
 
 .taskListTitle {
@@ -12,4 +14,8 @@
   padding: var(--horizontal-padding) var(--horizontal-padding) 12px
     var(--horizontal-padding);
   border-bottom: var(--border-style);
+}
+
+.taskContent {
+  overflow-y: auto;
 }

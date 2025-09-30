@@ -55,17 +55,19 @@ const TaskList: React.FC = () => {
     <div className={styles.taskList}>
       <h3 className={styles.taskListTitle}>Recurring Tasks</h3>
 
-      <AddTask onTaskAdded={fetchTasks} />
+      <div className={styles.taskContent}>
+        <AddTask onTaskAdded={fetchTasks} />
 
-      <ul>
-        {visibleTasks.map((task) => (
-          <TaskComponent
-            key={task.id}
-            task={task}
-            onTaskComplete={recordTaskCompletion}
-          />
-        ))}
-      </ul>
+        <ul>
+          {visibleTasks.map((task) => (
+            <TaskComponent
+              key={task.id}
+              task={task}
+              onTaskComplete={recordTaskCompletion}
+            />
+          ))}
+        </ul>
+      </div>
     </div>
   );
 };
