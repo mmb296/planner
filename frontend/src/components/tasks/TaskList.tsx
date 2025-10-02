@@ -57,6 +57,20 @@ const TaskList: React.FC = () => {
     );
   });
 
+  // Helper function to render task list
+  const renderTaskList = (taskList: Task[], completed = false) => {
+    if (taskList.length === 0) return null;
+
+    return taskList.map((task) => (
+      <TaskComponent
+        key={task.id}
+        task={task}
+        completed={completed}
+        onTaskComplete={recordTaskCompletion}
+      />
+    ));
+  };
+
   return (
     <div className={styles.taskList}>
       <h3 className={styles.taskListTitle}>Recurring Tasks</h3>
@@ -65,27 +79,8 @@ const TaskList: React.FC = () => {
         <AddTask onTaskAdded={fetchTasks} />
 
         <ul>
-          {overdueTasks.length > 0 &&
-            overdueTasks.map((task) => {
-              return (
-                <TaskComponent
-                  key={task.id}
-                  task={task}
-                  onTaskComplete={recordTaskCompletion}
-                />
-              );
-            })}
-          {completedTodayTasks.length > 0 &&
-            completedTodayTasks.map((task) => {
-              return (
-                <TaskComponent
-                  key={task.id}
-                  task={task}
-                  completed={true}
-                  onTaskComplete={recordTaskCompletion}
-                />
-              );
-            })}
+          {renderTaskList(overdueTasks, false)}
+          {renderTaskList(completedTodayTasks, true)}
         </ul>
       </div>
     </div>
