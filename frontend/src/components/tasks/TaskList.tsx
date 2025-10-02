@@ -41,14 +41,20 @@ const TaskList: React.FC = () => {
     fetchTasks();
   }, []);
 
-  const visibleTasks = tasks.filter((task) => {
-    if (!task.completed_at) {
-      return true; // Show incomplete tasks
-    }
+  const overdueTasks = tasks.filter((task) => {
+    if (!task.completed_at) return true;
 
-    // Show completed tasks only if they were completed today
-    const completionTime = new Date(task.completed_at).getTime();
-    return daysFromNow(completionTime) === 0;
+    return (
+      Math.abs(daysFromNow(new Date(task.completed_at).getTime())) >=
+      task.repeat_days
+    );
+  });
+
+  const completedTodayTasks = tasks.filter((task) => {
+    return (
+      task.completed_at &&
+      daysFromNow(new Date(task.completed_at).getTime()) === 0
+    );
   });
 
   return (
@@ -59,13 +65,27 @@ const TaskList: React.FC = () => {
         <AddTask onTaskAdded={fetchTasks} />
 
         <ul>
-          {visibleTasks.map((task) => (
-            <TaskComponent
-              key={task.id}
-              task={task}
-              onTaskComplete={recordTaskCompletion}
-            />
-          ))}
+          {overdueTasks.length > 0 &&
+            overdueTasks.map((task) => {
+              return (
+                <TaskComponent
+                  key={task.id}
+                  task={task}
+                  onTaskComplete={recordTaskCompletion}
+                />
+              );
+            })}
+          {completedTodayTasks.length > 0 &&
+            completedTodayTasks.map((task) => {
+              return (
+                <TaskComponent
+                  key={task.id}
+                  task={task}
+                  completed={true}
+                  onTaskComplete={recordTaskCompletion}
+                />
+              );
+            })}
         </ul>
       </div>
     </div>
