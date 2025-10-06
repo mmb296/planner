@@ -31,8 +31,8 @@ const AddTask: React.FC<{ onTaskAdded: () => void }> = ({ onTaskAdded }) => {
     if (response.ok) {
       // Reset form
       setTitle('');
-      setRepeatDays(7);
       setIsActive(false);
+      setRepeatDays(7);
 
       // Notify parent component to refresh tasks
       onTaskAdded();
@@ -50,6 +50,7 @@ const AddTask: React.FC<{ onTaskAdded: () => void }> = ({ onTaskAdded }) => {
         onBlur={() => {
           if (!title.trim()) {
             setIsActive(false);
+            setRepeatDays(7);
           }
         }}
         placeholder="New Task"
