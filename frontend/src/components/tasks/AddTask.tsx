@@ -5,6 +5,7 @@ import styles from './Task.module.css';
 const AddTask: React.FC<{ onTaskAdded: () => void }> = ({ onTaskAdded }) => {
   const [title, setTitle] = useState('');
   const [repeatDays, setRepeatDays] = useState(7);
+  const [isActive, setIsActive] = useState(false);
 
   const normalizeRepeatDays = (raw: number): number => {
     return Math.max(1, isNaN(raw) ? 1 : Math.floor(raw));
@@ -31,6 +32,7 @@ const AddTask: React.FC<{ onTaskAdded: () => void }> = ({ onTaskAdded }) => {
       // Reset form
       setTitle('');
       setRepeatDays(7);
+      setIsActive(false);
 
       // Notify parent component to refresh tasks
       onTaskAdded();
@@ -44,24 +46,32 @@ const AddTask: React.FC<{ onTaskAdded: () => void }> = ({ onTaskAdded }) => {
         type="text"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
+        onFocus={() => setIsActive(true)}
+        onBlur={() => {
+          if (!title.trim()) {
+            setIsActive(false);
+          }
+        }}
         placeholder="New Task"
         className={styles.input}
       />
-      <input
-        type="number"
-        min={1}
-        step={1}
-        value={Number.isNaN(repeatDays) ? '' : repeatDays}
-        onChange={(e) => {
-          setRepeatDays(e.target.valueAsNumber);
-        }}
-        onBlur={(e) => {
-          setRepeatDays(normalizeRepeatDays(e.target.valueAsNumber));
-        }}
-        placeholder="Days"
-        className={styles.input}
-        aria-label="Repeat every N days"
-      />
+      {isActive && (
+        <input
+          type="number"
+          min={1}
+          step={1}
+          value={Number.isNaN(repeatDays) ? '' : repeatDays}
+          onChange={(e) => {
+            setRepeatDays(e.target.valueAsNumber);
+          }}
+          onBlur={(e) => {
+            setRepeatDays(normalizeRepeatDays(e.target.valueAsNumber));
+          }}
+          placeholder="Days"
+          className={styles.input}
+          aria-label="Repeat every N days"
+        />
+      )}
       <button type="submit" style={{ display: 'none' }} aria-hidden="true" />
     </form>
   );
