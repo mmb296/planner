@@ -5,17 +5,20 @@ import styles from './Task.module.css';
 
 type TaskProps = {
   task: Task;
+  completed?: boolean;
   onTaskComplete: (taskId: number) => void;
 };
 
-const TaskComponent: React.FC<TaskProps> = ({ task, onTaskComplete }) => {
+const TaskComponent: React.FC<TaskProps> = ({
+  task,
+  completed = false,
+  onTaskComplete
+}) => {
   const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.checked) {
       onTaskComplete(task.id);
     }
   };
-
-  const completed = !!task.completed_at;
 
   return (
     <li className={styles.taskItem}>
