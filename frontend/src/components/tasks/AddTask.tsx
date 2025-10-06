@@ -40,7 +40,7 @@ const AddTask: React.FC<{ onTaskAdded: () => void }> = ({ onTaskAdded }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className={styles.taskItem}>
+    <form onSubmit={handleSubmit} className={styles.taskInput}>
       <input type="checkbox" className={styles.taskCheckbox} />
       <input
         type="text"
@@ -54,24 +54,26 @@ const AddTask: React.FC<{ onTaskAdded: () => void }> = ({ onTaskAdded }) => {
           }
         }}
         placeholder="New Task"
-        className={styles.input}
+        className={`${styles.input} ${styles.titleInput}`}
       />
       {isActive && (
-        <input
-          type="number"
-          min={1}
-          step={1}
-          value={Number.isNaN(repeatDays) ? '' : repeatDays}
-          onChange={(e) => {
-            setRepeatDays(e.target.valueAsNumber);
-          }}
-          onBlur={(e) => {
-            setRepeatDays(normalizeRepeatDays(e.target.valueAsNumber));
-          }}
-          placeholder="Days"
-          className={styles.input}
-          aria-label="Repeat every N days"
-        />
+        <>
+          <label className={styles.repeatDaysLabel}>Days:</label>
+          <input
+            type="number"
+            min={1}
+            step={1}
+            value={Number.isNaN(repeatDays) ? '' : repeatDays}
+            onChange={(e) => {
+              setRepeatDays(e.target.valueAsNumber);
+            }}
+            onBlur={(e) => {
+              setRepeatDays(normalizeRepeatDays(e.target.valueAsNumber));
+            }}
+            className={`${styles.input} ${styles.repeatDaysInput}`}
+            aria-label="Repeat every N days"
+          />
+        </>
       )}
       <button type="submit" style={{ display: 'none' }} aria-hidden="true" />
     </form>
