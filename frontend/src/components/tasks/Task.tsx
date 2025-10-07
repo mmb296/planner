@@ -7,17 +7,23 @@ type TaskProps = {
   task: Task;
   completed?: boolean;
   onTaskComplete: (taskId: number) => void;
+  onTaskDelete: (taskId: number) => void;
 };
 
 const TaskComponent: React.FC<TaskProps> = ({
   task,
   completed = false,
-  onTaskComplete
+  onTaskComplete,
+  onTaskDelete
 }) => {
   const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.checked) {
       onTaskComplete(task.id);
     }
+  };
+
+  const handleDelete = () => {
+    onTaskDelete(task.id);
   };
 
   return (
@@ -33,9 +39,17 @@ const TaskComponent: React.FC<TaskProps> = ({
           textDecoration: completed ? 'line-through' : 'none',
           opacity: completed ? 0.6 : 1
         }}
+        className={styles.taskTitle}
       >
         {task.title}
       </span>
+      <button
+        onClick={handleDelete}
+        className={styles.deleteButton}
+        title="Delete task"
+      >
+        ×
+      </button>
     </li>
   );
 };

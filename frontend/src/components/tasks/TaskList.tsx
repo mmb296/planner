@@ -36,6 +36,18 @@ const TaskList: React.FC = () => {
     }
   };
 
+  // Delete a task
+  const deleteTask = async (taskId: number) => {
+    const response = await fetch(`http://localhost:5000/api/tasks/${taskId}`, {
+      method: 'DELETE'
+    });
+
+    if (response.ok) {
+      // Refresh tasks to get the latest data
+      await fetchTasks();
+    }
+  };
+
   // Fetch data on component mount
   useEffect(() => {
     fetchTasks();
@@ -67,6 +79,7 @@ const TaskList: React.FC = () => {
         task={task}
         completed={completed}
         onTaskComplete={recordTaskCompletion}
+        onTaskDelete={deleteTask}
       />
     ));
   };
