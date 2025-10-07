@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 
 import styles from './Task.module.css';
 
-const AddTask: React.FC<{ onTaskAdded: () => void }> = ({ onTaskAdded }) => {
+const EditTask: React.FC<{ onTaskAdded: () => void }> = ({ onTaskAdded }) => {
   const [title, setTitle] = useState('');
   const [repeatDays, setRepeatDays] = useState(7);
   const [isActive, setIsActive] = useState(false);
@@ -80,4 +80,4 @@ const AddTask: React.FC<{ onTaskAdded: () => void }> = ({ onTaskAdded }) => {
   );
 };
 
-export default AddTask;
+export default EditTask;
