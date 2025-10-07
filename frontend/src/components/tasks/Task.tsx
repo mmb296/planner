@@ -43,10 +43,17 @@ const TaskComponent: React.FC<TaskProps> = ({
     });
 
     if (response.ok) {
-      // Reset form
-      setTitle('');
-      setRepeatDays(7);
-      setIsEditing(false);
+      if (task) {
+        // Update existing task - keep current values
+        setTitle(trimmedTitle);
+        setRepeatDays(normalizeRepeatDays(repeatDays));
+        setIsEditing(false);
+      } else {
+        // Create new task - reset form
+        setTitle('');
+        setRepeatDays(7);
+        setIsEditing(false);
+      }
 
       // Notify parent component to refresh tasks
       onTaskChange();
