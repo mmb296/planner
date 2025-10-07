@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import { Task } from '../../types';
 import styles from './Task.module.css';
@@ -29,6 +29,7 @@ const TaskComponent: React.FC<TaskProps> = ({
     externalIsEditing !== undefined ? externalIsEditing : internalIsEditing;
   const [title, setTitle] = useState(task?.title || '');
   const [repeatDays, setRepeatDays] = useState(task?.repeat_days || 7);
+  const formRef = useRef<HTMLFormElement>(null);
 
   const normalizeRepeatDays = (raw: number): number => {
     return Math.max(1, isNaN(raw) ? 1 : Math.floor(raw));
@@ -53,6 +54,25 @@ const TaskComponent: React.FC<TaskProps> = ({
       resetToOriginalValues();
     }
   }, [isEditing, task]);
+
+  // Global click handler to close editing when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        isEditing &&
+        formRef.current &&
+        !formRef.current.contains(event.target as Node)
+      ) {
+        exitEditMode();
+      }
+    };
+
+    if (isEditing) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () =>
+        document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isEditing]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -100,6 +120,7 @@ const TaskComponent: React.FC<TaskProps> = ({
   if (isEditing) {
     return (
       <form
+        ref={formRef}
         onSubmit={handleSubmit}
         className={styles.taskInput}
         onClick={(e) => e.stopPropagation()}
