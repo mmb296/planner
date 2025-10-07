@@ -67,6 +67,7 @@ const TaskList: React.FC = () => {
         task={task}
         completed={completed}
         onTaskComplete={recordTaskCompletion}
+        onTaskUpdated={fetchTasks}
       />
     ));
   };

@@ -1,11 +1,17 @@
 import React, { useState } from 'react';
 
+import { Task } from '../../types';
 import styles from './Task.module.css';
 
-const EditTask: React.FC<{ onTaskSaved: () => void }> = ({ onTaskSaved }) => {
-  const [title, setTitle] = useState('');
-  const [repeatDays, setRepeatDays] = useState(7);
-  const [isActive, setIsActive] = useState(false);
+type EditTaskProps = {
+  task?: Task;
+  onTaskSaved: () => void;
+};
+
+const EditTask: React.FC<EditTaskProps> = ({ task, onTaskSaved }) => {
+  const [title, setTitle] = useState(task?.title || '');
+  const [repeatDays, setRepeatDays] = useState(task?.repeat_days || 7);
+  const [isActive, setIsActive] = useState(!!task); // Active by default if editing
 
   const normalizeRepeatDays = (raw: number): number => {
     return Math.max(1, isNaN(raw) ? 1 : Math.floor(raw));
@@ -17,8 +23,14 @@ const EditTask: React.FC<{ onTaskSaved: () => void }> = ({ onTaskSaved }) => {
     const trimmedTitle = title.trim();
     if (!trimmedTitle) return;
 
-    const response = await fetch('http://localhost:5000/api/tasks', {
-      method: 'POST',
+    const url = task
+      ? `http://localhost:5000/api/tasks/${task.id}`
+      : 'http://localhost:5000/api/tasks';
+
+    const method = task ? 'PUT' : 'POST';
+
+    const response = await fetch(url, {
+      method,
       headers: {
         'Content-Type': 'application/json'
       },
@@ -29,10 +41,12 @@ const EditTask: React.FC<{ onTaskSaved: () => void }> = ({ onTaskSaved }) => {
     });
 
     if (response.ok) {
-      // Reset form
-      setTitle('');
-      setIsActive(false);
-      setRepeatDays(7);
+      // Reset form when creating new tasks
+      if (!task) {
+        setTitle('');
+        setIsActive(false);
+        setRepeatDays(7);
+      }
 
       // Notify parent component to refresh tasks
       onTaskSaved();
@@ -55,6 +69,7 @@ const EditTask: React.FC<{ onTaskSaved: () => void }> = ({ onTaskSaved }) => {
         }}
         placeholder="New Task"
         className={`${styles.input} ${styles.titleInput}`}
+        autoFocus={!!task} // Auto-focus when editing
       />
       {isActive && (
         <>

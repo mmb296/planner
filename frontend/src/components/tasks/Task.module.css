@@ -9,6 +9,10 @@
   cursor: pointer;
 }
 
+.taskTitle {
+  cursor: pointer;
+}
+
 .input {
   flex: 1;
   border: none;
