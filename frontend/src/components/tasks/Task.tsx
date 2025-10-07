@@ -103,17 +103,25 @@ const TaskComponent: React.FC<TaskProps> = ({
         onSubmit={handleSubmit}
         className={styles.taskInput}
         onClick={(e) => e.stopPropagation()}
+        onBlur={(e) => {
+          if (task) {
+            // Check if focus is moving to an element outside the form
+            const relatedTarget = e.relatedTarget as HTMLElement;
+            const form = e.currentTarget;
+            const isMovingOutsideForm =
+              relatedTarget && !form.contains(relatedTarget);
+
+            if (isMovingOutsideForm) {
+              exitEditMode();
+            }
+          }
+        }}
       >
         <input type="checkbox" className={styles.taskCheckbox} />
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          onBlur={() => {
-            if (task) {
-              exitEditMode();
-            }
-          }}
           placeholder="New Task"
           className={`${styles.input} ${styles.titleInput}`}
         />
@@ -124,12 +132,9 @@ const TaskComponent: React.FC<TaskProps> = ({
           step={1}
           value={Number.isNaN(repeatDays) ? '' : repeatDays}
           onChange={(e) => setRepeatDays(e.target.valueAsNumber)}
-          onBlur={(e) => {
-            setRepeatDays(normalizeRepeatDays(e.target.valueAsNumber));
-            if (task) {
-              exitEditMode();
-            }
-          }}
+          onBlur={(e) =>
+            setRepeatDays(normalizeRepeatDays(e.target.valueAsNumber))
+          }
           className={`${styles.input} ${styles.repeatDaysInput}`}
           aria-label="Repeat every N days"
         />
@@ -175,3 +180,5 @@ const TaskComponent: React.FC<TaskProps> = ({
 };
 
 export default TaskComponent;
+
+// ToDo: not a big deal but something to look into. If you click into editing mode, click the same task while in editing mode and then click a blurred out task, that task opens right up into editing mode.
