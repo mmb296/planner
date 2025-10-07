@@ -76,7 +76,7 @@ const TaskList: React.FC = () => {
       <h3 className={styles.taskListTitle}>Recurring Tasks</h3>
 
       <div className={styles.taskContent}>
-        <EditTask onTaskAdded={fetchTasks} />
+        <EditTask onTaskSaved={fetchTasks} />
 
         <ul>
           {renderTaskList(overdueTasks, false)}

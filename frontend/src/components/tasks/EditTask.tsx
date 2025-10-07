@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 
 import styles from './Task.module.css';
 
-const EditTask: React.FC<{ onTaskAdded: () => void }> = ({ onTaskAdded }) => {
+const EditTask: React.FC<{ onTaskSaved: () => void }> = ({ onTaskSaved }) => {
   const [title, setTitle] = useState('');
   const [repeatDays, setRepeatDays] = useState(7);
   const [isActive, setIsActive] = useState(false);
@@ -35,7 +35,7 @@ const EditTask: React.FC<{ onTaskAdded: () => void }> = ({ onTaskAdded }) => {
       setRepeatDays(7);
 
       // Notify parent component to refresh tasks
-      onTaskAdded();
+      onTaskSaved();
     }
   };
 
