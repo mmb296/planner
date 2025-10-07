@@ -7,6 +7,7 @@ import styles from './TaskList.module.css';
 
 const TaskList: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
 
   // Fetch tasks from backend API
   const fetchTasks = async () => {
@@ -67,6 +68,10 @@ const TaskList: React.FC = () => {
         completed={completed}
         onTaskComplete={recordTaskCompletion}
         onTaskChange={fetchTasks}
+        isEditing={editingTaskId === task.id}
+        onEditStart={() => setEditingTaskId(task.id)}
+        onEditEnd={() => setEditingTaskId(null)}
+        isDisabled={editingTaskId !== null && editingTaskId !== task.id}
       />
     ));
   };
@@ -77,7 +82,14 @@ const TaskList: React.FC = () => {
 
       <div className={styles.taskContent}>
         <TaskComponent onTaskChange={fetchTasks} />
-        <ul>
+        <ul
+          onClick={(e) => {
+            // If clicking on a disabled task or empty space, exit editing mode
+            if (editingTaskId) {
+              setEditingTaskId(null);
+            }
+          }}
+        >
           {renderTaskList(overdueTasks, false)}
           {renderTaskList(completedTodayTasks, true)}
         </ul>
