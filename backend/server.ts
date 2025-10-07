@@ -57,35 +57,31 @@ app.get('/api/tasks/:id', async (req, res) => {
   }
 });
 
-// Create new recurring task
+// Create or update recurring task
 app.post('/api/tasks', async (req, res) => {
   try {
-    const { title, repeat_days } = req.body;
+    const { id, title, repeat_days } = req.body;
     if (!title || repeat_days === undefined) {
       return res
         .status(400)
         .json({ error: 'title and repeat_days are required' });
     }
-    const result = await RecurringTaskDB.create({ title, repeat_days });
-    res.status(201).json({
-      id: result.lastID,
-      message: 'Task created successfully'
-    });
+
+    if (id) {
+      // Update existing task
+      await RecurringTaskDB.update(id, { title, repeat_days });
+      res.json({ message: 'Task updated successfully' });
+    } else {
+      // Create new task
+      const result = await RecurringTaskDB.create({ title, repeat_days });
+      res.status(201).json({
+        id: result.lastID,
+        message: 'Task created successfully'
+      });
+    }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Failed to create task' });
-  }
-});
-
-// Update recurring task
-app.put('/api/tasks/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const updates = req.body;
-    await RecurringTaskDB.update(parseInt(id), updates);
-    res.json({ message: 'Task updated successfully' });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to update task' });
+    res.status(500).json({ error: 'Failed to save task' });
   }
 });
 

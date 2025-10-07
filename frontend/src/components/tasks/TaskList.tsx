@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 
 import { Task } from '../../types';
 import { daysFromNow } from '../../utils/dateTime';
-import AddTask from './AddTask';
 import TaskComponent from './Task';
 import styles from './TaskList.module.css';
 
@@ -67,6 +66,7 @@ const TaskList: React.FC = () => {
         task={task}
         completed={completed}
         onTaskComplete={recordTaskCompletion}
+        onTaskChange={fetchTasks}
       />
     ));
   };
@@ -76,8 +76,7 @@ const TaskList: React.FC = () => {
       <h3 className={styles.taskListTitle}>Recurring Tasks</h3>
 
       <div className={styles.taskContent}>
-        <AddTask onTaskAdded={fetchTasks} />
-
+        <TaskComponent onTaskChange={fetchTasks} />
         <ul>
           {renderTaskList(overdueTasks, false)}
           {renderTaskList(completedTodayTasks, true)}
