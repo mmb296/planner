@@ -67,6 +67,7 @@ const TaskList: React.FC = () => {
         task={task}
         completed={completed}
         onTaskComplete={recordTaskCompletion}
+        onTaskUpdate={fetchTasks}
       />
     ));
   };
@@ -76,7 +77,7 @@ const TaskList: React.FC = () => {
       <h3 className={styles.taskListTitle}>Recurring Tasks</h3>
 
       <div className={styles.taskContent}>
-        <AddTask onTaskAdded={fetchTasks} />
+        <AddTask onTaskUpdate={fetchTasks} />
 
         <ul>
           {renderTaskList(overdueTasks, false)}
