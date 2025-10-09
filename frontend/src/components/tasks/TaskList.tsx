@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
+import { API_ENDPOINTS } from '../../config/api';
 import { Task } from '../../types';
 import { daysFromNow } from '../../utils/dateTime';
 import AddTask from './AddTask';
@@ -9,9 +10,8 @@ import styles from './TaskList.module.css';
 const TaskList: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
 
-  // Fetch tasks from backend API
   const fetchTasks = async () => {
-    const response = await fetch('http://localhost:5000/api/tasks');
+    const response = await fetch(API_ENDPOINTS.TASKS);
     if (response.ok) {
       const tasksData = await response.json();
       setTasks(tasksData);
@@ -20,9 +20,8 @@ const TaskList: React.FC = () => {
     }
   };
 
-  // Record a task completion
   const recordTaskCompletion = async (taskId: number) => {
-    const response = await fetch('http://localhost:5000/api/completions', {
+    await fetch(API_ENDPOINTS.COMPLETIONS, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -30,13 +29,9 @@ const TaskList: React.FC = () => {
       body: JSON.stringify({ task_id: taskId })
     });
 
-    if (response.ok) {
-      // Refresh tasks to get the latest data
-      await fetchTasks();
-    }
+    await fetchTasks();
   };
 
-  // Fetch data on component mount
   useEffect(() => {
     fetchTasks();
   }, []);
@@ -57,7 +52,6 @@ const TaskList: React.FC = () => {
     );
   });
 
-  // Helper function to render task list
   const renderTaskList = (taskList: Task[], completed = false) => {
     if (taskList.length === 0) return null;
 
@@ -67,6 +61,7 @@ const TaskList: React.FC = () => {
         task={task}
         completed={completed}
         onTaskComplete={recordTaskCompletion}
+        onTaskEdit={fetchTasks}
       />
     ));
   };
@@ -76,7 +71,7 @@ const TaskList: React.FC = () => {
       <h3 className={styles.taskListTitle}>Recurring Tasks</h3>
 
       <div className={styles.taskContent}>
-        <AddTask onTaskAdded={fetchTasks} />
+        <AddTask onTaskAdd={fetchTasks} />
 
         <ul>
           {renderTaskList(overdueTasks, false)}
