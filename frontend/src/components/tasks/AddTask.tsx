@@ -2,7 +2,7 @@ import React from 'react';
 
 import TaskForm from './TaskForm';
 
-const AddTask: React.FC<{ onTaskUpdate: () => void }> = ({ onTaskUpdate }) => {
+const AddTask: React.FC = () => {
   const handleSubmit = async (title: string, repeatDays: number) => {
     await fetch('http://localhost:5000/api/tasks', {
       method: 'POST',
@@ -14,9 +14,6 @@ const AddTask: React.FC<{ onTaskUpdate: () => void }> = ({ onTaskUpdate }) => {
         repeat_days: repeatDays
       })
     });
-
-    // Refresh task list
-    onTaskUpdate();
   };
 
   return <TaskForm onSubmit={handleSubmit} />;

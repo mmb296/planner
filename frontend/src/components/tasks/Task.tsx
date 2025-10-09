@@ -8,14 +8,12 @@ type TaskProps = {
   task: Task;
   completed?: boolean;
   onTaskComplete: (taskId: number) => void;
-  onTaskUpdate: () => void;
 };
 
 const TaskComponent: React.FC<TaskProps> = ({
   task,
   completed = false,
-  onTaskComplete,
-  onTaskUpdate
+  onTaskComplete
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -24,19 +22,10 @@ const TaskComponent: React.FC<TaskProps> = ({
     }
   };
 
-  const handleTitleClick = () => {
-    setIsEditing(true);
-  };
-
-  const handleTaskUpdate = () => {
-    setIsEditing(false);
-    onTaskUpdate();
-  };
-
   if (isEditing) {
     return (
       <li className={styles.taskItem}>
-        <EditTask task={task} onEditComplete={handleTaskUpdate} />
+        <EditTask task={task} onEditComplete={() => setIsEditing(false)} />
       </li>
     );
   }
@@ -55,7 +44,7 @@ const TaskComponent: React.FC<TaskProps> = ({
           opacity: completed ? 0.6 : 1
         }}
         className={styles.taskTitle}
-        onClick={handleTitleClick}
+        onClick={() => setIsEditing(true)}
       >
         {task.title}
       </span>

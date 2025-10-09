@@ -21,7 +21,7 @@ const EditTask: React.FC<EditTaskProps> = ({ task, onEditComplete }) => {
       })
     });
 
-    // Refresh task list and exit edit mode
+    // Exit edit mode
     onEditComplete();
   };
 

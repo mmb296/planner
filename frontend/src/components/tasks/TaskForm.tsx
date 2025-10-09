@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 
+import { useTaskContext } from '../../contexts/TaskContext';
 import { Task } from '../../types';
 import styles from './Task.module.css';
 
@@ -9,6 +10,7 @@ type TaskFormProps = {
 };
 
 const TaskForm: React.FC<TaskFormProps> = ({ task, onSubmit }) => {
+  const { refreshTasks } = useTaskContext();
   const [title, setTitle] = useState(task?.title || '');
   const [repeatDays, setRepeatDays] = useState(task?.repeat_days || 7);
   const [isActive, setIsActive] = useState(false);
@@ -24,6 +26,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, onSubmit }) => {
     if (!trimmedTitle) return;
 
     await onSubmit(trimmedTitle, normalizeRepeatDays(repeatDays));
+    await refreshTasks();
   };
 
   const handleFocus = () => {
