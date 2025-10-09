@@ -4,15 +4,15 @@ import { Task } from '../../types';
 import styles from './Task.module.css';
 
 type TaskFormProps = {
-  task?: Task;
-  onSubmit: (title: string, repeatDays: number) => Promise<void>;
   autoFocus?: boolean;
+  onSubmit: (title: string, repeatDays: number) => Promise<void>;
+  task?: Task;
 };
 
 const TaskForm: React.FC<TaskFormProps> = ({
-  task,
+  autoFocus = false,
   onSubmit,
-  autoFocus = false
+  task
 }) => {
   const [title, setTitle] = useState(task?.title || '');
   const [repeatDays, setRepeatDays] = useState(task?.repeat_days || 7);
