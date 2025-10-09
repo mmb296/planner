@@ -26,10 +26,6 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, onSubmit }) => {
     await onSubmit(trimmedTitle, normalizeRepeatDays(repeatDays));
   };
 
-  const handleFocus = () => {
-    setIsActive(true);
-  };
-
   const handleBlur = () => {
     if (!title.trim() && !task) {
       setIsActive(false);
@@ -44,7 +40,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, onSubmit }) => {
         type="text"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
-        onFocus={handleFocus}
+        onFocus={() => setIsActive(true)}
         onBlur={handleBlur}
         placeholder={'New Task'}
         className={`${styles.input} ${styles.titleInput}`}
