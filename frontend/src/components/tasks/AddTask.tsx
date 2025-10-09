@@ -1,10 +1,11 @@
 import React from 'react';
 
+import { API_ENDPOINTS } from '../../config/api';
 import TaskForm from './TaskForm';
 
 const AddTask: React.FC<{ onTaskAdd: () => void }> = ({ onTaskAdd }) => {
   const handleTaskAdd = async (title: string, repeatDays: number) => {
-    await fetch('http://localhost:5000/api/tasks', {
+    await fetch(API_ENDPOINTS.TASKS, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
