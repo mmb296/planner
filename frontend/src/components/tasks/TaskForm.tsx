@@ -6,9 +6,14 @@ import styles from './Task.module.css';
 type TaskFormProps = {
   task?: Task;
   onSubmit: (title: string, repeatDays: number) => Promise<void>;
+  autoFocus?: boolean;
 };
 
-const TaskForm: React.FC<TaskFormProps> = ({ task, onSubmit }) => {
+const TaskForm: React.FC<TaskFormProps> = ({
+  task,
+  onSubmit,
+  autoFocus = false
+}) => {
   const [title, setTitle] = useState(task?.title || '');
   const [repeatDays, setRepeatDays] = useState(task?.repeat_days || 7);
   const [isActive, setIsActive] = useState(false);
@@ -44,7 +49,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, onSubmit }) => {
         onBlur={handleTitleBlur}
         placeholder={'New Task'}
         className={`${styles.input} ${styles.titleInput}`}
-        autoFocus={!!task} // Auto-focus when editing
+        autoFocus={autoFocus}
       />
       {isActive && (
         <>
