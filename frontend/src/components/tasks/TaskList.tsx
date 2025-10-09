@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
+import { API_ENDPOINTS } from '../../config/api';
 import { Task } from '../../types';
 import { daysFromNow } from '../../utils/dateTime';
 import AddTask from './AddTask';
@@ -11,7 +12,7 @@ const TaskList: React.FC = () => {
 
   // Fetch tasks from backend API
   const fetchTasks = async () => {
-    const response = await fetch('http://localhost:5000/api/tasks');
+    const response = await fetch(API_ENDPOINTS.TASKS);
     if (response.ok) {
       const tasksData = await response.json();
       setTasks(tasksData);
@@ -22,7 +23,7 @@ const TaskList: React.FC = () => {
 
   // Record a task completion
   const recordTaskCompletion = async (taskId: number) => {
-    const response = await fetch('http://localhost:5000/api/completions', {
+    const response = await fetch(API_ENDPOINTS.COMPLETIONS, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
