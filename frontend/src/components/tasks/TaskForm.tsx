@@ -4,12 +4,18 @@ import { Task } from '../../types';
 import styles from './Task.module.css';
 
 type TaskFormProps = {
-  task?: Task;
-  onSubmit: (title: string, repeatDays: number) => Promise<void>;
+  autoFocus?: boolean;
   onReset?: () => void;
+  onSubmit: (title: string, repeatDays: number) => Promise<void>;
+  task?: Task;
 };
 
-const TaskForm: React.FC<TaskFormProps> = ({ task, onSubmit, onReset }) => {
+const TaskForm: React.FC<TaskFormProps> = ({
+  autoFocus = false,
+  onReset,
+  onSubmit,
+  task
+}) => {
   const [title, setTitle] = useState(task?.title || '');
   const [repeatDays, setRepeatDays] = useState(task?.repeat_days || 7);
   const [isActive, setIsActive] = useState(false);
@@ -29,9 +35,8 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, onSubmit, onReset }) => {
   };
 
   const handleTitleBlur = () => {
-    if (!title.trim() && !task) {
-      setIsActive(false);
-      setRepeatDays(7);
+    if (!title.trim()) {
+      onReset?.();
     }
   };
 
@@ -46,7 +51,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, onSubmit, onReset }) => {
         onBlur={handleTitleBlur}
         placeholder={'New Task'}
         className={`${styles.input} ${styles.titleInput}`}
-        autoFocus={!!task} // Auto-focus when editing
+        autoFocus={autoFocus}
       />
       {isActive && (
         <>

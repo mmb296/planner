@@ -25,7 +25,7 @@ const EditTask: React.FC<EditTaskProps> = ({ task, onTaskEdit }) => {
     onTaskEdit();
   };
 
-  return <TaskForm task={task} onSubmit={handleTaskEdit} />;
+  return <TaskForm autoFocus onSubmit={handleTaskEdit} task={task} />;
 };
 
 export default EditTask;
