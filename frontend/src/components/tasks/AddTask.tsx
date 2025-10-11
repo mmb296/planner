@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 import { API_ENDPOINTS } from '../../config/api';
 import TaskForm from './TaskForm';
 
 const AddTask: React.FC<{ onTaskAdd: () => void }> = ({ onTaskAdd }) => {
+  const [key, setKey] = useState(0);
+
   const handleTaskAdd = async (title: string, repeatDays: number) => {
     await fetch(API_ENDPOINTS.TASKS, {
       method: 'POST',
@@ -19,7 +21,11 @@ const AddTask: React.FC<{ onTaskAdd: () => void }> = ({ onTaskAdd }) => {
     onTaskAdd();
   };
 
-  return <TaskForm onSubmit={handleTaskAdd} />;
+  const handleReset = () => {
+    setKey((k) => k + 1);
+  };
+
+  return <TaskForm key={key} onSubmit={handleTaskAdd} onReset={handleReset} />;
 };
 
 export default AddTask;
