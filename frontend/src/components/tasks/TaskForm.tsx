@@ -29,9 +29,8 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, onSubmit, onReset }) => {
   };
 
   const handleTitleBlur = () => {
-    if (!title.trim() && !task) {
-      setIsActive(false);
-      setRepeatDays(7);
+    if (!title.trim()) {
+      onReset?.();
     }
   };
 
