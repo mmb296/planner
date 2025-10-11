@@ -6,9 +6,10 @@ import styles from './Task.module.css';
 type TaskFormProps = {
   task?: Task;
   onSubmit: (title: string, repeatDays: number) => Promise<void>;
+  onReset?: () => void;
 };
 
-const TaskForm: React.FC<TaskFormProps> = ({ task, onSubmit }) => {
+const TaskForm: React.FC<TaskFormProps> = ({ task, onSubmit, onReset }) => {
   const [title, setTitle] = useState(task?.title || '');
   const [repeatDays, setRepeatDays] = useState(task?.repeat_days || 7);
   const [isActive, setIsActive] = useState(false);
@@ -24,6 +25,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, onSubmit }) => {
     if (!trimmedTitle) return;
 
     await onSubmit(trimmedTitle, normalizeRepeatDays(repeatDays));
+    onReset?.();
   };
 
   const handleTitleBlur = () => {
