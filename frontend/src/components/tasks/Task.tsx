@@ -5,17 +5,19 @@ import EditTask from './EditTask';
 import styles from './Task.module.css';
 
 type TaskProps = {
-  task: Task;
   completed?: boolean;
   onTaskComplete: (taskId: number) => void;
+  onTaskDelete: (taskId: number) => void;
   onTaskEdit: () => void;
+  task: Task;
 };
 
 const TaskComponent: React.FC<TaskProps> = ({
-  task,
   completed = false,
   onTaskComplete,
-  onTaskEdit
+  onTaskDelete,
+  onTaskEdit,
+  task
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -55,6 +57,13 @@ const TaskComponent: React.FC<TaskProps> = ({
       >
         {task.title}
       </span>
+      <button
+        onClick={() => onTaskDelete(task.id)}
+        className={styles.deleteButton}
+        aria-label="Delete task"
+      >
+        ×
+      </button>
     </li>
   );
 };
