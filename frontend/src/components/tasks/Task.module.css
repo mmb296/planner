@@ -29,7 +29,6 @@
 }
 
 .input {
-  flex: 1;
   border: none;
   outline: none;
   background: transparent;
@@ -42,7 +41,7 @@
 }
 
 .taskInput {
-  padding: 8px 0 8px var(--horizontal-padding);
+  display: flex;
 }
 
 .titleInput {

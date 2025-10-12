@@ -25,7 +25,11 @@ const AddTask: React.FC<{ onTaskAdd: () => void }> = ({ onTaskAdd }) => {
     setKey((k) => k + 1);
   };
 
-  return <TaskForm key={key} onReset={handleReset} onSubmit={handleTaskAdd} />;
+  return (
+    <div style={{ padding: '8px var(--horizontal-padding)' }}>
+      <TaskForm key={key} onReset={handleReset} onSubmit={handleTaskAdd} />
+    </div>
+  );
 };
 
 export default AddTask;
