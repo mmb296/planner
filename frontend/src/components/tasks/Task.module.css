@@ -10,7 +10,22 @@
 }
 
 .taskTitle {
+  flex: 1;
   cursor: pointer;
+}
+
+.deleteButton {
+  background: none;
+  border: none;
+  color: transparent;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0 8px;
+  line-height: 1;
+}
+
+.taskItem:hover .deleteButton {
+  color: #999;
 }
 
 .input {

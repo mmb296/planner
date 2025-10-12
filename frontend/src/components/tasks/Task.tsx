@@ -7,6 +7,7 @@ import styles from './Task.module.css';
 type TaskProps = {
   completed?: boolean;
   onTaskComplete: (taskId: number) => void;
+  onTaskDelete: (taskId: number) => void;
   onTaskEdit: () => void;
   task: Task;
 };
@@ -14,6 +15,7 @@ type TaskProps = {
 const TaskComponent: React.FC<TaskProps> = ({
   completed = false,
   onTaskComplete,
+  onTaskDelete,
   onTaskEdit,
   task
 }) => {
@@ -55,6 +57,13 @@ const TaskComponent: React.FC<TaskProps> = ({
       >
         {task.title}
       </span>
+      <button
+        onClick={() => onTaskDelete(task.id)}
+        className={styles.deleteButton}
+        aria-label="Delete task"
+      >
+        ×
+      </button>
     </li>
   );
 };

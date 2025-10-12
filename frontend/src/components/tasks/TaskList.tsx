@@ -32,6 +32,14 @@ const TaskList: React.FC = () => {
     await fetchTasks();
   };
 
+  const deleteTask = async (taskId: number) => {
+    await fetch(API_ENDPOINTS.TASK(taskId), {
+      method: 'DELETE'
+    });
+
+    await fetchTasks();
+  };
+
   useEffect(() => {
     fetchTasks();
   }, []);
@@ -60,6 +68,7 @@ const TaskList: React.FC = () => {
         key={task.id}
         completed={completed}
         onTaskComplete={recordTaskCompletion}
+        onTaskDelete={deleteTask}
         onTaskEdit={fetchTasks}
         task={task}
       />
