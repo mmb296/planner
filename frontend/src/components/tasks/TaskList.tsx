@@ -58,10 +58,10 @@ const TaskList: React.FC = () => {
     return taskList.map((task) => (
       <TaskComponent
         key={task.id}
-        task={task}
         completed={completed}
         onTaskComplete={recordTaskCompletion}
         onTaskEdit={fetchTasks}
+        task={task}
       />
     ));
   };
