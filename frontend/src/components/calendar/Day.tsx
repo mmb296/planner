@@ -28,7 +28,9 @@ const Day: React.FC<DayProps> = ({ label, date, events }) => {
             <Event key={event.calendarId + (event.id || idx)} event={event} />
           ))
         ) : (
-          <li style={{ color: '#999', fontStyle: 'italic' }}>No events</li>
+          <li style={{ color: 'var(--secondary-color)', fontStyle: 'italic' }}>
+            No events
+          </li>
         )}
       </ul>
     </li>

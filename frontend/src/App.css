@@ -1,9 +1,14 @@
 .App {
+  --secondary-color: #999;
   display: flex;
   background-color: #f9fafd;
   height: 100vh;
   color: #3c3c43;
   overflow: hidden;
+}
+
+button {
+  cursor: pointer;
 }
 
 ul {
