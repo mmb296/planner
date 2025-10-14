@@ -18,7 +18,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
 }) => {
   const [title, setTitle] = useState(task?.title || '');
   const [repeatDays, setRepeatDays] = useState(task?.repeat_days || 7);
-  const [isActive, setIsActive] = useState(false);
+  const [isActive, setIsActive] = useState(!!task);
 
   const normalizeRepeatDays = (raw: number): number => {
     return Math.max(1, isNaN(raw) ? 1 : Math.floor(raw));
