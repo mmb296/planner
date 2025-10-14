@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import { Task } from '../../types';
 import EditTask from './EditTask';
@@ -20,6 +20,26 @@ const TaskComponent: React.FC<TaskProps> = ({
   task
 }) => {
   const [isEditing, setIsEditing] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (showMenu) {
+      const handleClickOutside = (event: MouseEvent) => {
+        if (
+          menuRef.current &&
+          !menuRef.current.contains(event.target as Node)
+        ) {
+          setShowMenu(false);
+        }
+      };
+
+      document.addEventListener('mousedown', handleClickOutside);
+      return () =>
+        document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showMenu]);
+
   const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.checked) {
       onTaskComplete(task.id);
@@ -31,10 +51,27 @@ const TaskComponent: React.FC<TaskProps> = ({
     onTaskEdit();
   };
 
+  const startEditing = () => {
+    setShowMenu(false);
+    setIsEditing(true);
+  };
+
+  const handleDelete = () => {
+    setShowMenu(false);
+    onTaskDelete(task.id);
+  };
+
   if (isEditing) {
     return (
       <li className={styles.taskItem}>
         <EditTask task={task} onTaskEdit={handleTaskEdit} />
+        <button
+          onClick={() => setIsEditing(false)}
+          className={styles.cancelButton}
+          aria-label="Cancel editing"
+        >
+          ×
+        </button>
       </li>
     );
   }
@@ -53,17 +90,28 @@ const TaskComponent: React.FC<TaskProps> = ({
           opacity: completed ? 0.6 : 1
         }}
         className={styles.taskTitle}
-        onClick={() => setIsEditing(true)}
       >
         {task.title}
       </span>
-      <button
-        onClick={() => onTaskDelete(task.id)}
-        className={styles.deleteButton}
-        aria-label="Delete task"
-      >
-        ×
-      </button>
+      <div className={styles.menuContainer} ref={menuRef}>
+        <button
+          onClick={() => setShowMenu(!showMenu)}
+          className={styles.menuButton}
+          aria-label="Task options"
+        >
+          ⋯
+        </button>
+        {showMenu && (
+          <div className={styles.menu}>
+            <button onClick={startEditing} className={styles.menuItem}>
+              Edit
+            </button>
+            <button onClick={handleDelete} className={styles.menuItem}>
+              Delete
+            </button>
+          </div>
+        )}
+      </div>
     </li>
   );
 };
