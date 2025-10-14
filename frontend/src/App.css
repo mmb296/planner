@@ -1,4 +1,5 @@
 .App {
+  --secondary-color: #999;
   display: flex;
   background-color: #f9fafd;
   height: 100vh;
