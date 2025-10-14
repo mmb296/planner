@@ -7,6 +7,10 @@
   overflow: hidden;
 }
 
+button {
+  cursor: pointer;
+}
+
 ul {
   list-style: none;
   padding-inline-start: 0;
