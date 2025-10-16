@@ -93,3 +93,44 @@
 .repeatDaysInput {
   width: 40px;
 }
+
+.datePickerContainer {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.datePickerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+
+.datePicker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dateInput {
+  border: var(--border-style);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 14px;
+  background: white;
+}
+
+.confirmButton {
+  background: #63d56c;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.confirmButton:hover {
+  background: #4ecb5a;
+}

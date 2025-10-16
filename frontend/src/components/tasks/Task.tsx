@@ -6,7 +6,7 @@ import styles from './Task.module.css';
 
 type TaskProps = {
   completed?: boolean;
-  onTaskComplete: (taskId: number) => void;
+  onTaskComplete: (taskId: number, completedAt?: string) => void;
   onTaskUncomplete: (taskId: number) => void;
   onTaskDelete: (taskId: number) => void;
   onTaskEdit: () => void;
@@ -23,6 +23,10 @@ const TaskComponent: React.FC<TaskProps> = ({
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [completedDate, setCompletedDate] = useState(
+    new Date().toISOString().split('T')[0]
+  );
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -44,10 +48,29 @@ const TaskComponent: React.FC<TaskProps> = ({
 
   const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.checked) {
-      onTaskComplete(task.id);
+      onTaskComplete(task.id); // Complete with current time
     } else {
       onTaskUncomplete(task.id);
     }
+  };
+
+  const handleCompleteWithDate = () => {
+    setShowDatePicker(true);
+    setShowMenu(false);
+  };
+
+  const handleDateSubmit = () => {
+    if (completedDate) {
+      const isoDate = new Date(completedDate + 'T00:00:00').toISOString();
+      onTaskComplete(task.id, isoDate);
+      setShowDatePicker(false);
+      setCompletedDate('');
+    }
+  };
+
+  const handleDateCancel = () => {
+    setShowDatePicker(false);
+    setCompletedDate(new Date().toISOString().split('T')[0]);
   };
 
   const handleTaskEdit = () => {
@@ -80,6 +103,36 @@ const TaskComponent: React.FC<TaskProps> = ({
     );
   }
 
+  if (showDatePicker) {
+    return (
+      <li className={styles.taskItem}>
+        <div className={styles.datePickerContainer}>
+          <span className={styles.taskTitle}>{task.title}</span>
+          <div className={styles.datePickerRow}>
+            <div className={styles.datePicker}>
+              <input
+                id={`date-${task.id}`}
+                type="date"
+                value={completedDate}
+                onChange={(e) => setCompletedDate(e.target.value)}
+                className={styles.dateInput}
+              />
+              <button
+                onClick={handleDateSubmit}
+                className={styles.confirmButton}
+              >
+                ✓
+              </button>
+            </div>
+            <button onClick={handleDateCancel} className={styles.cancelButton}>
+              ×
+            </button>
+          </div>
+        </div>
+      </li>
+    );
+  }
+
   return (
     <li className={styles.taskItem}>
       <input
@@ -107,6 +160,12 @@ const TaskComponent: React.FC<TaskProps> = ({
         </button>
         {showMenu && (
           <div className={styles.menu}>
+            <button
+              onClick={handleCompleteWithDate}
+              className={styles.menuItem}
+            >
+              Complete
+            </button>
             <button onClick={startEditing} className={styles.menuItem}>
               Edit
             </button>

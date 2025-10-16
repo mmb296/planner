@@ -20,13 +20,13 @@ const TaskList: React.FC = () => {
     }
   };
 
-  const recordTaskCompletion = async (taskId: number) => {
+  const recordTaskCompletion = async (taskId: number, completedAt?: string) => {
     await fetch(API_ENDPOINTS.COMPLETIONS, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ task_id: taskId })
+      body: JSON.stringify({ task_id: taskId, completed_at: completedAt })
     });
 
     await fetchTasks();
