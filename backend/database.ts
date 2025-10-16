@@ -168,6 +168,20 @@ export const TaskCompletionDB = {
   // Delete a specific completion
   async delete(id: number) {
     await dbRun('DELETE FROM task_completions WHERE id = ?', [id]);
+  },
+
+  // Delete the most recent completion for a task
+  async deleteLatestByTaskId(taskId: number) {
+    await dbRun(
+      `DELETE FROM task_completions 
+       WHERE id = (
+         SELECT id FROM task_completions 
+         WHERE task_id = ? 
+         ORDER BY completed_at DESC 
+         LIMIT 1
+       )`,
+      [taskId]
+    );
   }
 };
 

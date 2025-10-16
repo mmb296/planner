@@ -7,6 +7,7 @@ import styles from './Task.module.css';
 type TaskProps = {
   completed?: boolean;
   onTaskComplete: (taskId: number) => void;
+  onTaskUncomplete: (taskId: number) => void;
   onTaskDelete: (taskId: number) => void;
   onTaskEdit: () => void;
   task: Task;
@@ -15,6 +16,7 @@ type TaskProps = {
 const TaskComponent: React.FC<TaskProps> = ({
   completed = false,
   onTaskComplete,
+  onTaskUncomplete,
   onTaskDelete,
   onTaskEdit,
   task
@@ -43,6 +45,8 @@ const TaskComponent: React.FC<TaskProps> = ({
   const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.checked) {
       onTaskComplete(task.id);
+    } else {
+      onTaskUncomplete(task.id);
     }
   };
 
