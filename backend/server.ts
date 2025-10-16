@@ -129,6 +129,17 @@ app.delete('/api/completions/:id', async (req, res) => {
   }
 });
 
+// Delete the most recent completion for a task
+app.delete('/api/completions/tasks/:id/latest', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await TaskCompletionDB.deleteLatestByTaskId(parseInt(id));
+    res.json({ message: 'Latest completion deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete latest completion' });
+  }
+});
+
 // Initialize database and start server
 try {
   await initDatabase();
