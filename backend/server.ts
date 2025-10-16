@@ -101,13 +101,11 @@ app.delete('/api/tasks/:id', async (req, res) => {
 });
 
 // Create new task completion
-app.post('/api/completions', async (req, res) => {
+app.post('/api/tasks/:id/complete', async (req, res) => {
   try {
-    const { task_id, completed_at } = req.body;
-    if (!task_id) {
-      return res.status(400).json({ error: 'task_id is required' });
-    }
-    const result = await TaskCompletionDB.create(task_id, completed_at);
+    const { id } = req.params;
+    const { completed_at } = req.body;
+    const result = await TaskCompletionDB.create(parseInt(id), completed_at);
     res.status(201).json({
       id: result.lastID,
       message: 'Completion recorded successfully'
@@ -129,14 +127,14 @@ app.delete('/api/completions/:id', async (req, res) => {
   }
 });
 
-// Delete the most recent completion for a task
-app.delete('/api/completions/tasks/:id/latest', async (req, res) => {
+// Uncomplete a task (delete latest completion)
+app.post('/api/tasks/:id/uncomplete', async (req, res) => {
   try {
     const { id } = req.params;
     await TaskCompletionDB.deleteLatestByTaskId(parseInt(id));
-    res.json({ message: 'Latest completion deleted successfully' });
+    res.json({ message: 'Task uncompleted successfully' });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to delete latest completion' });
+    res.status(500).json({ error: 'Failed to uncomplete task' });
   }
 });
 
