@@ -21,12 +21,12 @@ const TaskList: React.FC = () => {
   };
 
   const recordTaskCompletion = async (taskId: number) => {
-    await fetch(API_ENDPOINTS.COMPLETIONS, {
+    await fetch(API_ENDPOINTS.TASK_COMPLETE(taskId), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ task_id: taskId })
+      body: JSON.stringify({})
     });
 
     await fetchTasks();
@@ -41,8 +41,8 @@ const TaskList: React.FC = () => {
   };
 
   const deleteTaskCompletion = async (taskId: number) => {
-    await fetch(API_ENDPOINTS.TASK_LATEST_COMPLETION(taskId), {
-      method: 'DELETE'
+    await fetch(API_ENDPOINTS.TASK_UNCOMPLETE(taskId), {
+      method: 'POST'
     });
 
     await fetchTasks();

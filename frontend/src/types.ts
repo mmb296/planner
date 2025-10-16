@@ -16,9 +16,3 @@ export type Task = {
   updated_at: string;
   completed_at?: string;
 };
-
-export type TaskCompletion = {
-  id: number;
-  task_id: number;
-  completed_at: string;
-};
