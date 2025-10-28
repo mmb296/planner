@@ -62,6 +62,38 @@ app.get('/auth/google/callback', async (req, res) => {
   res.json(tokens); // In production, store securely in DB
 });
 
+// Gmail API route
+app.get('/api/gmail/messages', async (req, res) => {
+  try {
+    const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
+
+    const response = await gmail.users.messages.list({
+      userId: 'me',
+      q: 'Appointment'
+    });
+
+    if (!response.data.messages) {
+      return res.json([]);
+    }
+
+    const messages = await Promise.all(
+      response.data.messages.map(async (msg) => {
+        if (!msg.id) return null;
+        const full = await gmail.users.messages.get({
+          userId: 'me',
+          id: msg.id
+        });
+        return full.data.snippet;
+      })
+    );
+
+    res.json(messages.filter(Boolean));
+  } catch (error) {
+    console.error('Gmail API error:', error);
+    res.status(500).json({ error: 'Failed to fetch Gmail messages' });
+  }
+});
+
 // Task routes
 app.get('/api/tasks', async (req, res) => {
   try {
