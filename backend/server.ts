@@ -1,4 +1,6 @@
+import dotenv from 'dotenv';
 import express from 'express';
+import { google } from 'googleapis';
 
 import {
   closeDatabase,
@@ -6,6 +8,8 @@ import {
   RecurringTaskDB,
   TaskCompletionDB
 } from './database.js';
+
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -28,12 +32,37 @@ app.use((req, res, next) => {
   }
 });
 
-// Routes
+// Health check
 app.get('/', (req, res) => {
   res.json({ message: 'Planner API is running!' });
 });
 
-// Get all recurring tasks
+// Google OAuth setup
+const oauth2Client = new google.auth.OAuth2(
+  process.env.GOOGLE_CLIENT_ID,
+  process.env.GOOGLE_CLIENT_SECRET,
+  'http://localhost:5000/auth/google/callback'
+);
+
+const SCOPES = ['https://www.googleapis.com/auth/gmail.readonly'];
+
+// Google Auth routes
+app.get('/auth/google', (req, res) => {
+  const url = oauth2Client.generateAuthUrl({
+    access_type: 'offline',
+    scope: SCOPES
+  });
+  res.redirect(url);
+});
+
+app.get('/auth/google/callback', async (req, res) => {
+  const { code } = req.query;
+  const { tokens } = await oauth2Client.getToken(code as string);
+  oauth2Client.setCredentials(tokens);
+  res.json(tokens); // In production, store securely in DB
+});
+
+// Task routes
 app.get('/api/tasks', async (req, res) => {
   try {
     const tasks = await RecurringTaskDB.getAll();
@@ -100,7 +129,7 @@ app.delete('/api/tasks/:id', async (req, res) => {
   }
 });
 
-// Create new task completion
+// Task completion routes
 app.post('/api/tasks/:id/complete', async (req, res) => {
   try {
     const { id } = req.params;

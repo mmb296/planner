@@ -8,3 +8,5 @@
 
 # database
 /planner.db
+
+.env
