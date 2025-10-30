@@ -2,6 +2,7 @@ import dotenv from 'dotenv';
 import express from 'express';
 import { google } from 'googleapis';
 
+import { applyMiddleware } from './middleware.js';
 import { registerGmailRoutes } from './routes/gmail.js';
 import { registerTaskRoutes } from './routes/tasks.js';
 
@@ -10,22 +11,7 @@ dotenv.config();
 export const app = express();
 
 // Middleware
-app.use(express.json());
-
-// CORS middleware (for frontend communication)
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header(
-    'Access-Control-Allow-Headers',
-    'Origin, X-Requested-With, Content-Type, Accept'
-  );
-  if (req.method === 'OPTIONS') {
-    res.sendStatus(200);
-  } else {
-    next();
-  }
-});
+applyMiddleware(app);
 
 // Health check
 app.get('/', (req, res) => {
