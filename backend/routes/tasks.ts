@@ -1,6 +1,6 @@
 import express from 'express';
 
-import { RecurringTaskDB, TaskCompletionDB } from '../database.js';
+import { RecurringTaskDB, TaskCompletionDB } from '../db/database.js';
 
 export function registerTaskRoutes(app: express.Express) {
   // Get all recurring tasks

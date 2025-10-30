@@ -1,4 +1,4 @@
-import { dbAll, dbGet, dbRun } from './db/connection.js';
+import { dbAll, dbGet, dbRun } from './connection.js';
 
 // Initialize database with tables
 export async function initDatabase() {

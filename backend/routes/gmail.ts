@@ -1,7 +1,7 @@
 import express from 'express';
 import { google } from 'googleapis';
 
-import { GmailDB } from '../database.js';
+import { GmailDB } from '../db/database.js';
 
 type Header = { name?: string; value?: string };
 
