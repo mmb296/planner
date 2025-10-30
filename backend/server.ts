@@ -4,6 +4,7 @@ import { google } from 'googleapis';
 
 import {
   closeDatabase,
+  GmailDB,
   initDatabase,
   RecurringTaskDB,
   TaskCompletionDB
@@ -46,6 +47,21 @@ const oauth2Client = new google.auth.OAuth2(
 
 const SCOPES = ['https://www.googleapis.com/auth/gmail.readonly'];
 
+// Helpers for Gmail polling
+type Header = { name?: string; value?: string };
+const extractDetails = (payload: any) => {
+  const headers = (payload?.payload?.headers || []) as Header[];
+  const subject = headers.find(
+    (h) => h.name?.toLowerCase() === 'subject'
+  )?.value;
+  const from = headers.find((h) => h.name?.toLowerCase() === 'from')?.value;
+  const internalDateMs = payload?.internalDate
+    ? Number(payload.internalDate)
+    : 0;
+  const snippet = payload?.snippet as string | undefined;
+  return { subject, from, internalDateMs, snippet };
+};
+
 // Google Auth routes
 app.get('/auth/google', (req, res) => {
   const url = oauth2Client.generateAuthUrl({
@@ -62,35 +78,58 @@ app.get('/auth/google/callback', async (req, res) => {
   res.json(tokens); // In production, store securely in DB
 });
 
-// Gmail API route
+// Gmail polling route
 app.get('/api/gmail/messages', async (req, res) => {
   try {
     const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
-    const response = await gmail.users.messages.list({
-      userId: 'me',
-      q: 'Appointment'
-    });
+    const maxSeen = await GmailDB.getMaxInternalDateMs();
+    let newMaxSeen = maxSeen;
 
-    if (!response.data.messages) {
-      return res.json([]);
-    }
+    let pageToken: string | undefined = undefined;
+    let savedCount = 0;
 
-    const messages = await Promise.all(
-      response.data.messages.map(async (msg) => {
-        if (!msg.id) return null;
+    do {
+      const listResp: any = await gmail.users.messages.list({
+        userId: 'me',
+        q: 'Appointment newer_than:7d',
+        maxResults: 100,
+        pageToken
+      });
+
+      const messages = listResp.data.messages || [];
+      for (const msg of messages) {
+        if (!msg.id) continue;
         const full = await gmail.users.messages.get({
           userId: 'me',
           id: msg.id
         });
-        return full.data.snippet;
-      })
-    );
+        const payload = full.data;
+        const { subject, from, internalDateMs, snippet } =
+          extractDetails(payload);
 
-    res.json(messages.filter(Boolean));
+        // Dedupe: skip if not newer than max seen
+        if (internalDateMs && internalDateMs <= maxSeen) continue;
+
+        await GmailDB.upsertMessage({
+          id: msg.id,
+          thread_id: payload.threadId || undefined,
+          subject: subject || undefined,
+          from_address: from || undefined,
+          snippet: snippet || undefined,
+          internal_date_ms: internalDateMs || undefined
+        });
+        savedCount += 1;
+        if (internalDateMs > newMaxSeen) newMaxSeen = internalDateMs;
+      }
+
+      pageToken = listResp.data.nextPageToken || undefined;
+    } while (pageToken);
+
+    res.json({ saved: savedCount, maxSeenInternalDateMs: newMaxSeen });
   } catch (error) {
-    console.error('Gmail API error:', error);
-    res.status(500).json({ error: 'Failed to fetch Gmail messages' });
+    console.error('Gmail incremental (simple) fetch error:', error);
+    res.status(500).json({ error: 'Failed to perform incremental fetch' });
   }
 });
 

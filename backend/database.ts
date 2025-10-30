@@ -64,6 +64,25 @@ export async function initDatabase() {
       )
     `);
 
+    // Create gmail_messages table
+    await dbRun(`
+      CREATE TABLE IF NOT EXISTS gmail_messages (
+        id TEXT PRIMARY KEY,
+        thread_id TEXT,
+        subject TEXT,
+        from_address TEXT,
+        snippet TEXT,
+        internal_date_ms INTEGER,
+        fetched_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Index to speed up MAX(internal_date_ms)
+    await dbRun(`
+      CREATE INDEX IF NOT EXISTS idx_gmail_messages_internal_date
+      ON gmail_messages (internal_date_ms)
+    `);
+
     console.log('Database initialized successfully');
   } catch (error) {
     console.error('Error initializing database:', error);
@@ -182,6 +201,44 @@ export const TaskCompletionDB = {
        )`,
       [taskId]
     );
+  }
+};
+
+// Gmail operations
+export const GmailDB = {
+  async upsertMessage(message: {
+    id: string;
+    thread_id?: string;
+    subject?: string;
+    from_address?: string;
+    snippet?: string;
+    internal_date_ms?: number;
+  }) {
+    await dbRun(
+      `INSERT INTO gmail_messages (id, thread_id, subject, from_address, snippet, internal_date_ms)
+       VALUES (?, ?, ?, ?, ?, ?)
+       ON CONFLICT(id) DO UPDATE SET
+         thread_id=excluded.thread_id,
+         subject=excluded.subject,
+         from_address=excluded.from_address,
+         snippet=excluded.snippet,
+         internal_date_ms=excluded.internal_date_ms`,
+      [
+        message.id,
+        message.thread_id || null,
+        message.subject || null,
+        message.from_address || null,
+        message.snippet || null,
+        message.internal_date_ms || null
+      ]
+    );
+  },
+
+  async getMaxInternalDateMs(): Promise<number> {
+    const row: any = await dbGet(
+      `SELECT COALESCE(MAX(internal_date_ms), 0) AS maxVal FROM gmail_messages`
+    );
+    return Number(row?.maxVal || 0);
   }
 };
 
