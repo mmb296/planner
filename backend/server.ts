@@ -128,7 +128,7 @@ app.get('/api/gmail/messages', async (req, res) => {
 
     res.json({ saved: savedCount, maxSeenInternalDateMs: newMaxSeen });
   } catch (error) {
-    console.error('Gmail incremental (simple) fetch error:', error);
+    console.error('Gmail fetch error:', error);
     res.status(500).json({ error: 'Failed to perform incremental fetch' });
   }
 });
