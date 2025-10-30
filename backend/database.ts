@@ -1,44 +1,4 @@
-import sqlite3 from 'sqlite3';
-
-// Types
-type DbResult = {
-  lastID: number;
-  changes: number;
-};
-
-// Create database connection
-const db = new sqlite3.Database('./planner.db');
-
-// Promisify database methods for async/await
-const dbGet = (sql: string, params: any[] = []) => {
-  return new Promise((resolve, reject) => {
-    db.get(sql, params, (err, row) => {
-      if (err) reject(err);
-      else resolve(row);
-    });
-  });
-};
-
-const dbAll = (sql: string, params: any[] = []) => {
-  return new Promise((resolve, reject) => {
-    db.all(sql, params, (err, rows) => {
-      if (err) reject(err);
-      else resolve(rows);
-    });
-  });
-};
-
-const dbRun = (sql: string, params: any[] = []): Promise<DbResult> => {
-  return new Promise((resolve, reject) => {
-    db.run(sql, params, function (err) {
-      if (err) {
-        reject(err);
-      } else {
-        resolve({ lastID: this.lastID, changes: this.changes });
-      }
-    });
-  });
-};
+import { dbAll, dbGet, dbRun } from './db/connection.js';
 
 // Initialize database with tables
 export async function initDatabase() {
@@ -241,17 +201,3 @@ export const GmailDB = {
     return Number(row?.maxVal || 0);
   }
 };
-
-// Close database connection
-export function closeDatabase() {
-  return new Promise<void>((resolve, reject) => {
-    db.close((err) => {
-      if (err) {
-        reject(err);
-      } else {
-        console.log('Database connection closed');
-        resolve();
-      }
-    });
-  });
-}
