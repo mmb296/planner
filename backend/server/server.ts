@@ -2,8 +2,8 @@ import dotenv from 'dotenv';
 import express from 'express';
 import { google } from 'googleapis';
 
-import { closeDatabase } from './db/connection.js';
-import { initDatabase } from './db/database.js';
+import { closeDatabase } from '../db/connection.js';
+import { initDatabase } from '../db/database.js';
 import { registerGmailRoutes } from './routes/gmail.js';
 import { registerTaskRoutes } from './routes/tasks.js';
 
