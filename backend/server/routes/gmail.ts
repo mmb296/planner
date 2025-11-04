@@ -29,10 +29,15 @@ export function registerGmailRoutes(app: express.Express, oauth2Client: any) {
       let pageToken: string | undefined = undefined;
       let savedCount = 0;
 
+      const query =
+        maxSeen > 0
+          ? `Appointment after:${Math.floor(maxSeen / 1000)}`
+          : 'Appointment newer_than:7d';
+
       do {
         const listResp: any = await gmail.users.messages.list({
           userId: 'me',
-          q: 'Appointment newer_than:7d',
+          q: query,
           maxResults: 100,
           pageToken
         });
@@ -48,7 +53,7 @@ export function registerGmailRoutes(app: express.Express, oauth2Client: any) {
           const { subject, from, internalDateMs, snippet } =
             extractDetails(payload);
 
-          // Dedupe: skip if not newer than max seen
+          // Dedupe: skip if not newer than max seen (handles edge cases where after: returns same timestamp)
           if (internalDateMs && internalDateMs <= maxSeen) continue;
 
           await GmailDB.upsertMessage({
