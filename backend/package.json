@@ -2,10 +2,10 @@
   "name": "planner-backend",
   "version": "1.0.0",
   "type": "module",
-  "main": "server.ts",
+  "main": "server/server.ts",
   "scripts": {
-    "start": "ts-node --esm server.ts",
-    "dev": "nodemon --exec ts-node --esm server.ts"
+    "start": "ts-node --esm server/server.ts",
+    "dev": "nodemon --exec ts-node --esm server/server.ts"
   },
   "dependencies": {
     "@types/sqlite3": "^5.1.0",
