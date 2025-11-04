@@ -15,7 +15,53 @@ function extractDetails(payload: any) {
     ? Number(payload.internalDate)
     : 0;
   const snippet = payload?.snippet as string | undefined;
-  return { subject, from, internalDateMs, snippet };
+
+  // Extract body text
+  let bodyText = '';
+  if (payload?.payload) {
+    const p = payload.payload;
+
+    // Simple message with body
+    if (p.body?.data) {
+      bodyText = Buffer.from(p.body.data, 'base64').toString('utf-8');
+    }
+    // Multipart message
+    else if (p.parts && Array.isArray(p.parts)) {
+      const textParts: string[] = [];
+      const htmlParts: string[] = [];
+
+      function extractFromPart(part: any) {
+        if (part.body?.data) {
+          const decoded = Buffer.from(part.body.data, 'base64').toString(
+            'utf-8'
+          );
+          const mimeType = part.mimeType?.toLowerCase() || '';
+
+          if (mimeType === 'text/plain') {
+            textParts.push(decoded);
+          } else if (mimeType === 'text/html') {
+            htmlParts.push(decoded);
+          }
+        }
+
+        // Recursively check nested parts
+        if (part.parts && Array.isArray(part.parts)) {
+          part.parts.forEach(extractFromPart);
+        }
+      }
+
+      p.parts.forEach(extractFromPart);
+
+      // Prefer plain text over HTML
+      if (textParts.length > 0) {
+        bodyText = textParts.join('\n');
+      } else if (htmlParts.length > 0) {
+        bodyText = htmlParts.join('\n');
+      }
+    }
+  }
+
+  return { subject, from, internalDateMs, snippet, bodyText };
 }
 
 export function registerGmailRoutes(app: express.Express, oauth2Client: any) {
@@ -50,7 +96,7 @@ export function registerGmailRoutes(app: express.Express, oauth2Client: any) {
             id: msg.id
           });
           const payload = full.data;
-          const { subject, from, internalDateMs, snippet } =
+          const { subject, from, internalDateMs, snippet, bodyText } =
             extractDetails(payload);
 
           // Dedupe: skip if not newer than max seen (handles edge cases where after: returns same timestamp)
