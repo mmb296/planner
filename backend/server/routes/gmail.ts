@@ -75,10 +75,12 @@ export function registerGmailRoutes(app: express.Express, oauth2Client: any) {
       let pageToken: string | undefined = undefined;
       let savedCount = 0;
 
+      const baseQuery =
+        '"Ignite Physical Therapy & Sports Performance" "Appointment"';
       const query =
         maxSeen > 0
-          ? `Appointment after:${Math.floor(maxSeen / 1000)}`
-          : 'Appointment newer_than:7d';
+          ? `${baseQuery} after:${Math.floor(maxSeen / 1000)}`
+          : `${baseQuery} newer_than:7d`;
 
       do {
         const listResp: any = await gmail.users.messages.list({
