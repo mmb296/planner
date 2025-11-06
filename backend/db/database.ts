@@ -33,6 +33,7 @@ export async function initDatabase() {
         from_address TEXT,
         snippet TEXT,
         internal_date_ms INTEGER,
+        body_text TEXT,
         fetched_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `);
@@ -186,23 +187,26 @@ export const GmailDB = {
     from_address?: string;
     snippet?: string;
     internal_date_ms?: number;
+    body_text?: string;
   }) {
     await dbRun(
-      `INSERT INTO gmail_messages (id, thread_id, subject, from_address, snippet, internal_date_ms)
-       VALUES (?, ?, ?, ?, ?, ?)
+      `INSERT INTO gmail_messages (id, thread_id, subject, from_address, snippet, internal_date_ms, body_text)
+       VALUES (?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(id) DO UPDATE SET
          thread_id=excluded.thread_id,
          subject=excluded.subject,
          from_address=excluded.from_address,
          snippet=excluded.snippet,
-         internal_date_ms=excluded.internal_date_ms`,
+         internal_date_ms=excluded.internal_date_ms,
+         body_text=excluded.body_text`,
       [
         message.id,
         message.thread_id || null,
         message.subject || null,
         message.from_address || null,
         message.snippet || null,
-        message.internal_date_ms || null
+        message.internal_date_ms || null,
+        message.body_text || null
       ]
     );
   },
@@ -212,6 +216,30 @@ export const GmailDB = {
       `SELECT COALESCE(MAX(internal_date_ms), 0) AS maxVal FROM gmail_messages`
     );
     return Number(row?.maxVal || 0);
+  },
+
+  async getMessagesWithBody(limit?: number): Promise<any[]> {
+    const query = `
+      SELECT id, thread_id, subject, from_address, snippet, internal_date_ms, body_text
+      FROM gmail_messages
+      WHERE body_text IS NOT NULL AND body_text <> ''
+      ORDER BY internal_date_ms DESC
+      ${limit ? 'LIMIT ?' : ''}
+    `;
+
+    const params = limit ? [limit] : [];
+    const rows = await dbAll(query, params);
+    return rows as any[];
+  },
+
+  async getMessageById(id: string): Promise<any | null> {
+    const row = await dbGet(
+      `SELECT id, thread_id, subject, from_address, snippet, internal_date_ms, body_text
+       FROM gmail_messages
+       WHERE id = ?`,
+      [id]
+    );
+    return row || null;
   }
 };
 
