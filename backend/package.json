@@ -12,6 +12,7 @@
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "googleapis": "^164.1.0",
+    "openai": "^6.8.1",
     "sqlite3": "^5.1.7"
   },
   "devDependencies": {
