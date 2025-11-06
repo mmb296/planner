@@ -166,7 +166,8 @@ export function registerGmailRoutes(app: express.Express, oauth2Client: any) {
             subject: subject || undefined,
             from_address: from || undefined,
             snippet: snippet || undefined,
-            internal_date_ms: internalDateMs || undefined
+            internal_date_ms: internalDateMs || undefined,
+            body_text: bodyText || undefined
           });
           savedCount += 1;
           if (internalDateMs > newMaxSeen) newMaxSeen = internalDateMs;
