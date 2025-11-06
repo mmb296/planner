@@ -88,21 +88,19 @@ async function extractAppointmentDetails(
 
   try {
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gpt-5-nano',
       messages: [
         {
           role: 'system',
-          content: `You are an assistant that extracts appointment or meeting information from emails.
-Analyze the entire email and return a JSON object with the following keys:
-- isAppointment: boolean (true only if this email clearly references a scheduled appointment, meeting, visit, or service)
-- title: string (concise, descriptive label that mentions the specific appointment purpose or provider; avoid generic titles like "Appointment Reminder")
+          content: `You are an assistant that extracts appointment information from emails. 
+Return a JSON object with:
+- isAppointment: boolean (true if this email contains an appointment/meeting/event)
+- title: string (event title/summary)
 - date: string (ISO format YYYY-MM-DD, or null if not found)
 - time: string (HH:MM format using 24-hour clock, or null if not found)
 - location: string (physical address or virtual meeting link/details, or null if not found)
-- description: string (one-sentence summary including key details such as provider, service type, preparation instructions, etc., or null if not found)
-
-If the email references multiple appointments, focus on the primary one. If isAppointment is false, set all other fields to null.
-Only include information explicitly mentioned or inferable with high confidence from the email.`
+- description: string (brief description, or null if not found)
+If isAppointment is false, return null for all other fields.`
         },
         {
           role: 'user',
