@@ -70,6 +70,23 @@ function extractDetails(payload: any) {
   return { subject, from, internalDateMs, snippet, bodyText };
 }
 
+interface GmailMessage {
+  id: string;
+  thread_id?: string | null;
+  subject?: string | null;
+  from_address?: string | null;
+  snippet?: string | null;
+  internal_date_ms?: number | null;
+  body_text?: string | null;
+}
+
+function hasRequiredFields(message: GmailMessage) {
+  const subject = message.subject?.trim();
+  const from = message.from_address?.trim();
+  const body = message.body_text?.trim();
+  return Boolean(subject && from && body);
+}
+
 async function extractAppointmentDetails(
   subject: string,
   from: string,
@@ -193,7 +210,7 @@ export function registerGmailRoutes(app: express.Express, oauth2Client: any) {
       const limitParam = req.query.limit as string | undefined;
       const limit = limitParam ? Math.max(parseInt(limitParam, 10), 1) : 25;
 
-      const messages: any[] = await GmailDB.getMessagesWithBody(limit);
+      const messages: GmailMessage[] = await GmailDB.getMessagesWithBody(limit);
       const suggestions: Array<{
         isAppointment: boolean;
         title?: string;
@@ -204,13 +221,14 @@ export function registerGmailRoutes(app: express.Express, oauth2Client: any) {
       }> = [];
 
       for (const message of messages) {
-        if (!message.subject || !message.from_address || !message.body_text)
+        if (!hasRequiredFields(message)) {
           continue;
+        }
 
         const suggestion = await extractAppointmentDetails(
-          message.subject,
-          message.from_address,
-          message.body_text
+          message.subject as string,
+          message.from_address as string,
+          message.body_text as string
         );
 
         if (suggestion) {
@@ -237,23 +255,25 @@ export function registerGmailRoutes(app: express.Express, oauth2Client: any) {
       }
 
       const { messageId } = req.params;
-      const message = await GmailDB.getMessageById(messageId);
+      const message = (await GmailDB.getMessageById(
+        messageId
+      )) as GmailMessage | null;
       if (!message) {
         return res
           .status(404)
           .json({ error: `No stored Gmail message with id ${messageId}` });
       }
 
-      if (!message.subject || !message.from_address || !message.body_text) {
+      if (!hasRequiredFields(message)) {
         return res.status(400).json({
           error: 'Stored message is missing subject, from address, or body text'
         });
       }
 
       const suggestion = await extractAppointmentDetails(
-        message.subject,
-        message.from_address,
-        message.body_text
+        message.subject as string,
+        message.from_address as string,
+        message.body_text as string
       );
 
       res.json({
