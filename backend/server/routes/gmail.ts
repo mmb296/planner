@@ -228,4 +228,45 @@ export function registerGmailRoutes(app: express.Express, oauth2Client: any) {
         .json({ error: 'Failed to generate appointment suggestions' });
     }
   });
+
+  // AI suggestion for a specific message
+  app.get('/api/ai/appointments/suggestions/:messageId', async (req, res) => {
+    try {
+      if (!openai) {
+        return res
+          .status(500)
+          .json({ error: 'OpenAI API key not configured on the server' });
+      }
+
+      const { messageId } = req.params;
+      const message = await GmailDB.getMessageById(messageId);
+      if (!message) {
+        return res
+          .status(404)
+          .json({ error: `No stored Gmail message with id ${messageId}` });
+      }
+
+      if (!message.subject || !message.from_address || !message.body_text) {
+        return res.status(400).json({
+          error: 'Stored message is missing subject, from address, or body text'
+        });
+      }
+
+      const suggestion = await extractAppointmentDetails(
+        message.subject,
+        message.from_address,
+        message.body_text
+      );
+
+      res.json({
+        messageId,
+        suggestion
+      });
+    } catch (error) {
+      console.error('AI appointment suggestion (single) error:', error);
+      res.status(500).json({
+        error: 'Failed to generate appointment suggestion for the message'
+      });
+    }
+  });
 }

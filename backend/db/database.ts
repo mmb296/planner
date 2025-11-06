@@ -230,6 +230,16 @@ export const GmailDB = {
     const params = limit ? [limit] : [];
     const rows = await dbAll(query, params);
     return rows as any[];
+  },
+
+  async getMessageById(id: string): Promise<any | null> {
+    const row = await dbGet(
+      `SELECT id, thread_id, subject, from_address, snippet, internal_date_ms, body_text
+       FROM gmail_messages
+       WHERE id = ?`,
+      [id]
+    );
+    return row || null;
   }
 };
 
