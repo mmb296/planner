@@ -20,9 +20,10 @@ app.get('/', (req, res) => {
   res.json({ message: 'Planner API is running!' });
 });
 
-// Google OAuth setup
-const oauth2Client = setupGoogleAuth(app, PORT);
-
-// Register routes
-registerGmailRoutes(app, oauth2Client);
+// Register routes that don't depend on auth
 registerTaskRoutes(app);
+
+export async function initializeApp() {
+  const oauth2Client = await setupGoogleAuth(app, PORT);
+  registerGmailRoutes(app, oauth2Client);
+}

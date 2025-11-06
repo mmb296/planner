@@ -1,11 +1,12 @@
 import { closeDatabase } from '../db/connection.js';
 import { initDatabase } from '../db/database.js';
-import { app } from './app.js';
+import { app, initializeApp } from './app.js';
 
 const PORT = process.env.PORT || 5000;
 
 try {
   await initDatabase();
+  await initializeApp();
   app.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}`);
   });
