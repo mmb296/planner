@@ -216,6 +216,20 @@ export const GmailDB = {
       `SELECT COALESCE(MAX(internal_date_ms), 0) AS maxVal FROM gmail_messages`
     );
     return Number(row?.maxVal || 0);
+  },
+
+  async getMessagesWithBody(limit?: number): Promise<any[]> {
+    const query = `
+      SELECT id, thread_id, subject, from_address, snippet, internal_date_ms, body_text
+      FROM gmail_messages
+      WHERE body_text IS NOT NULL AND body_text <> ''
+      ORDER BY internal_date_ms DESC
+      ${limit ? 'LIMIT ?' : ''}
+    `;
+
+    const params = limit ? [limit] : [];
+    const rows = await dbAll(query, params);
+    return rows as any[];
   }
 };
 

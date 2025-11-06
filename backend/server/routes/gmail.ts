@@ -71,8 +71,8 @@ function extractDetails(payload: any) {
 }
 
 async function extractAppointmentDetails(
-  subject: string | undefined,
-  from: string | undefined,
+  subject: string,
+  from: string,
   bodyText: string
 ): Promise<{
   isAppointment: boolean;
@@ -171,18 +171,6 @@ export function registerGmailRoutes(app: express.Express, oauth2Client: any) {
           });
           savedCount += 1;
           if (internalDateMs > newMaxSeen) newMaxSeen = internalDateMs;
-
-          // Extract appointment details using AI
-          if (bodyText && process.env.OPENAI_API_KEY) {
-            const appointmentDetails = await extractAppointmentDetails(
-              subject,
-              from,
-              bodyText
-            );
-            if (appointmentDetails) {
-              console.log('Found appointment:', appointmentDetails);
-            }
-          }
         }
 
         pageToken = listResp.data.nextPageToken || undefined;
@@ -192,6 +180,52 @@ export function registerGmailRoutes(app: express.Express, oauth2Client: any) {
     } catch (error) {
       console.error('Gmail fetch error:', error);
       res.status(500).json({ error: 'Failed to perform incremental fetch' });
+    }
+  });
+
+  // AI appointment suggestion route
+  app.get('/api/ai/appointments/suggestions', async (req, res) => {
+    try {
+      if (!openai) {
+        return res
+          .status(500)
+          .json({ error: 'OpenAI API key not configured on the server' });
+      }
+
+      const limitParam = req.query.limit as string | undefined;
+      const limit = limitParam ? Math.max(parseInt(limitParam, 10), 1) : 25;
+
+      const messages: any[] = await GmailDB.getMessagesWithBody(limit);
+      const suggestions: Array<{
+        isAppointment: boolean;
+        title?: string;
+        date?: string;
+        time?: string;
+        location?: string;
+        description?: string;
+      }> = [];
+
+      for (const message of messages) {
+        if (!message.subject || !message.from_address || !message.body_text)
+          continue;
+
+        const suggestion = await extractAppointmentDetails(
+          message.subject,
+          message.from_address,
+          message.body_text
+        );
+
+        if (suggestion) {
+          suggestions.push(suggestion);
+        }
+      }
+
+      res.json({ count: suggestions.length, suggestions });
+    } catch (error) {
+      console.error('AI appointment suggestion error:', error);
+      res
+        .status(500)
+        .json({ error: 'Failed to generate appointment suggestions' });
     }
   });
 }
