@@ -1,7 +1,13 @@
+import dotenv from 'dotenv';
 import express from 'express';
 import { google } from 'googleapis';
+import OpenAI from 'openai';
 
 import { GmailDB } from '../../db/database.js';
+
+dotenv.config();
+
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 type Header = { name?: string; value?: string };
 
@@ -64,6 +70,56 @@ function extractDetails(payload: any) {
   return { subject, from, internalDateMs, snippet, bodyText };
 }
 
+async function extractAppointmentDetails(
+  subject: string | undefined,
+  from: string | undefined,
+  bodyText: string
+): Promise<{
+  isAppointment: boolean;
+  title?: string;
+  date?: string;
+  time?: string;
+  location?: string;
+  description?: string;
+} | null> {
+  if (!bodyText && !subject) return null;
+
+  const emailContent = `Subject: ${subject || 'N/A'}\nFrom: ${from || 'N/A'}\n\n${bodyText}`;
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        {
+          role: 'system',
+          content: `You are an assistant that extracts appointment or meeting information from emails.
+Analyze the entire email and return a JSON object with the following keys:
+- isAppointment: boolean (true only if this email clearly references a scheduled appointment, meeting, visit, or service)
+- title: string (concise, descriptive label that mentions the specific appointment purpose or provider; avoid generic titles like "Appointment Reminder")
+- date: string (ISO format YYYY-MM-DD, or null if not found)
+- time: string (HH:MM format using 24-hour clock, or null if not found)
+- location: string (physical address or virtual meeting link/details, or null if not found)
+- description: string (one-sentence summary including key details such as provider, service type, preparation instructions, etc., or null if not found)
+
+If the email references multiple appointments, focus on the primary one. If isAppointment is false, set all other fields to null.
+Only include information explicitly mentioned or inferable with high confidence from the email.`
+        },
+        {
+          role: 'user',
+          content: emailContent
+        }
+      ],
+      response_format: { type: 'json_object' }
+    });
+
+    const result = JSON.parse(response.choices[0]?.message?.content || '{}');
+    return result.isAppointment ? result : null;
+  } catch (error) {
+    console.error('Error extracting appointment details:', error);
+    return null;
+  }
+}
+
 export function registerGmailRoutes(app: express.Express, oauth2Client: any) {
   // Gmail polling route (simple incremental fetch)
   app.get('/api/gmail/messages', async (req, res) => {
@@ -114,6 +170,18 @@ export function registerGmailRoutes(app: express.Express, oauth2Client: any) {
           });
           savedCount += 1;
           if (internalDateMs > newMaxSeen) newMaxSeen = internalDateMs;
+
+          // Extract appointment details using AI
+          if (bodyText && process.env.OPENAI_API_KEY) {
+            const appointmentDetails = await extractAppointmentDetails(
+              subject,
+              from,
+              bodyText
+            );
+            if (appointmentDetails) {
+              console.log('Found appointment:', appointmentDetails);
+            }
+          }
         }
 
         pageToken = listResp.data.nextPageToken || undefined;
