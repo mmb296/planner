@@ -4,6 +4,7 @@ import express from 'express';
 import { setupGoogleAuth } from './auth.js';
 import { applyMiddleware } from './middleware.js';
 import { registerGmailRoutes } from './routes/gmail.js';
+import { registerSettingsRoutes } from './routes/settings.js';
 import { registerTaskRoutes } from './routes/tasks.js';
 
 dotenv.config();
@@ -22,6 +23,7 @@ app.get('/', (req, res) => {
 
 // Register routes that don't depend on auth
 registerTaskRoutes(app);
+registerSettingsRoutes(app);
 
 export async function initializeApp() {
   const oauth2Client = await setupGoogleAuth(app, PORT);
