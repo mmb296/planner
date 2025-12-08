@@ -102,7 +102,7 @@ const CountdownBanner = () => {
         ×
       </button>
       <div className="countdown-content">
-        <span className="countdown-title">{title}</span>
+        {title && <span className="countdown-title">{title}</span>}
         <div className="countdown-timer">
           <CountdownItem value={timeLeft.days} label="Days" />
           <span className="countdown-separator">:</span>
