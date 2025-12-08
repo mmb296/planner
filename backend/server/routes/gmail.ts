@@ -172,17 +172,27 @@ export function registerGmailRoutes(app: express.Express, oauth2Client: any) {
           const { subject, from, internalDateMs, snippet, bodyText } =
             extractDetails(payload);
 
+          if (
+            !subject ||
+            !subject.trim() ||
+            !from ||
+            !from.trim() ||
+            !bodyText?.trim()
+          ) {
+            continue;
+          }
+
           // Dedupe: skip if not newer than max seen (handles edge cases where after: returns same timestamp)
           if (internalDateMs && internalDateMs <= maxSeen) continue;
 
           await GmailDB.upsertMessage({
             id: msg.id,
             thread_id: payload.threadId || undefined,
-            subject: subject || undefined,
-            from_address: from || undefined,
+            subject,
+            from_address: from,
             snippet: snippet || undefined,
             internal_date_ms: internalDateMs || undefined,
-            body_text: bodyText || undefined
+            body_text: bodyText
           });
           savedCount += 1;
           if (internalDateMs > newMaxSeen) newMaxSeen = internalDateMs;
