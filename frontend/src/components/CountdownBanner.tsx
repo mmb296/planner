@@ -2,10 +2,7 @@ import './CountdownBanner.css';
 
 import { useEffect, useState } from 'react';
 
-interface CountdownBannerProps {
-  targetDate?: Date;
-  title?: string;
-}
+import { API_ENDPOINTS } from '../config/api';
 
 interface CountdownItemProps {
   value: number;
@@ -28,11 +25,10 @@ const CountdownItem = ({
   );
 };
 
-const CountdownBanner = ({
-  targetDate = new Date('2025-01-01T00:00:00'),
-  title = 'Countdown'
-}: CountdownBannerProps) => {
+const CountdownBanner = () => {
   const [isClosed, setIsClosed] = useState(false);
+  const [targetDate, setTargetDate] = useState<Date | null>(null);
+  const [title, setTitle] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,
@@ -40,10 +36,36 @@ const CountdownBanner = ({
     seconds: 0
   });
 
+  // Fetch countdown config from API
   useEffect(() => {
+    const fetchCountdownConfig = async () => {
+      try {
+        const response = await fetch(API_ENDPOINTS.COUNTDOWN);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.target_date) {
+            setTargetDate(new Date(data.target_date));
+          }
+          if (data.title) {
+            setTitle(data.title);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch countdown config:', error);
+      }
+    };
+
+    fetchCountdownConfig();
+  }, []);
+
+  const shouldShowBanner = !isClosed && targetDate !== null;
+
+  useEffect(() => {
+    if (!shouldShowBanner) return;
+
     const calculateTimeLeft = () => {
       const now = new Date().getTime();
-      const target = targetDate.getTime();
+      const target = targetDate!.getTime();
       const difference = target - now;
 
       if (difference > 0) {
@@ -64,9 +86,9 @@ const CountdownBanner = ({
     const interval = setInterval(calculateTimeLeft, 1000);
 
     return () => clearInterval(interval);
-  }, [targetDate]);
+  }, [shouldShowBanner, targetDate]);
 
-  if (isClosed) {
+  if (!shouldShowBanner) {
     return null;
   }
 
