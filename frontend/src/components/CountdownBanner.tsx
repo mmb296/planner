@@ -32,6 +32,7 @@ const CountdownBanner = ({
   targetDate = new Date('2025-01-01T00:00:00'),
   title = 'Countdown'
 }: CountdownBannerProps) => {
+  const [isClosed, setIsClosed] = useState(false);
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,
@@ -65,8 +66,19 @@ const CountdownBanner = ({
     return () => clearInterval(interval);
   }, [targetDate]);
 
+  if (isClosed) {
+    return null;
+  }
+
   return (
     <div className="countdown-banner">
+      <button
+        className="countdown-close"
+        onClick={() => setIsClosed(true)}
+        aria-label="Close banner"
+      >
+        ×
+      </button>
       <div className="countdown-content">
         <span className="countdown-title">{title}</span>
         <div className="countdown-timer">
