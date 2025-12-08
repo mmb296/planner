@@ -7,6 +7,27 @@ interface CountdownBannerProps {
   title?: string;
 }
 
+interface CountdownItemProps {
+  value: number;
+  label: string;
+  padZero?: boolean;
+}
+
+const CountdownItem = ({
+  value,
+  label,
+  padZero = false
+}: CountdownItemProps) => {
+  const displayValue = padZero ? String(value).padStart(2, '0') : value;
+
+  return (
+    <div className="countdown-item">
+      <span className="countdown-value">{displayValue}</span>
+      <span className="countdown-label">{label}</span>
+    </div>
+  );
+};
+
 const CountdownBanner = ({
   targetDate = new Date('2025-01-01T00:00:00'),
   title = 'Countdown'
@@ -49,31 +70,13 @@ const CountdownBanner = ({
       <div className="countdown-content">
         <span className="countdown-title">{title}</span>
         <div className="countdown-timer">
-          <div className="countdown-item">
-            <span className="countdown-value">{timeLeft.days}</span>
-            <span className="countdown-label">Days</span>
-          </div>
+          <CountdownItem value={timeLeft.days} label="Days" />
           <span className="countdown-separator">:</span>
-          <div className="countdown-item">
-            <span className="countdown-value">
-              {String(timeLeft.hours).padStart(2, '0')}
-            </span>
-            <span className="countdown-label">Hours</span>
-          </div>
+          <CountdownItem value={timeLeft.hours} label="Hours" padZero />
           <span className="countdown-separator">:</span>
-          <div className="countdown-item">
-            <span className="countdown-value">
-              {String(timeLeft.minutes).padStart(2, '0')}
-            </span>
-            <span className="countdown-label">Minutes</span>
-          </div>
+          <CountdownItem value={timeLeft.minutes} label="Minutes" padZero />
           <span className="countdown-separator">:</span>
-          <div className="countdown-item">
-            <span className="countdown-value">
-              {String(timeLeft.seconds).padStart(2, '0')}
-            </span>
-            <span className="countdown-label">Seconds</span>
-          </div>
+          <CountdownItem value={timeLeft.seconds} label="Seconds" padZero />
         </div>
       </div>
     </div>
