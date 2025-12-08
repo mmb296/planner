@@ -1,9 +1,16 @@
 .App {
   --secondary-color: #999;
   display: flex;
+  flex-direction: column;
   background-color: #f9fafd;
   height: 100vh;
   color: #3c3c43;
+  overflow: hidden;
+}
+
+.App-content {
+  display: flex;
+  flex: 1;
   overflow: hidden;
 }
 
