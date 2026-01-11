@@ -4,6 +4,7 @@ import express from 'express';
 import { setupGoogleAuth } from './auth.js';
 import { applyMiddleware } from './middleware.js';
 import { registerGmailRoutes } from './routes/gmail.js';
+import { registerPeriodDaysRoutes } from './routes/periodDays.js';
 import { registerSettingsRoutes } from './routes/settings.js';
 import { registerTaskRoutes } from './routes/tasks.js';
 
@@ -23,6 +24,7 @@ app.get('/', (req, res) => {
 
 // Register routes that don't depend on auth
 registerTaskRoutes(app);
+registerPeriodDaysRoutes(app);
 registerSettingsRoutes(app);
 
 export async function initializeApp() {

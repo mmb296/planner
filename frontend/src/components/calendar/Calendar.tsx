@@ -1,8 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 
+import { usePeriodDays } from '../../hooks/usePeriodDays';
 import { CalendarService } from '../../services/calendarService';
 import { CalendarEvent } from '../../types';
-import { getFutureDate, getTodayDate } from '../../utils/dateTime';
+import {
+  formatDateString,
+  getFutureDate,
+  getTodayDate
+} from '../../utils/dateTime';
 import styles from './Calendar.module.css';
 import Day from './Day';
 import DaysSelect from './DaysSelect';
@@ -23,6 +28,7 @@ const Calendar: React.FC = () => {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [numDays, setNumDays] = useState(14);
   const [showAllCals, setShowAllCals] = useState(false);
+  const { periodDays, togglePeriodDay } = usePeriodDays(numDays);
 
   // Returns the token client, initializing if needed
   const getTokenClient = () => {
@@ -140,14 +146,22 @@ const Calendar: React.FC = () => {
         <ul className={styles.eventsList}>
           {Array.from(eventsByDay.entries())
             .sort((a, b) => a[0] - b[0])
-            .map(([daysOut, events]) => (
-              <Day
-                key={daysOut}
-                label={CalendarService.getDayLabel(daysOut)}
-                date={getFutureDate(daysOut)}
-                events={events}
-              />
-            ))}
+            .map(([daysOut, events]) => {
+              const date = getFutureDate(daysOut);
+              const dateStr = formatDateString(date);
+              return (
+                <Day
+                  key={daysOut}
+                  label={CalendarService.getDayLabel(daysOut)}
+                  date={date}
+                  events={events}
+                  isPeriodDay={periodDays.has(dateStr)}
+                  onDotToggle={(date) => {
+                    togglePeriodDay(formatDateString(date));
+                  }}
+                />
+              );
+            })}
         </ul>
       </div>
     );
