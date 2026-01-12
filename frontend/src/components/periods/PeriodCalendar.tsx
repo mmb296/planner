@@ -9,7 +9,7 @@ import {
   getMonthStart,
   getNextMonth,
   getPreviousMonth,
-  getTodayDate
+  isToday
 } from '../../utils/dateTime';
 import styles from './PeriodCalendar.module.css';
 
@@ -56,8 +56,6 @@ const PeriodCalendar: React.FC<PeriodCalendarProps> = ({ isOpen, onClose }) => {
 
   const days = getDaysInMonth(currentMonth);
   const monthName = formatMonthName(currentMonth);
-  const today = getTodayDate();
-  const todayStr = formatDateString(today);
 
   const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -100,15 +98,13 @@ const PeriodCalendar: React.FC<PeriodCalendarProps> = ({ isOpen, onClose }) => {
             }
 
             const dateStr = formatDateString(date);
-            const isToday = dateStr === todayStr;
-            const isPeriod = periodDays.has(dateStr);
 
             return (
               <button
                 key={dateStr}
                 type="button"
-                className={`${styles.dayCell} ${isToday ? styles.today : ''} ${
-                  isPeriod ? styles.periodDay : ''
+                className={`${styles.dayCell} ${isToday(date) ? styles.today : ''} ${
+                  periodDays.has(dateStr) ? styles.periodDay : ''
                 }`}
                 onClick={() => togglePeriodDay(dateStr)}
               >

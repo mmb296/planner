@@ -6,6 +6,16 @@ export function getTodayDate(): Date {
   return today;
 }
 
+// Check if a date is today (compares only the date portion, ignoring time)
+export function isToday(date: Date): boolean {
+  const today = getTodayDate();
+  return (
+    date.getFullYear() === today.getFullYear() &&
+    date.getMonth() === today.getMonth() &&
+    date.getDate() === today.getDate()
+  );
+}
+
 export function daysFromNow(time: number): number {
   return Math.floor((time - getTodayDate().getTime()) / (1000 * 60 * 60 * 24));
 }
