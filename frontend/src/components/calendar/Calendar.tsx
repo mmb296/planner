@@ -8,7 +8,9 @@ import {
   getFutureDate,
   getTodayDate
 } from '../../utils/dateTime';
+import PeriodCalendar from '../periods/PeriodCalendar';
 import styles from './Calendar.module.css';
+import CalendarIcon from './CalendarIcon';
 import Day from './Day';
 import DaysSelect from './DaysSelect';
 
@@ -28,7 +30,11 @@ const Calendar: React.FC = () => {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [numDays, setNumDays] = useState(14);
   const [showAllCals, setShowAllCals] = useState(false);
-  const { periodDays, togglePeriodDay } = usePeriodDays(numDays);
+  const [showPeriodCalendar, setShowPeriodCalendar] = useState(false);
+  const { periodDays, togglePeriodDay } = usePeriodDays(
+    getTodayDate(),
+    getFutureDate(numDays - 1)
+  );
 
   // Returns the token client, initializing if needed
   const getTokenClient = () => {
@@ -132,6 +138,13 @@ const Calendar: React.FC = () => {
             })}
           </h1>
           <div className={styles.calendarOptions}>
+            <button
+              onClick={() => setShowPeriodCalendar(true)}
+              className={styles.periodCalendarButton}
+              title="Open period calendar"
+            >
+              <CalendarIcon className={styles.periodCalendarIcon} />
+            </button>
             <label>
               Show all calendars:
               <input
@@ -163,6 +176,10 @@ const Calendar: React.FC = () => {
               );
             })}
         </ul>
+        <PeriodCalendar
+          isOpen={showPeriodCalendar}
+          onClose={() => setShowPeriodCalendar(false)}
+        />
       </div>
     );
   }
