@@ -40,7 +40,6 @@
   background: transparent;
   border: none;
   padding: 4px;
-  cursor: pointer;
   display: flex;
   transition: opacity 0.2s;
 }
