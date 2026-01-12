@@ -1,5 +1,7 @@
 .App {
   --secondary-color: #999;
+  --period-color: #ff5b7d;
+  --period-color-hover: #e04a6a;
   display: flex;
   flex-direction: column;
   background-color: #f9fafd;

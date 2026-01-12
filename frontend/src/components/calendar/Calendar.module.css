@@ -52,7 +52,7 @@
 .periodCalendarIcon {
   width: 24px;
   height: 24px;
-  fill: #ff5b7d;
+  fill: var(--period-color);
 }
 
 .placeholder {

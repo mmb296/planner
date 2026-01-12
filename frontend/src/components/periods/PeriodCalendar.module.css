@@ -134,11 +134,11 @@
 }
 
 .dayCell.periodDay {
-  background-color: #ff5b7d;
+  background-color: var(--period-color);
   color: white;
   font-weight: 600;
 }
 
 .dayCell.periodDay:hover {
-  background-color: #e04a6a;
+  background-color: var(--period-color-hover);
 }

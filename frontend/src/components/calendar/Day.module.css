@@ -36,11 +36,11 @@
 }
 
 .dot:hover {
-  border-color: #ff5b7d;
+  border-color: var(--period-color);
   transform: scale(1.1);
 }
 
 .dot.dotFilled {
-  background-color: #ff5b7d;
-  border-color: #ff5b7d;
+  background-color: var(--period-color);
+  border-color: var(--period-color);
 }
