@@ -33,6 +33,25 @@
 .calendarOptions {
   display: flex;
   gap: 20px;
+  align-items: center;
+}
+
+.periodCalendarButton {
+  background: transparent;
+  border: none;
+  padding: 4px;
+  display: flex;
+  transition: opacity 0.2s;
+}
+
+.periodCalendarButton:hover {
+  opacity: 0.8;
+}
+
+.periodCalendarIcon {
+  width: 24px;
+  height: 24px;
+  fill: var(--period-color);
 }
 
 .placeholder {
