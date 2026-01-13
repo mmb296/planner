@@ -12,14 +12,14 @@ import {
   getTodayDate,
   isToday
 } from '../../utils/dateTime';
-import styles from './PeriodCalendar.module.css';
+import styles from './PeriodModal.module.css';
 
-type PeriodCalendarProps = {
+type PeriodModalProps = {
   isOpen: boolean;
   onClose: () => void;
 };
 
-const PeriodCalendar: React.FC<PeriodCalendarProps> = ({ isOpen, onClose }) => {
+const PeriodModal: React.FC<PeriodModalProps> = ({ isOpen, onClose }) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const {
     periodDays,
@@ -129,4 +129,4 @@ const PeriodCalendar: React.FC<PeriodCalendarProps> = ({ isOpen, onClose }) => {
   );
 };
 
-export default PeriodCalendar;
+export default PeriodModal;

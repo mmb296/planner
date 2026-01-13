@@ -8,7 +8,7 @@ import {
   getFutureDate,
   getTodayDate
 } from '../../utils/dateTime';
-import PeriodCalendar from '../periods/PeriodCalendar';
+import PeriodModal from '../periods/PeriodModal';
 import styles from './Calendar.module.css';
 import CalendarIcon from './CalendarIcon';
 import Day from './Day';
@@ -30,7 +30,7 @@ const Calendar: React.FC = () => {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [numDays, setNumDays] = useState(14);
   const [showAllCals, setShowAllCals] = useState(false);
-  const [showPeriodCalendar, setShowPeriodCalendar] = useState(false);
+  const [showPeriodModal, setShowPeriodModal] = useState(false);
   const {
     periodDays,
     togglePeriodDay,
@@ -122,11 +122,11 @@ const Calendar: React.FC = () => {
 
   // Refetch period days when the period calendar modal closes
   useEffect(() => {
-    if (!showPeriodCalendar) {
+    if (!showPeriodModal) {
       refetchPeriodDays();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showPeriodCalendar]);
+  }, [showPeriodModal]);
 
   // Filter and group events
   const eventsByDay = CalendarService.filterAndGroupEventsByDay(
@@ -157,7 +157,7 @@ const Calendar: React.FC = () => {
             </label>
             <DaysSelect value={numDays} onChange={setNumDays} />
             <button
-              onClick={() => setShowPeriodCalendar(true)}
+              onClick={() => setShowPeriodModal(true)}
               className={styles.periodCalendarButton}
               title="Open period calendar"
             >
@@ -185,9 +185,9 @@ const Calendar: React.FC = () => {
               );
             })}
         </ul>
-        <PeriodCalendar
-          isOpen={showPeriodCalendar}
-          onClose={() => setShowPeriodCalendar(false)}
+        <PeriodModal
+          isOpen={showPeriodModal}
+          onClose={() => setShowPeriodModal(false)}
         />
       </div>
     );
