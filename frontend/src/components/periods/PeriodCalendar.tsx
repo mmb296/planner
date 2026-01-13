@@ -9,6 +9,7 @@ import {
   getMonthStart,
   getNextMonth,
   getPreviousMonth,
+  getTodayDate,
   isToday
 } from '../../utils/dateTime';
 import styles from './PeriodCalendar.module.css';
@@ -37,6 +38,13 @@ const PeriodCalendar: React.FC<PeriodCalendarProps> = ({ isOpen, onClose }) => {
   const goToToday = () => {
     setCurrentMonth(new Date());
   };
+
+  // Reset to today's month when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setCurrentMonth(getTodayDate());
+    }
+  }, [isOpen]);
 
   // Close on escape key
   useEffect(() => {
