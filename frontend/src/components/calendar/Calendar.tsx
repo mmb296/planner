@@ -138,13 +138,6 @@ const Calendar: React.FC = () => {
             })}
           </h1>
           <div className={styles.calendarOptions}>
-            <button
-              onClick={() => setShowPeriodCalendar(true)}
-              className={styles.periodCalendarButton}
-              title="Open period calendar"
-            >
-              <CalendarIcon className={styles.periodCalendarIcon} />
-            </button>
             <label>
               Show all calendars:
               <input
@@ -154,6 +147,13 @@ const Calendar: React.FC = () => {
               />
             </label>
             <DaysSelect value={numDays} onChange={setNumDays} />
+            <button
+              onClick={() => setShowPeriodCalendar(true)}
+              className={styles.periodCalendarButton}
+              title="Open period calendar"
+            >
+              <CalendarIcon className={styles.periodCalendarIcon} />
+            </button>
           </div>
         </header>
         <ul className={styles.eventsList}>
