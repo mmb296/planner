@@ -49,5 +49,5 @@ export function usePeriodDays(startDate: Date, endDate: Date) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [startDateStr, endDateStr]);
 
-  return { periodDays, togglePeriodDay };
+  return { periodDays, togglePeriodDay, refetch: fetchPeriodDays };
 }
