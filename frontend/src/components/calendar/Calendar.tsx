@@ -31,10 +31,11 @@ const Calendar: React.FC = () => {
   const [numDays, setNumDays] = useState(14);
   const [showAllCals, setShowAllCals] = useState(false);
   const [showPeriodCalendar, setShowPeriodCalendar] = useState(false);
-  const { periodDays, togglePeriodDay } = usePeriodDays(
-    getTodayDate(),
-    getFutureDate(numDays - 1)
-  );
+  const {
+    periodDays,
+    togglePeriodDay,
+    refetch: refetchPeriodDays
+  } = usePeriodDays(getTodayDate(), getFutureDate(numDays - 1));
 
   // Returns the token client, initializing if needed
   const getTokenClient = () => {
@@ -118,6 +119,14 @@ const Calendar: React.FC = () => {
     fetchUpcomingEvents(savedToken, numDays);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [numDays]);
+
+  // Refetch period days when the period calendar modal closes
+  useEffect(() => {
+    if (!showPeriodCalendar) {
+      refetchPeriodDays();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showPeriodCalendar]);
 
   // Filter and group events
   const eventsByDay = CalendarService.filterAndGroupEventsByDay(

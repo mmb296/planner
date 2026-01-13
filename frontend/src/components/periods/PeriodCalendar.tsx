@@ -21,10 +21,11 @@ type PeriodCalendarProps = {
 
 const PeriodCalendar: React.FC<PeriodCalendarProps> = ({ isOpen, onClose }) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const { periodDays, togglePeriodDay } = usePeriodDays(
-    getMonthStart(currentMonth),
-    getMonthEnd(currentMonth)
-  );
+  const {
+    periodDays,
+    togglePeriodDay,
+    refetch: refetchPeriodDays
+  } = usePeriodDays(getMonthStart(currentMonth), getMonthEnd(currentMonth));
 
   // Navigate months
   const goToPreviousMonth = () => {
@@ -39,11 +40,13 @@ const PeriodCalendar: React.FC<PeriodCalendarProps> = ({ isOpen, onClose }) => {
     setCurrentMonth(new Date());
   };
 
-  // Reset to today's month when modal opens
+  // Reset to today's month and refetch period days when modal opens
   useEffect(() => {
     if (isOpen) {
       setCurrentMonth(getTodayDate());
+      refetchPeriodDays();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   // Close on escape key
