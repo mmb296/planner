@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { usePeriodDays } from '../../hooks/usePeriodDays';
 import { CalendarService } from '../../services/calendarService';
+import { fetchEvents } from '../../services/googleCalendarService';
 import { CalendarEvent } from '../../types';
 import {
   formatDateString,
@@ -60,41 +61,21 @@ const Calendar: React.FC = () => {
 
   // Fetch events from Google Calendar API
   const fetchUpcomingEvents = async (token: string, daysToFetch = numDays) => {
-    const params = {
-      orderBy: 'startTime',
-      singleEvents: 'true',
-      timeMin: getTodayDate().toISOString(),
-      timeMax: getFutureDate(daysToFetch).toISOString()
-    };
-
-    const fetchEvents = async (calendarId: string) => {
-      const url = new URL(
-        `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events`
+    try {
+      const timeMin = getTodayDate();
+      const timeMax = getFutureDate(daysToFetch);
+      const allEvents = await fetchEvents(
+        CALENDAR_IDS,
+        timeMin,
+        timeMax,
+        token
       );
-      url.search = new URLSearchParams(params).toString();
-
-      const response = await fetch(url.toString(), {
-        method: 'GET',
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      if (!response.ok) {
-        if (response.status === 401 || response.status === 403) {
-          clearAuthentication();
-        }
-        return [];
+      setEvents(allEvents);
+    } catch (error: any) {
+      if (error.message === 'AUTH_ERROR') {
+        clearAuthentication();
       }
-
-      const data = await response.json();
-      return (data.items || []).map((event: CalendarEvent) => ({
-        ...event,
-        calendarId
-      }));
-    };
-
-    const results = await Promise.all(CALENDAR_IDS.map(fetchEvents));
-    const allEvents = results.flat();
-    setEvents(allEvents);
+    }
   };
 
   // Handle authentication
