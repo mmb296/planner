@@ -1,0 +1,99 @@
+import { CalendarEvent } from '../types';
+
+const DISCOVERY_DOC =
+  'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest';
+// API key is optional for authenticated requests but recommended for better rate limiting
+const API_KEY = process.env.REACT_APP_GOOGLE_API_KEY || undefined;
+
+let gapiLoadPromise: Promise<void> | null = null;
+let cachedAccessToken: string | null = null;
+
+/**
+ * Ensure gapi client is loaded and initialized
+ */
+const ensureGapiLoaded = (): Promise<void> => {
+  if (window.gapi?.client && 'calendar' in window.gapi.client) {
+    return Promise.resolve();
+  }
+
+  if (gapiLoadPromise) {
+    return gapiLoadPromise;
+  }
+
+  gapiLoadPromise = new Promise((resolve, reject) => {
+    if (!window.gapi) {
+      reject(new Error('gapi library not loaded'));
+      return;
+    }
+
+    window.gapi.load('client', async () => {
+      try {
+        await window.gapi.client.init({
+          apiKey: API_KEY,
+          discoveryDocs: [DISCOVERY_DOC]
+        });
+        resolve();
+      } catch (error) {
+        reject(error);
+      }
+    });
+  });
+
+  return gapiLoadPromise;
+};
+
+const setAccessTokenIfChanged = (accessToken: string): void => {
+  if (cachedAccessToken !== accessToken) {
+    window.gapi.client.setToken({ access_token: accessToken });
+    cachedAccessToken = accessToken;
+  }
+};
+
+/**
+ * Fetch events from one or more calendars
+ */
+export const fetchEvents = async (
+  calendarIds: string[],
+  timeMin: Date,
+  timeMax: Date,
+  accessToken: string
+): Promise<CalendarEvent[]> => {
+  try {
+    await ensureGapiLoaded();
+    setAccessTokenIfChanged(accessToken);
+  } catch (error) {
+    console.error('Error initializing gapi client:', error);
+    return [];
+  }
+
+  const fetchCalendarEvents = async (
+    calendarId: string
+  ): Promise<CalendarEvent[]> => {
+    const response = await (window.gapi.client as any).calendar.events.list({
+      calendarId,
+      timeMin: timeMin.toISOString(),
+      timeMax: timeMax.toISOString(),
+      singleEvents: true,
+      orderBy: 'startTime' as const
+    });
+
+    const items = response.result.items || [];
+    return items.map((event: CalendarEvent) => ({
+      ...event,
+      calendarId
+    }));
+  };
+
+  try {
+    const results = await Promise.all(calendarIds.map(fetchCalendarEvents));
+    return results.flat();
+  } catch (error: any) {
+    // Handle auth errors - throw so Calendar can clear auth
+    if (error.status === 401 || error.status === 403) {
+      throw new Error('AUTH_ERROR');
+    }
+    // TODO: Handle non-auth errors individually
+    // For now, if any calendars fail, return empty array
+    return [];
+  }
+};
