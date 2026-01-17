@@ -97,3 +97,31 @@ export const fetchEvents = async (
     return [];
   }
 };
+
+/**
+ * List all calendars available to the user
+ */
+export const listCalendars = async (
+  accessToken: string
+): Promise<Array<{ id: string; summary: string }>> => {
+  try {
+    await ensureGapiLoaded();
+    setAccessTokenIfChanged(accessToken);
+  } catch (error) {
+    console.error('Error initializing gapi client:', error);
+    return [];
+  }
+
+  try {
+    const response = await (
+      window.gapi.client as any
+    ).calendar.calendarList.list();
+    return response.result.items || [];
+  } catch (error: any) {
+    // Handle auth errors - throw so caller can clear auth
+    if (error.status === 401 || error.status === 403) {
+      throw new Error('AUTH_ERROR');
+    }
+    return [];
+  }
+};
