@@ -50,6 +50,21 @@ const setAccessTokenIfChanged = (accessToken: string): void => {
 };
 
 /**
+ * Initialize gapi and set access token
+ * Returns false if setup fails, true otherwise
+ */
+const ensureGapiReady = async (accessToken: string): Promise<boolean> => {
+  try {
+    await ensureGapiLoaded();
+    setAccessTokenIfChanged(accessToken);
+    return true;
+  } catch (error) {
+    console.error('Error setting up gapi client:', error);
+    return false;
+  }
+};
+
+/**
  * Fetch events from one or more calendars
  */
 export const fetchEvents = async (
@@ -58,11 +73,7 @@ export const fetchEvents = async (
   timeMax: Date,
   accessToken: string
 ): Promise<CalendarEvent[]> => {
-  try {
-    await ensureGapiLoaded();
-    setAccessTokenIfChanged(accessToken);
-  } catch (error) {
-    console.error('Error initializing gapi client:', error);
+  if (!(await ensureGapiReady(accessToken))) {
     return [];
   }
 
@@ -104,11 +115,7 @@ export const fetchEvents = async (
 export const listCalendars = async (
   accessToken: string
 ): Promise<Array<{ id: string; summary: string }>> => {
-  try {
-    await ensureGapiLoaded();
-    setAccessTokenIfChanged(accessToken);
-  } catch (error) {
-    console.error('Error initializing gapi client:', error);
+  if (!(await ensureGapiReady(accessToken))) {
     return [];
   }
 
