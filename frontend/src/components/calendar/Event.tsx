@@ -4,22 +4,6 @@ import { CalendarEvent } from '../../types';
 import { formatTime, isEventPast } from '../../utils/dateTime';
 import styles from './Event.module.css';
 
-function getDotColor(event: CalendarEvent): string {
-  // Special color for events starting with 'NO '
-  if (event.summary?.startsWith('NO ')) return '#ff6d70';
-
-  if (!event.start.dateTime) return '#f4d9e8'; // All Day
-  const hour = new Date(event.start.dateTime).getHours();
-  if (hour < 12) return '#f8e9bd'; // Morning
-  if (hour < 17) return '#d9e2f2'; // Afternoon
-  return '#cec8f7'; // Night
-}
-
-function getCalendarLetter(event: CalendarEvent): string {
-  // Show first letter of calendar summary
-  return event.calendarSummary[0].toUpperCase();
-}
-
 const Event: React.FC<{ event: CalendarEvent }> = ({ event }) => (
   <li
     className={styles.eventItem}
@@ -27,10 +11,8 @@ const Event: React.FC<{ event: CalendarEvent }> = ({ event }) => (
   >
     <span
       className={styles.eventDot}
-      style={{ backgroundColor: getDotColor(event) }}
-    >
-      {getCalendarLetter(event)}
-    </span>
+      style={{ backgroundColor: event.color }}
+    />
     {event.start.dateTime && (
       <span className={styles.eventTime}>
         {formatTime(event.start.dateTime)} -{' '}
