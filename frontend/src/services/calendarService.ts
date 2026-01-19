@@ -3,20 +3,14 @@ import { getEventSpanDays } from '../utils/dateTime';
 
 export class CalendarService {
   /**
-   * Filter events by calendar visibility and group them by day
+   * Group events by day
    */
-  static filterAndGroupEventsByDay(
+  static groupEventsByDay(
     events: CalendarEvent[],
-    showAllCalendars: boolean,
     numDays: number
   ): Map<number, CalendarEvent[]> {
-    // Filter events based on calendar visibility preference
-    const filteredEvents = showAllCalendars
-      ? events
-      : events.filter((event) => event.calendarId === 'primary');
-
     // Group events by day difference from today
-    const eventsByDay: Map<number, CalendarEvent[]> = filteredEvents.reduce(
+    const eventsByDay: Map<number, CalendarEvent[]> = events.reduce(
       (map, event) => {
         const spanDays = getEventSpanDays(event);
         spanDays.forEach((daysOut: number) => {

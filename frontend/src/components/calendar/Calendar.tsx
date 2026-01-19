@@ -30,7 +30,6 @@ const Calendar: React.FC = () => {
   );
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [numDays, setNumDays] = useState(14);
-  const [showAllCals, setShowAllCals] = useState(false);
   const [showPeriodModal, setShowPeriodModal] = useState(false);
   const {
     periodDays,
@@ -110,11 +109,7 @@ const Calendar: React.FC = () => {
   }, [showPeriodModal]);
 
   // Filter and group events
-  const eventsByDay = CalendarService.filterAndGroupEventsByDay(
-    events,
-    showAllCals,
-    numDays
-  );
+  const eventsByDay = CalendarService.groupEventsByDay(events, numDays);
 
   if (isAuthenticated) {
     return (
@@ -128,14 +123,6 @@ const Calendar: React.FC = () => {
             })}
           </h1>
           <div className={styles.calendarOptions}>
-            <label>
-              Show all calendars:
-              <input
-                type="checkbox"
-                checked={showAllCals}
-                onChange={(e) => setShowAllCals(e.target.checked)}
-              />
-            </label>
             <DaysSelect value={numDays} onChange={setNumDays} />
             <button
               onClick={() => setShowPeriodModal(true)}
