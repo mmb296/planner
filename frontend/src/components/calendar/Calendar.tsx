@@ -2,7 +2,10 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { usePeriodDays } from '../../hooks/usePeriodDays';
 import { CalendarService } from '../../services/calendarService';
-import { fetchEvents } from '../../services/googleCalendarService';
+import {
+  fetchEvents,
+  listCalendars
+} from '../../services/googleCalendarService';
 import { CalendarEvent } from '../../types';
 import {
   formatDateString,
@@ -17,17 +20,13 @@ import DaysSelect from './DaysSelect';
 
 const SCOPES = 'https://www.googleapis.com/auth/calendar.readonly';
 
-// Read calendar IDs from environment variable and split into an array
-const CALENDAR_IDS = (process.env.REACT_APP_CALENDAR_IDS || 'primary')
-  .split(',')
-  .map((id) => id.trim());
-
 const Calendar: React.FC = () => {
   const tokenClient = useRef<any>(null);
 
   const [isAuthenticated, setIsAuthenticated] = useState(
     !!sessionStorage.getItem('access_token')
   );
+  const [calendarIds, setCalendarIds] = useState<string[]>([]);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [numDays, setNumDays] = useState(14);
   const [showPeriodModal, setShowPeriodModal] = useState(false);
@@ -58,17 +57,24 @@ const Calendar: React.FC = () => {
     setEvents([]);
   };
 
+  // Fetch calendars from Google Calendar API
+  const fetchCalendars = async (token: string) => {
+    try {
+      const calendars = await listCalendars(token);
+      setCalendarIds(calendars.map((calendar) => calendar.id));
+    } catch (error: any) {
+      if (error.message === 'AUTH_ERROR') {
+        clearAuthentication();
+      }
+    }
+  };
+
   // Fetch events from Google Calendar API
   const fetchUpcomingEvents = async (token: string, daysToFetch = numDays) => {
     try {
       const timeMin = getTodayDate();
       const timeMax = getFutureDate(daysToFetch);
-      const allEvents = await fetchEvents(
-        CALENDAR_IDS,
-        timeMin,
-        timeMax,
-        token
-      );
+      const allEvents = await fetchEvents(calendarIds, timeMin, timeMax, token);
       setEvents(allEvents);
     } catch (error: any) {
       if (error.message === 'AUTH_ERROR') {
@@ -87,18 +93,25 @@ const Calendar: React.FC = () => {
       }
       sessionStorage.setItem('access_token', resp.access_token);
       setIsAuthenticated(true);
-      fetchUpcomingEvents(resp.access_token, numDays);
+      fetchCalendars(resp.access_token);
     };
     client.requestAccessToken();
   };
 
-  // Fetch events when days changes or on initial load (if authenticated)
   useEffect(() => {
     const savedToken = sessionStorage.getItem('access_token');
     if (!savedToken) return;
+    fetchCalendars(savedToken);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Fetch events when days changes or on initial load (if authenticated)
+  useEffect(() => {
+    const savedToken = sessionStorage.getItem('access_token');
+    if (!savedToken || calendarIds.length === 0) return;
     fetchUpcomingEvents(savedToken, numDays);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [numDays]);
+  }, [numDays, calendarIds]);
 
   // Refetch period days when the period calendar modal closes
   useEffect(() => {
