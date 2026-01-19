@@ -114,7 +114,7 @@ export const fetchEvents = async (
  */
 export const listCalendars = async (
   accessToken: string
-): Promise<Array<{ id: string; summary: string }>> => {
+): Promise<Array<Calendar>> => {
   if (!(await ensureGapiReady(accessToken))) {
     return [];
   }
