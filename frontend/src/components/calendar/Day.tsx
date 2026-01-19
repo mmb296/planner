@@ -36,9 +36,7 @@ const Day: React.FC<DayProps> = ({
       </div>
       <ul>
         {sortedEvents.length > 0 ? (
-          sortedEvents.map((event, idx) => (
-            <Event key={event.calendarId + (event.id || idx)} event={event} />
-          ))
+          sortedEvents.map((event) => <Event key={event.id} event={event} />)
         ) : (
           <li style={{ color: 'var(--secondary-color)', fontStyle: 'italic' }}>
             No events

@@ -1,6 +1,14 @@
+export type Calendar = {
+  id: string;
+  backgroundColor: string;
+  summary: string;
+  [key: string]: any;
+};
+
 export type CalendarEvent = {
   id: string;
   summary?: string;
+  color?: string;
   start: {
     dateTime?: string;
     date?: string;
