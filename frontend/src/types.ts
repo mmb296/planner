@@ -1,3 +1,9 @@
+export type Calendar = {
+  id: string;
+  summary: string;
+  [key: string]: any;
+};
+
 export type CalendarEvent = {
   id: string;
   summary?: string;

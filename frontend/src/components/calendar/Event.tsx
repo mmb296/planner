@@ -16,9 +16,8 @@ function getDotColor(event: CalendarEvent): string {
 }
 
 function getCalendarLetter(event: CalendarEvent): string {
-  // Show first letter of calendarId (unless 'primary')
-  if (!event.calendarId || event.calendarId === 'primary') return '';
-  return event.calendarId[0].toUpperCase();
+  // Show first letter of calendar summary
+  return event.calendarSummary[0].toUpperCase();
 }
 
 const Event: React.FC<{ event: CalendarEvent }> = ({ event }) => (

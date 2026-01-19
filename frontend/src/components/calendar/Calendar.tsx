@@ -6,7 +6,7 @@ import {
   fetchEvents,
   listCalendars
 } from '../../services/googleCalendarService';
-import { CalendarEvent } from '../../types';
+import { CalendarEvent, Calendar as CalendarType } from '../../types';
 import {
   formatDateString,
   getFutureDate,
@@ -26,7 +26,7 @@ const Calendar: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(
     !!sessionStorage.getItem('access_token')
   );
-  const [calendarIds, setCalendarIds] = useState<string[]>([]);
+  const [calendars, setCalendars] = useState<CalendarType[]>([]);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [numDays, setNumDays] = useState(14);
   const [showPeriodModal, setShowPeriodModal] = useState(false);
@@ -61,7 +61,7 @@ const Calendar: React.FC = () => {
   const fetchCalendars = async (token: string) => {
     try {
       const calendars = await listCalendars(token);
-      setCalendarIds(calendars.map((calendar) => calendar.id));
+      setCalendars(calendars);
     } catch (error: any) {
       if (error.message === 'AUTH_ERROR') {
         clearAuthentication();
@@ -74,7 +74,7 @@ const Calendar: React.FC = () => {
     try {
       const timeMin = getTodayDate();
       const timeMax = getFutureDate(daysToFetch);
-      const allEvents = await fetchEvents(calendarIds, timeMin, timeMax, token);
+      const allEvents = await fetchEvents(calendars, timeMin, timeMax, token);
       setEvents(allEvents);
     } catch (error: any) {
       if (error.message === 'AUTH_ERROR') {
@@ -108,10 +108,10 @@ const Calendar: React.FC = () => {
   // Fetch events when days changes or on initial load (if authenticated)
   useEffect(() => {
     const savedToken = sessionStorage.getItem('access_token');
-    if (!savedToken || calendarIds.length === 0) return;
+    if (!savedToken || calendars.length === 0) return;
     fetchUpcomingEvents(savedToken, numDays);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [numDays, calendarIds]);
+  }, [numDays, calendars]);
 
   // Refetch period days when the period calendar modal closes
   useEffect(() => {

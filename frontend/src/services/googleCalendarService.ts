@@ -1,4 +1,4 @@
-import { CalendarEvent } from '../types';
+import { Calendar, CalendarEvent } from '../types';
 
 const DISCOVERY_DOC =
   'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest';
@@ -68,7 +68,7 @@ const ensureGapiReady = async (accessToken: string): Promise<boolean> => {
  * Fetch events from one or more calendars
  */
 export const fetchEvents = async (
-  calendarIds: string[],
+  calendars: Calendar[],
   timeMin: Date,
   timeMax: Date,
   accessToken: string
@@ -78,10 +78,10 @@ export const fetchEvents = async (
   }
 
   const fetchCalendarEvents = async (
-    calendarId: string
+    calendar: Calendar
   ): Promise<CalendarEvent[]> => {
     const response = await (window.gapi.client as any).calendar.events.list({
-      calendarId,
+      calendarId: calendar.id,
       timeMin: timeMin.toISOString(),
       timeMax: timeMax.toISOString(),
       singleEvents: true,
@@ -91,12 +91,12 @@ export const fetchEvents = async (
     const items = response.result.items || [];
     return items.map((event: CalendarEvent) => ({
       ...event,
-      calendarId
+      calendarSummary: calendar.summary
     }));
   };
 
   try {
-    const results = await Promise.all(calendarIds.map(fetchCalendarEvents));
+    const results = await Promise.all(calendars.map(fetchCalendarEvents));
     return results.flat();
   } catch (error: any) {
     // Handle auth errors - throw so Calendar can clear auth
