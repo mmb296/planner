@@ -27,7 +27,10 @@ const Calendar: React.FC = () => {
     !!sessionStorage.getItem('access_token')
   );
   const [calendars, setCalendars] = useState<CalendarType[]>([]);
-  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [selectedCalendarIds, setSelectedCalendarIds] = useState<Set<string>>(
+    new Set()
+  );
+  const [allEvents, setAllEvents] = useState<CalendarEvent[]>([]);
   const [numDays, setNumDays] = useState(14);
   const [showPeriodModal, setShowPeriodModal] = useState(false);
   const {
@@ -54,7 +57,7 @@ const Calendar: React.FC = () => {
   const clearAuthentication = () => {
     sessionStorage.removeItem('access_token');
     setIsAuthenticated(false);
-    setEvents([]);
+    setAllEvents([]);
   };
 
   // Fetch calendars from Google Calendar API
@@ -62,6 +65,8 @@ const Calendar: React.FC = () => {
     try {
       const calendars = await listCalendars(token);
       setCalendars(calendars);
+      // Select all calendars by default
+      setSelectedCalendarIds(new Set(calendars.map((cal) => cal.id)));
     } catch (error: any) {
       if (error.message === 'AUTH_ERROR') {
         clearAuthentication();
@@ -69,13 +74,13 @@ const Calendar: React.FC = () => {
     }
   };
 
-  // Fetch events from Google Calendar API
+  // Fetch events from Google Calendar API (all calendars)
   const fetchUpcomingEvents = async (token: string, daysToFetch = numDays) => {
     try {
       const timeMin = getTodayDate();
       const timeMax = getFutureDate(daysToFetch);
       const allEvents = await fetchEvents(calendars, timeMin, timeMax, token);
-      setEvents(allEvents);
+      setAllEvents(allEvents);
     } catch (error: any) {
       if (error.message === 'AUTH_ERROR') {
         clearAuthentication();
@@ -120,8 +125,12 @@ const Calendar: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showPeriodModal]);
 
-  // Filter and group events
-  const eventsByDay = CalendarService.groupEventsByDay(events, numDays);
+  // Filter and group events by day
+  const eventsByDay = CalendarService.filterAndGroupEventsByDay(
+    allEvents,
+    selectedCalendarIds,
+    numDays
+  );
 
   if (isAuthenticated) {
     return (
@@ -135,6 +144,34 @@ const Calendar: React.FC = () => {
             })}
           </h1>
           <div className={styles.calendarOptions}>
+            <div className={styles.calendarCheckboxes}>
+              {calendars.map((calendar) => (
+                <label
+                  key={calendar.id}
+                  className={styles.calendarCheckbox}
+                  style={
+                    {
+                      '--calendar-color': calendar.backgroundColor
+                    } as React.CSSProperties
+                  }
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedCalendarIds.has(calendar.id)}
+                    onChange={(e) => {
+                      const newSelected = new Set(selectedCalendarIds);
+                      if (e.target.checked) {
+                        newSelected.add(calendar.id);
+                      } else {
+                        newSelected.delete(calendar.id);
+                      }
+                      setSelectedCalendarIds(newSelected);
+                    }}
+                  />
+                  {calendar.summary}
+                </label>
+              ))}
+            </div>
             <DaysSelect value={numDays} onChange={setNumDays} />
             <button
               onClick={() => setShowPeriodModal(true)}

@@ -91,6 +91,7 @@ export const fetchEvents = async (
     const items = response.result.items || [];
     return items.map((event: CalendarEvent) => ({
       ...event,
+      calendarId: calendar.id,
       color: calendar.backgroundColor
     }));
   };

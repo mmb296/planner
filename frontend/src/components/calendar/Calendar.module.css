@@ -15,6 +15,7 @@
 
 .calendar header h1 {
   margin: 0;
+  min-width: 300px;
 }
 
 .eventsList {
@@ -34,6 +35,35 @@
   display: flex;
   gap: 20px;
   align-items: center;
+}
+
+.calendarCheckboxes {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.calendarCheckbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.calendarCheckbox input[type='checkbox'] {
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  appearance: none;
+  border: 2px solid var(--calendar-color);
+  border-radius: 3px;
+}
+
+.calendarCheckbox input[type='checkbox']:checked {
+  background-color: var(--calendar-color);
+  border-color: var(--calendar-color);
 }
 
 .periodCalendarButton {
