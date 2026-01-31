@@ -370,5 +370,13 @@ export const PeriodDaysDB = {
       [startDate, actualEndDate]
     )) as any[];
     return rows.map((row) => row.date);
+  },
+
+  // Get all period days (for prediction calculation)
+  async getAll(): Promise<string[]> {
+    const rows = (await dbAll(
+      'SELECT date FROM period_days ORDER BY date'
+    )) as any[];
+    return rows.map((row) => row.date);
   }
 };

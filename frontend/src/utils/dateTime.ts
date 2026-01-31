@@ -132,3 +132,14 @@ export function formatMonthName(date: Date): string {
     year: 'numeric'
   });
 }
+
+// Format prediction date for display (e.g., "Jan 15" or "Jan 15, 2023" if different year)
+export function formatPredictionDate(dateStr: string): string {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year:
+      date.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined
+  });
+}

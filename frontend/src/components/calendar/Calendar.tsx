@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 import { usePeriodDays } from '../../hooks/usePeriodDays';
+import { usePeriodPrediction } from '../../hooks/usePeriodPrediction';
 import { CalendarService } from '../../services/calendarService';
 import {
   fetchEvents,
@@ -9,6 +10,7 @@ import {
 import { CalendarEvent, Calendar as CalendarType } from '../../types';
 import {
   formatDateString,
+  formatPredictionDate,
   getFutureDate,
   getTodayDate
 } from '../../utils/dateTime';
@@ -38,6 +40,7 @@ const Calendar: React.FC = () => {
     togglePeriodDay,
     refetch: refetchPeriodDays
   } = usePeriodDays(getTodayDate(), getFutureDate(numDays - 1));
+  const { prediction, refetch: refetchPrediction } = usePeriodPrediction();
 
   // Returns the token client, initializing if needed
   const getTokenClient = () => {
@@ -117,13 +120,21 @@ const Calendar: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [numDays, calendars]);
 
-  // Refetch period days when the period calendar modal closes
+  // Refetch period days and prediction when the period calendar modal closes
   useEffect(() => {
     if (!showPeriodModal) {
       refetchPeriodDays();
+      refetchPrediction();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showPeriodModal]);
+
+  // Refetch prediction when period days change (after toggle)
+  // TODO: clean this up
+  useEffect(() => {
+    refetchPrediction();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [periodDays.size]);
 
   // Filter and group events by day
   const eventsByDay = CalendarService.filterAndGroupEventsByDay(
@@ -132,90 +143,117 @@ const Calendar: React.FC = () => {
     numDays
   );
 
-  if (isAuthenticated) {
-    return (
-      <div className={styles.calendar}>
-        <header>
-          <h1>
-            {new Date().toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric'
-            })}
-          </h1>
-          <div className={styles.calendarOptions}>
-            <div className={styles.calendarCheckboxes}>
-              {calendars.map((calendar) => (
-                <label
-                  key={calendar.id}
-                  className={styles.calendarCheckbox}
-                  style={
-                    {
-                      '--calendar-color': calendar.backgroundColor
-                    } as React.CSSProperties
-                  }
-                >
-                  <input
-                    type="checkbox"
-                    checked={selectedCalendarIds.has(calendar.id)}
-                    onChange={(e) => {
-                      const newSelected = new Set(selectedCalendarIds);
-                      if (e.target.checked) {
-                        newSelected.add(calendar.id);
-                      } else {
-                        newSelected.delete(calendar.id);
-                      }
-                      setSelectedCalendarIds(newSelected);
-                    }}
-                  />
-                  {calendar.summary}
-                </label>
-              ))}
-            </div>
-            <DaysSelect value={numDays} onChange={setNumDays} />
-            <button
-              onClick={() => setShowPeriodModal(true)}
-              className={styles.periodCalendarButton}
-              title="Open period calendar"
-            >
-              <CalendarIcon className={styles.periodCalendarIcon} />
-            </button>
-          </div>
-        </header>
-        <ul className={styles.eventsList}>
-          {Array.from(eventsByDay.entries())
-            .sort((a, b) => a[0] - b[0])
-            .map(([daysOut, events]) => {
-              const date = getFutureDate(daysOut);
-              const dateStr = formatDateString(date);
-              return (
-                <Day
-                  key={daysOut}
-                  label={CalendarService.getDayLabel(daysOut)}
-                  date={date}
-                  events={events}
-                  isPeriodDay={periodDays.has(dateStr)}
-                  onDotToggle={(date) => {
-                    togglePeriodDay(formatDateString(date));
-                  }}
-                />
-              );
-            })}
-        </ul>
-        <PeriodModal
-          isOpen={showPeriodModal}
-          onClose={() => setShowPeriodModal(false)}
-        />
+  const authenticatedHeaderContent = isAuthenticated && (
+    <div className={styles.calendarOptions}>
+      <div className={styles.calendarCheckboxes}>
+        {calendars.map((calendar) => (
+          <label
+            key={calendar.id}
+            className={styles.calendarCheckbox}
+            style={
+              {
+                '--calendar-color': calendar.backgroundColor
+              } as React.CSSProperties
+            }
+          >
+            <input
+              type="checkbox"
+              checked={selectedCalendarIds.has(calendar.id)}
+              onChange={(e) => {
+                const newSelected = new Set(selectedCalendarIds);
+                if (e.target.checked) {
+                  newSelected.add(calendar.id);
+                } else {
+                  newSelected.delete(calendar.id);
+                }
+                setSelectedCalendarIds(newSelected);
+              }}
+            />
+            {calendar.summary}
+          </label>
+        ))}
       </div>
-    );
-  }
+      <DaysSelect value={numDays} onChange={setNumDays} />
+    </div>
+  );
 
-  return (
-    <div className={`${styles.calendar} ${styles.placeholder}`}>
+  const eventsContent = isAuthenticated ? (
+    <ul className={styles.eventsList}>
+      {Array.from(eventsByDay.entries())
+        .sort((a, b) => a[0] - b[0])
+        .map(([daysOut, events]) => {
+          const date = getFutureDate(daysOut);
+          const dateStr = formatDateString(date);
+          return (
+            <Day
+              key={daysOut}
+              label={CalendarService.getDayLabel(daysOut)}
+              date={date}
+              events={events}
+              isPeriodDay={periodDays.has(dateStr)}
+              onDotToggle={(date) => {
+                togglePeriodDay(formatDateString(date));
+              }}
+            />
+          );
+        })}
+    </ul>
+  ) : (
+    <div className={styles.placeholder}>
       <p>Sign in with Google Calendar to view your events</p>
       <button onClick={handleAuthClick} className={styles.signInButton}>
         Sign In with Google Calendar
       </button>
+    </div>
+  );
+
+  return (
+    <div className={styles.calendar}>
+      <header>
+        <h1>
+          {new Date().toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          })}
+        </h1>
+        {authenticatedHeaderContent}
+      </header>
+      <div className={styles.predictionBanner}>
+        {prediction && prediction.nextPeriodDate ? (
+          <div className={styles.predictionContent}>
+            <span className={styles.predictionLabel}>
+              Next period predicted:
+            </span>
+            <span className={styles.predictionDate}>
+              {formatPredictionDate(prediction.nextPeriodDate)}
+            </span>
+            {prediction.averageCycleLength && (
+              <span className={styles.predictionCycle}>
+                (avg {prediction.averageCycleLength} day cycle)
+              </span>
+            )}
+          </div>
+        ) : (
+          <div className={styles.predictionContent}>
+            <span className={styles.predictionLabel}>
+              No prediction available
+            </span>
+          </div>
+        )}
+        <button
+          onClick={() => setShowPeriodModal(true)}
+          className={styles.periodCalendarButton}
+          title="Open period calendar"
+        >
+          <CalendarIcon className={styles.periodCalendarIcon} />
+        </button>
+      </div>
+      {eventsContent}
+      <PeriodModal
+        isOpen={showPeriodModal}
+        onClose={() => setShowPeriodModal(false)}
+      />
     </div>
   );
 };
