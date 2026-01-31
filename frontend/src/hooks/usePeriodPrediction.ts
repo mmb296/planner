@@ -22,7 +22,6 @@ export function usePeriodPrediction() {
     } catch (error) {
       console.error('Error fetching period prediction:', error);
       setPrediction(null);
-    } finally {
     }
   };
 
