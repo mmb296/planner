@@ -4,6 +4,7 @@ import express from 'express';
 import { setupGoogleAuth } from './auth.js';
 import { applyMiddleware } from './middleware.js';
 import { registerGmailRoutes } from './routes/gmail.js';
+import { registerGoalsRoutes } from './routes/goals.js';
 import { registerPeriodDaysRoutes } from './routes/periodDays.js';
 import { registerSettingsRoutes } from './routes/settings.js';
 import { registerTaskRoutes } from './routes/tasks.js';
@@ -26,6 +27,7 @@ app.get('/', (req, res) => {
 registerTaskRoutes(app);
 registerPeriodDaysRoutes(app);
 registerSettingsRoutes(app);
+registerGoalsRoutes(app);
 
 export async function initializeApp() {
   const oauth2Client = await setupGoogleAuth(app, PORT);
