@@ -83,7 +83,7 @@ export function registerGoalsRoutes(app: express.Express) {
     }
   });
 
-  // Add or update an entry for a goal
+  // Add a new entry for a goal
   app.post('/api/goals/:id/entries', async (req, res) => {
     try {
       const { id } = req.params;
@@ -91,24 +91,9 @@ export function registerGoalsRoutes(app: express.Express) {
       if (!entry.date) {
         return res.status(400).json({ error: 'date is required' });
       }
-      const goal = await GoalsDB.getById(id);
-      if (!goal) {
-        return res.status(404).json({ error: 'Goal not found' });
-      }
-      // Check if entry already exists
-      const existingEntryIndex = goal.entries.findIndex(
-        (e) => e.date === entry.date
-      );
-      let updatedGoal;
-      if (existingEntryIndex >= 0) {
-        // Update existing entry
-        updatedGoal = await GoalsDB.updateEntry(id, entry.date, entry);
-      } else {
-        // Add new entry
-        updatedGoal = await GoalsDB.addEntry(id, entry);
-      }
+      const updatedGoal = await GoalsDB.addEntry(id, entry);
       if (!updatedGoal) {
-        return res.status(500).json({ error: 'Failed to save entry' });
+        return res.status(404).json({ error: 'Goal not found' });
       }
       res.json(updatedGoal);
     } catch (error) {
@@ -117,11 +102,27 @@ export function registerGoalsRoutes(app: express.Express) {
     }
   });
 
-  // Delete an entry
-  app.delete('/api/goals/:id/entries/:date', async (req, res) => {
+  // Update an entry by entry ID
+  app.put('/api/goals/:id/entries/:entryId', async (req, res) => {
     try {
-      const { id, date } = req.params;
-      const updatedGoal = await GoalsDB.deleteEntry(id, date);
+      const { id, entryId } = req.params;
+      const updates: Partial<GoalEntry> = req.body;
+      const updatedGoal = await GoalsDB.updateEntry(id, entryId, updates);
+      if (!updatedGoal) {
+        return res.status(404).json({ error: 'Goal or entry not found' });
+      }
+      res.json(updatedGoal);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Failed to update entry' });
+    }
+  });
+
+  // Delete an entry by entry ID
+  app.delete('/api/goals/:id/entries/:entryId', async (req, res) => {
+    try {
+      const { id, entryId } = req.params;
+      const updatedGoal = await GoalsDB.deleteEntry(id, entryId);
       if (!updatedGoal) {
         return res.status(404).json({ error: 'Goal or entry not found' });
       }
