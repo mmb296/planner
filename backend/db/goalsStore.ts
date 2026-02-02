@@ -1,8 +1,10 @@
+import { randomUUID } from 'crypto';
 import { ObjectId } from 'mongodb';
 
 import { getMongoDB } from './mongoConnection.js';
 
 type BaseEntry = {
+  _id?: string; // Unique ID for the entry (generated if not provided)
   date: string; // YYYY-MM-DD
   notes?: string;
 };
@@ -102,36 +104,42 @@ export const GoalsDB = {
     if (!goal) {
       return null;
     }
-    goal.entries.push(entry);
+    // Generate ID if not provided
+    const entryWithId: GoalEntry = {
+      ...entry,
+      _id: entry._id || randomUUID()
+    };
+    goal.entries.push(entryWithId);
     return await this.update(goalId, goal);
   },
 
   async updateEntry(
     goalId: string,
-    entryDate: string,
+    entryId: string,
     updates: Partial<GoalEntry>
   ): Promise<Goal | null> {
     const goal = await this.getById(goalId);
     if (!goal) {
       return null;
     }
-    const entryIndex = goal.entries.findIndex((e) => e.date === entryDate);
+    const entryIndex = goal.entries.findIndex((e) => e._id === entryId);
     if (entryIndex === -1) {
       return null;
     }
     goal.entries[entryIndex] = {
       ...goal.entries[entryIndex],
-      ...updates
+      ...updates,
+      _id: goal.entries[entryIndex]._id // Preserve the ID
     };
     return await this.update(goalId, goal);
   },
 
-  async deleteEntry(goalId: string, entryDate: string): Promise<Goal | null> {
+  async deleteEntry(goalId: string, entryId: string): Promise<Goal | null> {
     const goal = await this.getById(goalId);
     if (!goal) {
       return null;
     }
-    goal.entries = goal.entries.filter((e) => e.date !== entryDate);
+    goal.entries = goal.entries.filter((e) => e._id !== entryId);
     return await this.update(goalId, goal);
   }
 };
