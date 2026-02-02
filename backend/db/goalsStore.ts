@@ -2,10 +2,17 @@ import { ObjectId } from 'mongodb';
 
 import { getMongoDB } from './mongoConnection.js';
 
-export type GoalEntry = {
+type BaseEntry = {
   date: string; // YYYY-MM-DD
   notes?: string;
 };
+
+export type BookEntry = BaseEntry & {
+  title: string;
+  author: string;
+};
+
+export type GoalEntry = BaseEntry | BookEntry;
 
 export type Goal = {
   _id: ObjectId;
