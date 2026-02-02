@@ -126,10 +126,11 @@ export const GoalsDB = {
     if (entryIndex === -1) {
       return null;
     }
+    // Exclude _id from updates to prevent ID changes
+    const { _id, ...safeUpdates } = updates;
     goal.entries[entryIndex] = {
       ...goal.entries[entryIndex],
-      ...updates,
-      _id: goal.entries[entryIndex]._id // Preserve the ID
+      ...safeUpdates
     };
     return await this.update(goalId, goal);
   },
