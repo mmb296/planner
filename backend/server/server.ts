@@ -7,7 +7,11 @@ const PORT = process.env.PORT || 5000;
 
 try {
   await initDatabase();
-  await connectMongoDB();
+  try {
+    await connectMongoDB();
+  } catch (mongoError) {
+    console.warn('MongoDB not available. Start MongoDB to enable it.');
+  }
   await initializeApp();
   app.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}`);
