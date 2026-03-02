@@ -143,8 +143,8 @@ const Calendar: React.FC = () => {
     numDays
   );
 
-  const authenticatedHeaderContent = isAuthenticated && (
-    <div className={styles.calendarOptions}>
+  const calendarList = isAuthenticated && calendars.length > 0 && (
+    <div className={styles.calendarListSection}>
       <div className={styles.calendarCheckboxes}>
         {calendars.map((calendar) => (
           <label
@@ -173,7 +173,6 @@ const Calendar: React.FC = () => {
           </label>
         ))}
       </div>
-      <DaysSelect value={numDays} onChange={setNumDays} />
     </div>
   );
 
@@ -217,7 +216,9 @@ const Calendar: React.FC = () => {
             day: 'numeric'
           })}
         </h1>
-        {authenticatedHeaderContent}
+        {isAuthenticated && (
+          <DaysSelect value={numDays} onChange={setNumDays} />
+        )}
       </header>
       <div className={styles.predictionBanner}>
         {prediction && prediction.nextPeriodDate ? (
@@ -249,6 +250,7 @@ const Calendar: React.FC = () => {
           <CalendarIcon className={styles.periodCalendarIcon} />
         </button>
       </div>
+      {calendarList}
       {eventsContent}
       <PeriodModal
         isOpen={showPeriodModal}

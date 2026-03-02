@@ -127,6 +127,10 @@
   justify-content: space-between;
 }
 
+.calendarListSection {
+  margin-top: 16px;
+}
+
 .predictionContent {
   display: flex;
   align-items: center;
