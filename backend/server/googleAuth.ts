@@ -2,12 +2,13 @@ import express from 'express';
 import { google } from 'googleapis';
 
 import { OAuthIntegration, OAuthTokenDB } from '../db/database.js';
+import { registerPrimaryCalendarWatch } from './calendarWatch.js';
 
-type GoogleOAuthOptions = {
-  integration: OAuthIntegration;
-  scopes: string[];
-  /** If set, browser is sent here after tokens are saved; otherwise JSON success */
-  returnToApp?: Boolean;
+const GOOGLE_INTEGRATION_SCOPES: Record<OAuthIntegration, string[]> = {
+  [OAuthIntegration.Gmail]: ['https://www.googleapis.com/auth/gmail.readonly'],
+  [OAuthIntegration.Calendar]: [
+    'https://www.googleapis.com/auth/calendar.readonly'
+  ]
 };
 
 /** Display name for logs/errors; enum values are lowercase path segments (gmail → Gmail) */
@@ -24,9 +25,8 @@ function googleOAuthPaths(integration: OAuthIntegration) {
 async function setupGoogleOAuthFlow(
   app: express.Express,
   port: string | number,
-  options: GoogleOAuthOptions
+  integration: OAuthIntegration
 ) {
-  const { integration, scopes, returnToApp } = options;
   const { authPath, callbackPath } = googleOAuthPaths(integration);
   const label = googleOAuthIntegrationLabel(integration);
 
@@ -58,7 +58,7 @@ async function setupGoogleOAuthFlow(
   app.get(authPath, (req, res) => {
     const url = oauth2Client.generateAuthUrl({
       access_type: 'offline',
-      scope: scopes,
+      scope: GOOGLE_INTEGRATION_SCOPES[integration],
       prompt: 'consent'
     });
     res.redirect(url);
@@ -74,7 +74,10 @@ async function setupGoogleOAuthFlow(
       oauth2Client.setCredentials(tokens);
       await OAuthTokenDB.saveToken(integration, tokens);
 
-      if (returnToApp) {
+      if (integration === OAuthIntegration.Calendar) {
+        void registerPrimaryCalendarWatch(oauth2Client).catch((e) =>
+          console.warn('[calendar watch] register after OAuth failed:', e)
+        );
         res.redirect(process.env.FRONTEND_URL || 'http://localhost:3000');
       } else {
         res.json({ message: 'Token saved successfully' });
@@ -88,23 +91,13 @@ async function setupGoogleOAuthFlow(
   return oauth2Client;
 }
 
-export async function setupGmailAuth(
-  app: express.Express,
-  port: string | number
-) {
-  return setupGoogleOAuthFlow(app, port, {
-    integration: OAuthIntegration.Gmail,
-    scopes: ['https://www.googleapis.com/auth/gmail.readonly']
-  });
+export function setupGmailAuth(app: express.Express, port: string | number) {
+  return setupGoogleOAuthFlow(app, port, OAuthIntegration.Gmail);
 }
 
-export async function setupGoogleCalendarAuth(
+export function setupGoogleCalendarAuth(
   app: express.Express,
   port: string | number
 ) {
-  return setupGoogleOAuthFlow(app, port, {
-    integration: OAuthIntegration.Calendar,
-    scopes: ['https://www.googleapis.com/auth/calendar.readonly'],
-    returnToApp: true
-  });
+  return setupGoogleOAuthFlow(app, port, OAuthIntegration.Calendar);
 }
