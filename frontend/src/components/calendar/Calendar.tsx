@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import { API_ENDPOINTS } from '../../config/api';
 import { usePeriodDays } from '../../hooks/usePeriodDays';
@@ -51,6 +51,13 @@ const Calendar: React.FC = () => {
     setSelectedCalendarIds(new Set());
   };
 
+  const clearAuthenticationRef = useRef(clearAuthentication);
+  clearAuthenticationRef.current = clearAuthentication;
+  const calendarsRef = useRef(calendars);
+  calendarsRef.current = calendars;
+  const numDaysRef = useRef(numDays);
+  numDaysRef.current = numDays;
+
   const fetchCalendars = async () => {
     try {
       const list = await listCalendars();
@@ -101,6 +108,35 @@ const Calendar: React.FC = () => {
     fetchUpcomingEvents(numDays);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [numDays, calendars, isAuthenticated]);
+
+  /** Live updates when the server finishes a Google Calendar push sync */
+  useEffect(() => {
+    if (!isAuthenticated || calendars.length === 0) return;
+
+    const es = new EventSource(API_ENDPOINTS.CALENDAR_EVENTS_STREAM);
+
+    es.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data) as { type?: string };
+        if (data.type !== 'calendar_updated') return;
+        const timeMin = getTodayDate();
+        const timeMax = getFutureDate(numDaysRef.current);
+        void fetchEvents(calendarsRef.current, timeMin, timeMax)
+          .then(setAllEvents)
+          .catch((err: unknown) => {
+            if (err instanceof Error && err.message === 'AUTH_ERROR') {
+              void clearAuthenticationRef.current();
+            }
+          });
+      } catch {
+        /* ignore malformed payloads */
+      }
+    };
+
+    return () => {
+      es.close();
+    };
+  }, [isAuthenticated, calendars.length]);
 
   // Refetch period days and prediction when the period calendar modal closes
   useEffect(() => {

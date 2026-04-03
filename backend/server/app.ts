@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 import express from 'express';
 
+import { registerCalendarSseRoute } from './calendarSse.js';
 import {
   registerCalendarWebhookRoute,
   renewCalendarWatchIfNeeded
@@ -39,6 +40,7 @@ export async function initializeApp() {
   const calendarOAuth2Client = await setupGoogleCalendarAuth(app, PORT);
   registerGmailRoutes(app, gmailOAuth2Client);
   registerGoogleCalendarRoutes(app, calendarOAuth2Client);
+  registerCalendarSseRoute(app);
   registerCalendarWebhookRoute(app, calendarOAuth2Client);
   void renewCalendarWatchIfNeeded(calendarOAuth2Client).catch((e) =>
     console.warn('[calendar watch] startup renew failed:', e)
