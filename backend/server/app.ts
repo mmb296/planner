@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 import express from 'express';
 
-import { setupGmailAuth } from './gmailAuth.js';
+import { setupGmailAuth } from './googleAuth.js';
 import { applyMiddleware } from './middleware.js';
 import { registerGmailRoutes } from './routes/gmail.js';
 import { registerGoalsRoutes } from './routes/goals.js';
