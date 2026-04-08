@@ -22,7 +22,7 @@ export async function setupGmailAuth(
     console.log('Loaded Gmail OAuth token from database');
   } else {
     console.log(
-      'No OAuth token found in database. Visit /auth/google to authenticate.'
+      'No OAuth token found in database. Visit /auth/google/gmail to authenticate.'
     );
   }
 
@@ -38,7 +38,7 @@ export async function setupGmailAuth(
     });
   });
 
-  app.get('/auth/google', (req, res) => {
+  app.get('/auth/google/gmail', (req, res) => {
     const url = oauth2Client.generateAuthUrl({
       access_type: 'offline',
       scope: SCOPES,
