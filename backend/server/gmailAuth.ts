@@ -1,9 +1,9 @@
 import express from 'express';
 import { google } from 'googleapis';
 
-import { OAuthTokenDB } from '../db/database.js';
+import { OAuthIntegration, OAuthTokenDB } from '../db/database.js';
 
-export async function setupGoogleAuth(
+export async function setupGmailAuth(
   app: express.Express,
   port: string | number
 ) {
@@ -16,10 +16,10 @@ export async function setupGoogleAuth(
   const SCOPES = ['https://www.googleapis.com/auth/gmail.readonly'];
 
   // Load token from database on startup
-  const savedToken = await OAuthTokenDB.getToken();
+  const savedToken = await OAuthTokenDB.getToken(OAuthIntegration.Gmail);
   if (savedToken) {
     oauth2Client.setCredentials(savedToken);
-    console.log('Loaded OAuth token from database');
+    console.log('Loaded Gmail OAuth token from database');
   } else {
     console.log(
       'No OAuth token found in database. Visit /auth/google to authenticate.'
@@ -29,8 +29,8 @@ export async function setupGoogleAuth(
   // Listen for token refresh events and save them
   oauth2Client.on('tokens', async (token) => {
     // Get current token from DB to preserve refresh_token
-    const currentToken = await OAuthTokenDB.getToken();
-    OAuthTokenDB.saveToken({
+    const currentToken = await OAuthTokenDB.getToken(OAuthIntegration.Gmail);
+    OAuthTokenDB.saveToken(OAuthIntegration.Gmail, {
       ...currentToken,
       ...token,
       // Preserve refresh_token if new token don't include it
@@ -53,7 +53,7 @@ export async function setupGoogleAuth(
     oauth2Client.setCredentials(tokens);
 
     // Save token to database
-    await OAuthTokenDB.saveToken(tokens);
+    await OAuthTokenDB.saveToken(OAuthIntegration.Gmail, tokens);
 
     res.json({ message: 'Token saved successfully' });
   });

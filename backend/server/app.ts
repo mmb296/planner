@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 import express from 'express';
 
-import { setupGoogleAuth } from './auth.js';
+import { setupGmailAuth } from './gmailAuth.js';
 import { applyMiddleware } from './middleware.js';
 import { registerGmailRoutes } from './routes/gmail.js';
 import { registerGoalsRoutes } from './routes/goals.js';
@@ -30,6 +30,6 @@ registerSettingsRoutes(app);
 registerGoalsRoutes(app);
 
 export async function initializeApp() {
-  const oauth2Client = await setupGoogleAuth(app, PORT);
-  registerGmailRoutes(app, oauth2Client);
+  const gmailOauth2Client = await setupGmailAuth(app, PORT);
+  registerGmailRoutes(app, gmailOauth2Client);
 }
