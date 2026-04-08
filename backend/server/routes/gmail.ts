@@ -3,7 +3,11 @@ import express from 'express';
 import { google } from 'googleapis';
 import OpenAI from 'openai';
 
-import { GmailDB } from '../../db/database.js';
+import { GmailDB, OAuthIntegration } from '../../db/database.js';
+import {
+  clearGoogleOAuthSession,
+  isInvalidGrant
+} from '../googleOAuthInvalidGrant.js';
 
 dotenv.config();
 
@@ -194,6 +198,13 @@ export function registerGmailRoutes(app: express.Express, oauth2Client: any) {
       res.json({ saved: savedCount, maxSeenInternalDateMs: newMaxSeen });
     } catch (error) {
       console.error('Gmail fetch error:', error);
+      if (isInvalidGrant(error)) {
+        await clearGoogleOAuthSession(oauth2Client, OAuthIntegration.Gmail);
+        return res.status(401).json({
+          error:
+            'Gmail access expired or was revoked. Sign in with Google again.'
+        });
+      }
       res.status(500).json({ error: 'Failed to perform incremental fetch' });
     }
   });
