@@ -10,7 +10,7 @@ export async function setupGmailAuth(
   const oauth2Client = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
-    `http://localhost:${port}/auth/google/callback`
+    `http://localhost:${port}/auth/google/gmail/callback`
   );
 
   const SCOPES = ['https://www.googleapis.com/auth/gmail.readonly'];
@@ -47,7 +47,7 @@ export async function setupGmailAuth(
     res.redirect(url);
   });
 
-  app.get('/auth/google/callback', async (req, res) => {
+  app.get('/auth/google/gmail/callback', async (req, res) => {
     const { code } = req.query as { code?: string };
     const { tokens } = await oauth2Client.getToken(code as string);
     oauth2Client.setCredentials(tokens);
