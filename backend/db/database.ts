@@ -80,10 +80,10 @@ export async function initDatabase() {
       CREATE TABLE IF NOT EXISTS calendar_watch (
         calendar_id TEXT PRIMARY KEY,
         channel_id TEXT,
+        channel_token TEXT,
         resource_id TEXT,
         expiration_ms INTEGER,
         sync_token TEXT,
-        channel_token TEXT,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `);
@@ -346,17 +346,16 @@ export const OAuthTokenDB = {
 export type CalendarWatchRow = {
   calendar_id: string;
   channel_id: string | null;
+  channel_token: string | null;
   resource_id: string | null;
   expiration_ms: number | null;
   sync_token: string | null;
-  channel_token: string | null;
 };
 
 function parseCalendarWatchRow(row: any): CalendarWatchRow {
   return {
     ...row,
-    expiration_ms:
-      row.expiration_ms != null ? Number(row.expiration_ms) : null
+    expiration_ms: row.expiration_ms != null ? Number(row.expiration_ms) : null
   } as CalendarWatchRow;
 }
 
