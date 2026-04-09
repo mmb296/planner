@@ -32,7 +32,7 @@ registerGoalsRoutes(app);
 
 export async function initializeApp() {
   const gmailOauth2Client = await setupGmailAuth(app, PORT);
-  const googleOauth2Client = await setupGoogleCalendarAuth(app, PORT);
+  const calendarOauth2Client = await setupGoogleCalendarAuth(app, PORT);
   registerGmailRoutes(app, gmailOauth2Client);
-  registerGoogleCalendarRoutes(app, googleOauth2Client);
+  registerGoogleCalendarRoutes(app, calendarOauth2Client);
 }
