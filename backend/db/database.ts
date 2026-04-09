@@ -421,10 +421,6 @@ export const CalendarWatchDB = {
     await dbRun('DELETE FROM calendar_watch WHERE calendar_id = ?', [
       calendarId
     ]);
-  },
-
-  async clearAll(): Promise<void> {
-    await dbRun('DELETE FROM calendar_watch');
   }
 };
 
