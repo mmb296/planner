@@ -7,7 +7,7 @@ type GoogleOAuthOptions = {
   integration: OAuthIntegration;
   scopes: string[];
   /** If set, browser is sent here after tokens are saved; otherwise JSON success */
-  successRedirectUrl?: string;
+  returnToApp?: Boolean;
 };
 
 /** Display name for logs/errors; enum values are lowercase path segments (gmail → Gmail) */
@@ -26,7 +26,7 @@ async function setupGoogleOAuthFlow(
   port: string | number,
   options: GoogleOAuthOptions
 ) {
-  const { integration, scopes, successRedirectUrl } = options;
+  const { integration, scopes, returnToApp } = options;
   const { authPath, callbackPath } = googleOAuthPaths(integration);
   const label = googleOAuthIntegrationLabel(integration);
 
@@ -74,8 +74,8 @@ async function setupGoogleOAuthFlow(
       oauth2Client.setCredentials(tokens);
       await OAuthTokenDB.saveToken(integration, tokens);
 
-      if (successRedirectUrl) {
-        res.redirect(successRedirectUrl);
+      if (returnToApp) {
+        res.redirect(process.env.FRONTEND_URL || 'http://localhost:3000');
       } else {
         res.json({ message: 'Token saved successfully' });
       }
@@ -102,12 +102,9 @@ export async function setupGoogleCalendarAuth(
   app: express.Express,
   port: string | number
 ) {
-  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-  const base = frontendUrl.replace(/\/$/, '');
-
   return setupGoogleOAuthFlow(app, port, {
     integration: OAuthIntegration.Calendar,
     scopes: ['https://www.googleapis.com/auth/calendar.readonly'],
-    successRedirectUrl: `${base}/?calendar_connected=1`
+    returnToApp: true
   });
 }

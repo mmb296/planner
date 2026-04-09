@@ -1,10 +1,11 @@
 import dotenv from 'dotenv';
 import express from 'express';
 
-import { setupGmailAuth } from './googleAuth.js';
+import { setupGmailAuth, setupGoogleCalendarAuth } from './googleAuth.js';
 import { applyMiddleware } from './middleware.js';
 import { registerGmailRoutes } from './routes/gmail.js';
 import { registerGoalsRoutes } from './routes/goals.js';
+import { registerGoogleCalendarRoutes } from './routes/googleCalendar.js';
 import { registerPeriodDaysRoutes } from './routes/periodDays.js';
 import { registerSettingsRoutes } from './routes/settings.js';
 import { registerTaskRoutes } from './routes/tasks.js';
@@ -31,5 +32,7 @@ registerGoalsRoutes(app);
 
 export async function initializeApp() {
   const gmailOauth2Client = await setupGmailAuth(app, PORT);
+  const googleOauth2Client = await setupGoogleCalendarAuth(app, PORT);
   registerGmailRoutes(app, gmailOauth2Client);
+  registerGoogleCalendarRoutes(app, googleOauth2Client);
 }
