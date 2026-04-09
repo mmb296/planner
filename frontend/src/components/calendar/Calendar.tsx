@@ -1,12 +1,15 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
+import { API_ENDPOINTS } from '../../config/api';
 import { usePeriodDays } from '../../hooks/usePeriodDays';
 import { usePeriodPrediction } from '../../hooks/usePeriodPrediction';
-import { CalendarService } from '../../services/calendarService';
 import {
+  disconnectCalendar,
   fetchEvents,
+  getCalendarConnectionStatus,
   listCalendars
-} from '../../services/googleCalendarService';
+} from '../../services/calendarApi';
+import { CalendarService } from '../../services/calendarService';
 import { CalendarEvent, Calendar as CalendarType } from '../../types';
 import {
   formatDateString,
@@ -20,14 +23,8 @@ import CalendarIcon from './CalendarIcon';
 import Day from './Day';
 import DaysSelect from './DaysSelect';
 
-const SCOPES = 'https://www.googleapis.com/auth/calendar.readonly';
-
 const Calendar: React.FC = () => {
-  const tokenClient = useRef<any>(null);
-
-  const [isAuthenticated, setIsAuthenticated] = useState(
-    !!sessionStorage.getItem('access_token')
-  );
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [calendars, setCalendars] = useState<CalendarType[]>([]);
   const [selectedCalendarIds, setSelectedCalendarIds] = useState<Set<string>>(
     new Set()
@@ -42,83 +39,68 @@ const Calendar: React.FC = () => {
   } = usePeriodDays(getTodayDate(), getFutureDate(numDays - 1));
   const { prediction, refetch: refetchPrediction } = usePeriodPrediction();
 
-  // Returns the token client, initializing if needed
-  const getTokenClient = () => {
-    if (!tokenClient.current) {
-      tokenClient.current = (
-        window as any
-      ).google?.accounts?.oauth2?.initTokenClient({
-        client_id: process.env.REACT_APP_GOOGLE_CLIENT_ID,
-        scope: SCOPES,
-        callback: '' // Will be set before requesting token
-      });
-    }
-    return tokenClient.current;
-  };
-
-  // Clear authentication state and stored token
-  const clearAuthentication = () => {
-    sessionStorage.removeItem('access_token');
-    setIsAuthenticated(false);
-    setAllEvents([]);
-  };
-
-  // Fetch calendars from Google Calendar API
-  const fetchCalendars = async (token: string) => {
+  const clearAuthentication = async () => {
     try {
-      const calendars = await listCalendars(token);
-      setCalendars(calendars);
-      // Select all calendars by default
-      setSelectedCalendarIds(new Set(calendars.map((cal) => cal.id)));
-    } catch (error: any) {
-      if (error.message === 'AUTH_ERROR') {
-        clearAuthentication();
+      await disconnectCalendar();
+    } catch {
+      /* ignore */
+    }
+    setIsAuthenticated(false);
+    setCalendars([]);
+    setAllEvents([]);
+    setSelectedCalendarIds(new Set());
+  };
+
+  const fetchCalendars = async () => {
+    try {
+      const list = await listCalendars();
+      setCalendars(list);
+      setSelectedCalendarIds(new Set(list.map((cal) => cal.id)));
+    } catch (error: unknown) {
+      if (error instanceof Error && error.message === 'AUTH_ERROR') {
+        await clearAuthentication();
       }
     }
   };
 
-  // Fetch events from Google Calendar API (all calendars)
-  const fetchUpcomingEvents = async (token: string, daysToFetch = numDays) => {
+  const fetchUpcomingEvents = async (daysToFetch = numDays) => {
     try {
       const timeMin = getTodayDate();
       const timeMax = getFutureDate(daysToFetch);
-      const allEvents = await fetchEvents(calendars, timeMin, timeMax, token);
-      setAllEvents(allEvents);
-    } catch (error: any) {
-      if (error.message === 'AUTH_ERROR') {
-        clearAuthentication();
+      const events = await fetchEvents(calendars, timeMin, timeMax);
+      setAllEvents(events);
+    } catch (error: unknown) {
+      if (error instanceof Error && error.message === 'AUTH_ERROR') {
+        await clearAuthentication();
       }
     }
   };
 
-  // Handle authentication
-  const handleAuthClick = () => {
-    const client = getTokenClient();
-    client.callback = (resp: any) => {
-      if (resp.error !== undefined) {
-        clearAuthentication();
-        return;
-      }
-      sessionStorage.setItem('access_token', resp.access_token);
-      setIsAuthenticated(true);
-      fetchCalendars(resp.access_token);
-    };
-    client.requestAccessToken();
-  };
-
   useEffect(() => {
-    const savedToken = sessionStorage.getItem('access_token');
-    if (!savedToken) return;
-    fetchCalendars(savedToken);
+    let cancelled = false;
+    (async () => {
+      try {
+        const connected = await getCalendarConnectionStatus();
+        if (cancelled) return;
+        setIsAuthenticated(connected);
+        if (connected) {
+          await fetchCalendars();
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    const savedToken = sessionStorage.getItem('access_token');
-    if (!savedToken || calendars.length === 0) return;
-    fetchUpcomingEvents(savedToken, numDays);
+    if (!isAuthenticated || calendars.length === 0) return;
+    fetchUpcomingEvents(numDays);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [numDays, calendars]);
+  }, [numDays, calendars, isAuthenticated]);
 
   // Refetch period days and prediction when the period calendar modal closes
   useEffect(() => {
@@ -200,7 +182,12 @@ const Calendar: React.FC = () => {
   ) : (
     <div className={styles.placeholder}>
       <p>Sign in with Google Calendar to view your events</p>
-      <button onClick={handleAuthClick} className={styles.signInButton}>
+      <button
+        onClick={() => {
+          window.location.href = API_ENDPOINTS.CALENDAR_AUTH_START;
+        }}
+        className={styles.signInButton}
+      >
         Sign In with Google Calendar
       </button>
     </div>
