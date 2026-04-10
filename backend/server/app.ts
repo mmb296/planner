@@ -1,6 +1,10 @@
 import dotenv from 'dotenv';
 import express from 'express';
 
+import {
+  registerCalendarWebhookRoute,
+  renewCalendarWatchIfNeeded
+} from './calendarWatch.js';
 import { setupGmailAuth, setupGoogleCalendarAuth } from './googleAuth.js';
 import { applyMiddleware } from './middleware.js';
 import { registerGmailRoutes } from './routes/gmail.js';
@@ -31,8 +35,12 @@ registerSettingsRoutes(app);
 registerGoalsRoutes(app);
 
 export async function initializeApp() {
-  const gmailOauth2Client = await setupGmailAuth(app, PORT);
-  const calendarOauth2Client = await setupGoogleCalendarAuth(app, PORT);
-  registerGmailRoutes(app, gmailOauth2Client);
-  registerGoogleCalendarRoutes(app, calendarOauth2Client);
+  const gmailOAuth2Client = await setupGmailAuth(app, PORT);
+  const calendarOAuth2Client = await setupGoogleCalendarAuth(app, PORT);
+  registerGmailRoutes(app, gmailOAuth2Client);
+  registerGoogleCalendarRoutes(app, calendarOAuth2Client);
+  registerCalendarWebhookRoute(app, calendarOAuth2Client);
+  void renewCalendarWatchIfNeeded(calendarOAuth2Client).catch((e) =>
+    console.warn('[calendar watch] startup renew failed:', e)
+  );
 }
