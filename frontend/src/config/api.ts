@@ -14,5 +14,6 @@ export const API_ENDPOINTS = {
   CALENDAR_STATUS: `${API_BASE_URL}/api/calendar/status`,
   CALENDAR_LIST: `${API_BASE_URL}/api/calendar/calendars`,
   CALENDAR_EVENTS: `${API_BASE_URL}/api/calendar/events`,
+  CALENDAR_EVENTS_STREAM: `${API_BASE_URL}/api/calendar/stream`,
   CALENDAR_DISCONNECT: `${API_BASE_URL}/api/calendar/auth`
 };

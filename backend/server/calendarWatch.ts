@@ -1,7 +1,6 @@
+import { randomBytes, randomUUID } from 'crypto';
 import type { OAuth2Client } from 'google-auth-library';
 import type { calendar_v3 } from 'googleapis';
-import { randomBytes, randomUUID } from 'crypto';
-import type { Express, Request, Response } from 'express';
 import { google } from 'googleapis';
 
 import {
@@ -9,7 +8,9 @@ import {
   OAuthIntegration,
   OAuthTokenDB
 } from '../db/database.js';
+import { broadcastCalendarEventsUpdated } from './calendarSse.js';
 
+import type { Express, Request, Response } from 'express';
 const PRIMARY_CALENDAR = 'primary';
 /** Default 7 days (seconds) for Google Calendar notification channel TTL */
 const WATCH_TTL_SECONDS = '604800';
@@ -176,6 +177,7 @@ async function runIncrementalSync(
   if (!row.sync_token) {
     const token = await fetchFullSyncToken(cal, calendarId);
     await CalendarWatchDB.updateSyncToken(calendarId, token ?? null);
+    broadcastCalendarEventsUpdated();
     return;
   }
 
@@ -188,6 +190,7 @@ async function runIncrementalSync(
     if (newToken) {
       await CalendarWatchDB.updateSyncToken(calendarId, newToken);
     }
+    broadcastCalendarEventsUpdated();
   } catch (e: any) {
     const gone =
       e?.code === 410 ||
@@ -199,6 +202,7 @@ async function runIncrementalSync(
       );
       const token = await fetchFullSyncToken(cal, calendarId);
       await CalendarWatchDB.updateSyncToken(calendarId, token ?? null);
+      broadcastCalendarEventsUpdated();
     } else {
       throw e;
     }
