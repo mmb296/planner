@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { API_ENDPOINTS } from '../config/api';
+import { apiClient } from '../services/apiClient';
 import { formatDateString } from '../utils/dateTime';
 
 export function usePeriodDays(startDate: Date, endDate: Date) {
@@ -9,28 +10,23 @@ export function usePeriodDays(startDate: Date, endDate: Date) {
   const startDateStr = formatDateString(startDate);
   const endDateStr = formatDateString(endDate);
 
-  // Fetch period days for the date range
   const fetchPeriodDays = async () => {
-    const response = await fetch(
-      `${API_ENDPOINTS.PERIOD_DAYS_RANGE}?startDate=${startDateStr}&endDate=${endDateStr}`
-    );
-    if (response.ok) {
-      const dates = await response.json();
+    try {
+      const dates = await apiClient.get<string[]>(
+        `${API_ENDPOINTS.PERIOD_DAYS_RANGE}?startDate=${startDateStr}&endDate=${endDateStr}`
+      );
       setPeriodDays(new Set(dates));
+    } catch (error) {
+      console.error('Failed to fetch period days:', error);
     }
   };
 
-  // Toggle period day
   const togglePeriodDay = async (date: string) => {
-    const response = await fetch(API_ENDPOINTS.PERIOD_DAYS_TOGGLE, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ date })
-    });
-    if (response.ok) {
-      const { isPeriod } = await response.json();
+    try {
+      const { isPeriod } = await apiClient.post<{ isPeriod: boolean }>(
+        API_ENDPOINTS.PERIOD_DAYS_TOGGLE,
+        { date }
+      );
       setPeriodDays((prev) => {
         const newSet = new Set(prev);
         if (isPeriod) {
@@ -40,6 +36,8 @@ export function usePeriodDays(startDate: Date, endDate: Date) {
         }
         return newSet;
       });
+    } catch (error) {
+      console.error('Failed to toggle period day:', error);
     }
   };
 

@@ -3,6 +3,7 @@ import './CountdownBanner.css';
 import { useEffect, useState } from 'react';
 
 import { API_ENDPOINTS } from '../config/api';
+import { apiClient } from '../services/apiClient';
 
 interface CountdownItemProps {
   value: number;
@@ -36,20 +37,15 @@ const CountdownBanner = () => {
     seconds: 0
   });
 
-  // Fetch countdown config from API
   useEffect(() => {
     const fetchCountdownConfig = async () => {
       try {
-        const response = await fetch(API_ENDPOINTS.COUNTDOWN);
-        if (response.ok) {
-          const data = await response.json();
-          if (data.target_date) {
-            setTargetDate(new Date(data.target_date));
-          }
-          if (data.title) {
-            setTitle(data.title);
-          }
-        }
+        const data = await apiClient.get<{
+          target_date?: string;
+          title?: string;
+        }>(API_ENDPOINTS.COUNTDOWN);
+        if (data.target_date) setTargetDate(new Date(data.target_date));
+        if (data.title) setTitle(data.title);
       } catch (error) {
         console.error('Failed to fetch countdown config:', error);
       }
