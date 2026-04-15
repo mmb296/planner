@@ -2,6 +2,7 @@ import { closeDatabase } from '../db/connection.js';
 import { initDatabase } from '../db/database.js';
 import { closeMongoDB, connectMongoDB } from '../db/mongoConnection.js';
 import { app, initializeApp } from './app.js';
+import { applyErrorMiddleware } from './middleware.js';
 
 const PORT = process.env.PORT || 5000;
 
@@ -13,6 +14,7 @@ try {
     console.warn('MongoDB not available. Start MongoDB to enable it.');
   }
   await initializeApp();
+  applyErrorMiddleware(app);
   app.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}`);
   });

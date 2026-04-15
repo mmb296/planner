@@ -34,7 +34,6 @@ export function registerGoogleCalendarRoutes(
       const { data } = await cal.calendarList.list();
       res.json(data.items || []);
     } catch (error) {
-      console.error('calendarList.list failed:', error);
       if (isInvalidGrant(error)) {
         await clearGoogleOAuthSession(
           calendarOAuth2Client,
@@ -45,7 +44,7 @@ export function registerGoogleCalendarRoutes(
             'Calendar access expired or was revoked. Sign in with Google Calendar again.'
         });
       }
-      res.status(500).json({ error: 'Failed to list calendars' });
+      throw error;
     }
   });
 
@@ -111,7 +110,6 @@ export function registerGoogleCalendarRoutes(
 
       res.json(allEvents);
     } catch (error) {
-      console.error('calendar events failed:', error);
       if (isInvalidGrant(error)) {
         await clearGoogleOAuthSession(
           calendarOAuth2Client,
@@ -122,7 +120,7 @@ export function registerGoogleCalendarRoutes(
             'Calendar access expired or was revoked. Sign in with Google Calendar again.'
         });
       }
-      res.status(500).json({ error: 'Failed to fetch events' });
+      throw error;
     }
   });
 
