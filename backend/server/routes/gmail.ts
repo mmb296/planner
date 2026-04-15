@@ -197,7 +197,6 @@ export function registerGmailRoutes(app: express.Express, oauth2Client: any) {
 
       res.json({ saved: savedCount, maxSeenInternalDateMs: newMaxSeen });
     } catch (error) {
-      console.error('Gmail fetch error:', error);
       if (isInvalidGrant(error)) {
         await clearGoogleOAuthSession(oauth2Client, OAuthIntegration.Gmail);
         return res.status(401).json({
@@ -205,97 +204,74 @@ export function registerGmailRoutes(app: express.Express, oauth2Client: any) {
             'Gmail access expired or was revoked. Sign in with Google again.'
         });
       }
-      res.status(500).json({ error: 'Failed to perform incremental fetch' });
+      throw error;
     }
   });
 
   // AI appointment suggestion route
   app.get('/api/ai/appointments/suggestions', async (req, res) => {
-    try {
-      if (!openai) {
-        return res
-          .status(500)
-          .json({ error: 'OpenAI API key not configured on the server' });
-      }
-
-      const limitParam = req.query.limit as string | undefined;
-      const limit = limitParam ? Math.max(parseInt(limitParam, 10), 1) : 25;
-
-      const messages: GmailMessage[] = await GmailDB.getMessagesWithBody(limit);
-      const suggestions: Array<{
-        isAppointment: boolean;
-        title?: string;
-        date?: string;
-        time?: string;
-        location?: string;
-        description?: string;
-      }> = [];
-
-      for (const message of messages) {
-        if (!hasRequiredFields(message)) {
-          continue;
-        }
-
-        const suggestion = await extractAppointmentDetails(
-          message.subject as string,
-          message.from_address as string,
-          message.body_text as string
-        );
-
-        if (suggestion) {
-          suggestions.push(suggestion);
-        }
-      }
-
-      res.json({ count: suggestions.length, suggestions });
-    } catch (error) {
-      console.error('AI appointment suggestion error:', error);
-      res
+    if (!openai) {
+      return res
         .status(500)
-        .json({ error: 'Failed to generate appointment suggestions' });
+        .json({ error: 'OpenAI API key not configured on the server' });
     }
-  });
 
-  // AI suggestion for a specific message
-  app.get('/api/ai/appointments/suggestions/:messageId', async (req, res) => {
-    try {
-      if (!openai) {
-        return res
-          .status(500)
-          .json({ error: 'OpenAI API key not configured on the server' });
-      }
+    const limitParam = req.query.limit as string | undefined;
+    const limit = limitParam ? Math.max(parseInt(limitParam, 10), 1) : 25;
 
-      const { messageId } = req.params;
-      const message = (await GmailDB.getMessageById(
-        messageId
-      )) as GmailMessage | null;
-      if (!message) {
-        return res
-          .status(404)
-          .json({ error: `No stored Gmail message with id ${messageId}` });
-      }
+    const messages: GmailMessage[] = await GmailDB.getMessagesWithBody(limit);
+    const suggestions: Array<{
+      isAppointment: boolean;
+      title?: string;
+      date?: string;
+      time?: string;
+      location?: string;
+      description?: string;
+    }> = [];
 
-      if (!hasRequiredFields(message)) {
-        return res.status(400).json({
-          error: 'Stored message is missing subject, from address, or body text'
-        });
-      }
-
+    for (const message of messages) {
+      if (!hasRequiredFields(message)) continue;
       const suggestion = await extractAppointmentDetails(
         message.subject as string,
         message.from_address as string,
         message.body_text as string
       );
+      if (suggestion) suggestions.push(suggestion);
+    }
 
-      res.json({
-        messageId,
-        suggestion
-      });
-    } catch (error) {
-      console.error('AI appointment suggestion (single) error:', error);
-      res.status(500).json({
-        error: 'Failed to generate appointment suggestion for the message'
+    res.json({ count: suggestions.length, suggestions });
+  });
+
+  // AI suggestion for a specific message
+  app.get('/api/ai/appointments/suggestions/:messageId', async (req, res) => {
+    if (!openai) {
+      return res
+        .status(500)
+        .json({ error: 'OpenAI API key not configured on the server' });
+    }
+
+    const { messageId } = req.params;
+    const message = (await GmailDB.getMessageById(
+      messageId
+    )) as GmailMessage | null;
+    if (!message) {
+      return res
+        .status(404)
+        .json({ error: `No stored Gmail message with id ${messageId}` });
+    }
+
+    if (!hasRequiredFields(message)) {
+      return res.status(400).json({
+        error: 'Stored message is missing subject, from address, or body text'
       });
     }
+
+    const suggestion = await extractAppointmentDetails(
+      message.subject as string,
+      message.from_address as string,
+      message.body_text as string
+    );
+
+    res.json({ messageId, suggestion });
   });
 }
