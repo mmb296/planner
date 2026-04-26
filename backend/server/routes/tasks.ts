@@ -1,6 +1,6 @@
 import express from 'express';
 
-import { RecurringTaskDB, TaskCompletionDB } from '../../db/database.js';
+import { RecurringTaskDB, TaskCompletionDB } from '../../db/tasksStore.js';
 
 export function registerTaskRoutes(app: express.Express) {
   app.get('/api/tasks', async (req, res) => {
