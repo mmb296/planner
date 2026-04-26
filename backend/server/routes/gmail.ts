@@ -3,7 +3,8 @@ import express from 'express';
 import { google } from 'googleapis';
 import OpenAI from 'openai';
 
-import { GmailDB, OAuthIntegration } from '../../db/database.js';
+import { OAuthIntegration } from '../../db/database.js';
+import { GmailDB } from '../../db/gmailStore';
 import {
   clearGoogleOAuthSession,
   isInvalidGrant
