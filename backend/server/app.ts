@@ -9,7 +9,6 @@ import {
 import { setupGmailAuth, setupGoogleCalendarAuth } from './googleAuth.js';
 import { applyMiddleware } from './middleware.js';
 import { registerGmailRoutes } from './routes/gmail.js';
-import { registerGoalsRoutes } from './routes/goals.js';
 import { registerGoogleCalendarRoutes } from './routes/googleCalendar.js';
 import { registerPeriodDaysRoutes } from './routes/periodDays.js';
 import { registerSettingsRoutes } from './routes/settings.js';
@@ -33,7 +32,6 @@ app.get('/', (req, res) => {
 registerTaskRoutes(app);
 registerPeriodDaysRoutes(app);
 registerSettingsRoutes(app);
-registerGoalsRoutes(app);
 
 export async function initializeApp() {
   const gmailOAuth2Client = await setupGmailAuth(app, PORT);

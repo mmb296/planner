@@ -10,13 +10,13 @@ A personal planning app that brings together Google Calendar, task management an
 
 ## Tech Stack
 
-| Layer         | Technology                                      |
-| ------------- | ----------------------------------------------- |
-| Frontend      | React 19, TypeScript, Vite                      |
-| Backend       | Express 5, Node.js, TypeScript                  |
-| Database      | SQLite (primary), MongoDB (optional, for goals) |
-| Auth          | Google OAuth2                                   |
-| External APIs | Google Calendar API, Gmail API, OpenAI API      |
+| Layer         | Technology                                 |
+| ------------- | ------------------------------------------ |
+| Frontend      | React 19, TypeScript, Vite                 |
+| Backend       | Express 5, Node.js, TypeScript             |
+| Database      | SQLite (primary)                           |
+| Auth          | Google OAuth2                              |
+| External APIs | Google Calendar API, Gmail API, OpenAI API |
 
 ## Project Structure
 

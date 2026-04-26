@@ -1,6 +1,5 @@
 import { closeDatabase } from '../db/connection.js';
 import { initDatabase } from '../db/database.js';
-import { closeMongoDB, connectMongoDB } from '../db/mongoConnection.js';
 import { app, initializeApp } from './app.js';
 import { applyErrorMiddleware } from './middleware.js';
 
@@ -8,11 +7,6 @@ const PORT = process.env.PORT || 5000;
 
 try {
   await initDatabase();
-  try {
-    await connectMongoDB();
-  } catch (mongoError) {
-    console.warn('MongoDB not available. Start MongoDB to enable it.');
-  }
   await initializeApp();
   applyErrorMiddleware(app);
   app.listen(PORT, () => {
@@ -26,6 +20,5 @@ try {
 process.on('SIGINT', async () => {
   console.log('Shutting down server...');
   await closeDatabase();
-  await closeMongoDB();
   process.exit(0);
 });
