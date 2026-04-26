@@ -2,7 +2,7 @@ import express from 'express';
 import { OAuth2Client } from 'google-auth-library';
 import { google } from 'googleapis';
 
-import { OAuthIntegration, OAuthTokenDB } from '../../db/oauthStore.js';
+import { OAuthTokenDB } from '../../db/oauthStore.js';
 import { stopCalendarWatchChannel } from '../calendarWatch.js';
 import {
   clearGoogleOAuthSession,
@@ -14,13 +14,13 @@ export function registerGoogleCalendarRoutes(
   calendarOAuth2Client: OAuth2Client
 ) {
   app.get('/api/calendar/status', async (req, res) => {
-    const t = await OAuthTokenDB.getToken(OAuthIntegration.Calendar);
+    const t = await OAuthTokenDB.getToken('calendar');
     const connected = !!(t?.refresh_token || t?.access_token);
     res.json({ connected });
   });
 
   app.get('/api/calendar/calendars', async (req, res) => {
-    const saved = await OAuthTokenDB.getToken(OAuthIntegration.Calendar);
+    const saved = await OAuthTokenDB.getToken('calendar');
     if (!saved?.refresh_token && !saved?.access_token) {
       return res.status(401).json({ error: 'Calendar not connected' });
     }
@@ -35,10 +35,7 @@ export function registerGoogleCalendarRoutes(
       res.json(data.items || []);
     } catch (error) {
       if (isInvalidGrant(error)) {
-        await clearGoogleOAuthSession(
-          calendarOAuth2Client,
-          OAuthIntegration.Calendar
-        );
+        await clearGoogleOAuthSession(calendarOAuth2Client, 'calendar');
         return res.status(401).json({
           error:
             'Calendar access expired or was revoked. Sign in with Google Calendar again.'
@@ -49,7 +46,7 @@ export function registerGoogleCalendarRoutes(
   });
 
   app.get('/api/calendar/events', async (req, res) => {
-    const saved = await OAuthTokenDB.getToken(OAuthIntegration.Calendar);
+    const saved = await OAuthTokenDB.getToken('calendar');
     if (!saved?.refresh_token && !saved?.access_token) {
       return res.status(401).json({ error: 'Calendar not connected' });
     }
@@ -111,10 +108,7 @@ export function registerGoogleCalendarRoutes(
       res.json(allEvents);
     } catch (error) {
       if (isInvalidGrant(error)) {
-        await clearGoogleOAuthSession(
-          calendarOAuth2Client,
-          OAuthIntegration.Calendar
-        );
+        await clearGoogleOAuthSession(calendarOAuth2Client, 'calendar');
         return res.status(401).json({
           error:
             'Calendar access expired or was revoked. Sign in with Google Calendar again.'
@@ -126,7 +120,7 @@ export function registerGoogleCalendarRoutes(
 
   app.delete('/api/calendar/auth', async (req, res) => {
     await stopCalendarWatchChannel(calendarOAuth2Client);
-    await OAuthTokenDB.clearToken(OAuthIntegration.Calendar);
+    await OAuthTokenDB.clearToken('calendar');
     calendarOAuth2Client.setCredentials({});
     res.json({ message: 'Calendar disconnected' });
   });

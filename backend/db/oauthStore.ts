@@ -1,9 +1,6 @@
 import { dbGet, dbRun } from './connection.js';
 
-export enum OAuthIntegration {
-  Gmail = 'gmail',
-  Calendar = 'calendar'
-}
+export type OAuthIntegration = 'gmail' | 'calendar';
 
 export type OAuthToken = {
   access_token?: string;

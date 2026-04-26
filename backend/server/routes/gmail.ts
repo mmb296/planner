@@ -4,7 +4,6 @@ import { google } from 'googleapis';
 import OpenAI from 'openai';
 
 import { GmailDB } from '../../db/gmailStore';
-import { OAuthIntegration } from '../../db/oauthStore.js';
 import {
   clearGoogleOAuthSession,
   isInvalidGrant
@@ -199,7 +198,7 @@ export function registerGmailRoutes(app: express.Express, oauth2Client: any) {
       res.json({ saved: savedCount, maxSeenInternalDateMs: newMaxSeen });
     } catch (error) {
       if (isInvalidGrant(error)) {
-        await clearGoogleOAuthSession(oauth2Client, OAuthIntegration.Gmail);
+        await clearGoogleOAuthSession(oauth2Client, 'gmail');
         return res.status(401).json({
           error:
             'Gmail access expired or was revoked. Sign in with Google again.'
