@@ -5,7 +5,7 @@ import { google } from 'googleapis';
 import { CalendarOAuthTokenDB } from '../../db/oauthStore.js';
 import { stopCalendarWatchChannel } from '../calendarWatch.js';
 import {
-  clearGoogleOAuthSession,
+  clearCalendarOAuthSession,
   isInvalidGrant
 } from '../googleOAuthInvalidGrant.js';
 
@@ -35,7 +35,7 @@ export function registerGoogleCalendarRoutes(
       res.json(data.items || []);
     } catch (error) {
       if (isInvalidGrant(error)) {
-        await clearGoogleOAuthSession(calendarOAuth2Client, 'calendar');
+        await clearCalendarOAuthSession(calendarOAuth2Client);
         return res.status(401).json({
           error:
             'Calendar access expired or was revoked. Sign in with Google Calendar again.'
@@ -108,7 +108,7 @@ export function registerGoogleCalendarRoutes(
       res.json(allEvents);
     } catch (error) {
       if (isInvalidGrant(error)) {
-        await clearGoogleOAuthSession(calendarOAuth2Client, 'calendar');
+        await clearCalendarOAuthSession(calendarOAuth2Client);
         return res.status(401).json({
           error:
             'Calendar access expired or was revoked. Sign in with Google Calendar again.'
