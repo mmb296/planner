@@ -2,7 +2,7 @@ import { randomBytes, randomUUID } from 'crypto';
 import { google } from 'googleapis';
 
 import { CalendarWatchDB } from '../db/calendarWatchStore.js';
-import { OAuthIntegration, OAuthTokenDB } from '../db/oauthStore.js';
+import { CalendarOAuthTokenDB } from '../db/oauthStore.js';
 import { broadcastCalendarEventsUpdated } from './calendarSse.js';
 
 import type { Express, Request, Response } from 'express';
@@ -40,7 +40,7 @@ export async function registerPrimaryCalendarWatch(
     return;
   }
 
-  const saved = await OAuthTokenDB.getToken(OAuthIntegration.Calendar);
+  const saved = await CalendarOAuthTokenDB.getToken();
   if (!saved?.refresh_token && !saved?.access_token) {
     return;
   }
@@ -158,7 +158,7 @@ async function runIncrementalSync(
   oauth2Client: OAuth2Client,
   calendarId: string
 ): Promise<void> {
-  const saved = await OAuthTokenDB.getToken(OAuthIntegration.Calendar);
+  const saved = await CalendarOAuthTokenDB.getToken();
   if (!saved?.refresh_token && !saved?.access_token) {
     return;
   }
@@ -211,7 +211,7 @@ export async function stopCalendarWatchChannel(
   oauth2Client: OAuth2Client
 ): Promise<void> {
   const row = await CalendarWatchDB.getByCalendarId(PRIMARY_CALENDAR);
-  const saved = await OAuthTokenDB.getToken(OAuthIntegration.Calendar);
+  const saved = await CalendarOAuthTokenDB.getToken();
   if (row?.channel_id && row?.resource_id && saved?.refresh_token) {
     oauth2Client.setCredentials(saved);
     try {
@@ -235,7 +235,7 @@ export async function renewCalendarWatchIfNeeded(
   if (!getWebhookUrl()) {
     return;
   }
-  const saved = await OAuthTokenDB.getToken(OAuthIntegration.Calendar);
+  const saved = await CalendarOAuthTokenDB.getToken();
   if (!saved?.refresh_token && !saved?.access_token) {
     return;
   }

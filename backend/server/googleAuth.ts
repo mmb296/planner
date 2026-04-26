@@ -5,16 +5,12 @@ import { OAuthIntegration, OAuthTokenDB } from '../db/oauthStore.js';
 import { registerPrimaryCalendarWatch } from './calendarWatch.js';
 
 const GOOGLE_INTEGRATION_SCOPES: Record<OAuthIntegration, string[]> = {
-  [OAuthIntegration.Gmail]: ['https://www.googleapis.com/auth/gmail.readonly'],
-  [OAuthIntegration.Calendar]: [
-    'https://www.googleapis.com/auth/calendar.readonly'
-  ]
+  gmail: ['https://www.googleapis.com/auth/gmail.readonly'],
+  calendar: ['https://www.googleapis.com/auth/calendar.readonly']
 };
 
-/** Display name for logs/errors; enum values are lowercase path segments (gmail → Gmail) */
 function googleOAuthIntegrationLabel(integration: OAuthIntegration): string {
-  const s = integration as string;
-  return s.charAt(0).toUpperCase() + s.slice(1);
+  return integration.charAt(0).toUpperCase() + integration.slice(1);
 }
 
 function googleOAuthPaths(integration: OAuthIntegration) {
@@ -78,7 +74,7 @@ async function setupGoogleOAuthFlow(
       oauth2Client.setCredentials(tokens);
       await OAuthTokenDB.saveToken(integration, tokens);
 
-      if (integration === OAuthIntegration.Calendar) {
+      if (integration === 'calendar') {
         void registerPrimaryCalendarWatch(oauth2Client).catch((e) =>
           console.warn('[calendar watch] register after OAuth failed:', e)
         );
@@ -96,12 +92,12 @@ async function setupGoogleOAuthFlow(
 }
 
 export function setupGmailAuth(app: express.Express, port: string | number) {
-  return setupGoogleOAuthFlow(app, port, OAuthIntegration.Gmail);
+  return setupGoogleOAuthFlow(app, port, 'gmail');
 }
 
 export function setupGoogleCalendarAuth(
   app: express.Express,
   port: string | number
 ) {
-  return setupGoogleOAuthFlow(app, port, OAuthIntegration.Calendar);
+  return setupGoogleOAuthFlow(app, port, 'calendar');
 }

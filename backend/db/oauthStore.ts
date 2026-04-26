@@ -1,9 +1,6 @@
 import { dbGet, dbRun } from './connection.js';
 
-export enum OAuthIntegration {
-  Gmail = 'gmail',
-  Calendar = 'calendar'
-}
+export type OAuthIntegration = 'gmail' | 'calendar';
 
 export type OAuthToken = {
   access_token?: string;
@@ -33,6 +30,23 @@ export async function createOauthTable() {
     )
   `);
 }
+
+function makeOAuthTokenDB(integration: OAuthIntegration) {
+  return {
+    async saveToken(tokens: OAuthTokenInput) {
+      return OAuthTokenDB.saveToken(integration, tokens);
+    },
+    async getToken(): Promise<OAuthToken | null> {
+      return OAuthTokenDB.getToken(integration);
+    },
+    async clearToken(): Promise<void> {
+      return OAuthTokenDB.clearToken(integration);
+    }
+  };
+}
+
+export const CalendarOAuthTokenDB = makeOAuthTokenDB('calendar');
+export const GmailOAuthTokenDB = makeOAuthTokenDB('gmail');
 
 // Google OAuth tokens: one row per integration (Gmail, Calendar)
 export const OAuthTokenDB = {

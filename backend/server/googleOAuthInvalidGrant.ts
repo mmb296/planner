@@ -1,6 +1,6 @@
 import type { OAuth2Client } from 'google-auth-library';
 
-import { OAuthIntegration, OAuthTokenDB } from '../db/oauthStore.js';
+import { CalendarOAuthTokenDB, GmailOAuthTokenDB } from '../db/oauthStore.js';
 
 /** Google token endpoint returns invalid_grant when refresh token is dead. */
 export function isInvalidGrant(error: unknown): boolean {
@@ -13,10 +13,16 @@ export function isInvalidGrant(error: unknown): boolean {
   return msg.includes('invalid_grant');
 }
 
-export async function clearGoogleOAuthSession(
-  oauth2Client: Pick<OAuth2Client, 'setCredentials'>,
-  integration: OAuthIntegration
+export async function clearCalendarOAuthSession(
+  oauth2Client: Pick<OAuth2Client, 'setCredentials'>
 ): Promise<void> {
-  await OAuthTokenDB.clearToken(integration);
+  await CalendarOAuthTokenDB.clearToken();
+  oauth2Client.setCredentials({});
+}
+
+export async function clearGmailOAuthSession(
+  oauth2Client: Pick<OAuth2Client, 'setCredentials'>
+): Promise<void> {
+  await GmailOAuthTokenDB.clearToken();
   oauth2Client.setCredentials({});
 }
