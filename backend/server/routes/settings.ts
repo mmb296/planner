@@ -1,6 +1,6 @@
 import express from 'express';
 
-import { CountdownConfigDB } from '../../db/database.js';
+import { CountdownConfigDB } from '../../db/countdownStore.js';
 
 export function registerSettingsRoutes(app: express.Express) {
   app.get('/api/countdown', async (req, res) => {

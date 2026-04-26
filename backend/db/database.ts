@@ -1,4 +1,5 @@
 import { dbAll, dbGet, dbRun } from './connection.js';
+import { createCountdownTable } from './countdownStore.js';
 
 export enum OAuthIntegration {
   Gmail = 'gmail',
@@ -88,15 +89,7 @@ export async function initDatabase() {
       )
     `);
 
-    // Create countdown_config table
-    await dbRun(`
-      CREATE TABLE IF NOT EXISTS countdown_config (
-        id INTEGER PRIMARY KEY CHECK (id = 1),
-        target_date TEXT NOT NULL,
-        title TEXT,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
+    await createCountdownTable();
 
     // Create period_days table
     await dbRun(`
@@ -421,32 +414,6 @@ export const CalendarWatchDB = {
     await dbRun('DELETE FROM calendar_watch WHERE calendar_id = ?', [
       calendarId
     ]);
-  }
-};
-
-// Countdown Config operations
-export const CountdownConfigDB = {
-  async get(): Promise<{ target_date: string; title?: string } | null> {
-    const row: any = await dbGet(
-      'SELECT target_date, title FROM countdown_config WHERE id = 1'
-    );
-    if (!row) return null;
-    return {
-      target_date: row.target_date,
-      title: row.title || undefined
-    };
-  },
-
-  async set(targetDate: string, title?: string): Promise<void> {
-    await dbRun(
-      `INSERT INTO countdown_config (id, target_date, title)
-       VALUES (1, ?, ?)
-       ON CONFLICT(id) DO UPDATE SET
-         target_date=excluded.target_date,
-         title=excluded.title,
-         updated_at=CURRENT_TIMESTAMP`,
-      [targetDate, title || null]
-    );
   }
 };
 
