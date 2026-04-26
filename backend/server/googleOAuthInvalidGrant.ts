@@ -1,6 +1,6 @@
 import type { OAuth2Client } from 'google-auth-library';
 
-import { OAuthIntegration, OAuthTokenDB } from '../db/database.js';
+import { OAuthIntegration, OAuthTokenDB } from '../db/oauthStore.js';
 
 /** Google token endpoint returns invalid_grant when refresh token is dead. */
 export function isInvalidGrant(error: unknown): boolean {

@@ -1,7 +1,7 @@
 import express from 'express';
 import { google } from 'googleapis';
 
-import { OAuthIntegration, OAuthTokenDB } from '../db/database.js';
+import { OAuthIntegration, OAuthTokenDB } from '../db/oauthStore.js';
 import { registerPrimaryCalendarWatch } from './calendarWatch.js';
 
 const GOOGLE_INTEGRATION_SCOPES: Record<OAuthIntegration, string[]> = {
