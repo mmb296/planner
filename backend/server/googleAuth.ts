@@ -55,11 +55,15 @@ async function setupGoogleOAuthFlow(
     });
   });
 
-  app.get(authPath, (req, res) => {
+  app.get(authPath, async (req, res) => {
+    const existing = await OAuthTokenDB.getToken(integration);
     const url = oauth2Client.generateAuthUrl({
       access_type: 'offline',
       scope: GOOGLE_INTEGRATION_SCOPES[integration],
-      prompt: 'consent'
+      // Only force consent (and a new refresh token) when we don't already have one.
+      // Using 'consent' when a refresh token exists revokes the old one, which
+      // invalidates any other stored sessions.
+      prompt: existing?.refresh_token ? 'select_account' : 'consent'
     });
     res.redirect(url);
   });

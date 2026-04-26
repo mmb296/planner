@@ -25,6 +25,7 @@ import DaysSelect from './DaysSelect';
 
 const Calendar: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [serverReady, setServerReady] = useState(false);
   const [calendars, setCalendars] = useState<CalendarType[]>([]);
   const [selectedCalendarIds, setSelectedCalendarIds] = useState<Set<string>>(
     new Set()
@@ -85,20 +86,30 @@ const Calendar: React.FC = () => {
 
   useEffect(() => {
     let cancelled = false;
-    (async () => {
+    let retryTimeout: ReturnType<typeof setTimeout>;
+
+    const checkStatus = async () => {
       try {
         const connected = await getCalendarConnectionStatus();
         if (cancelled) return;
+        setServerReady(true);
         setIsAuthenticated(connected);
         if (connected) {
           await fetchCalendars();
         }
-      } catch (e) {
-        console.error(e);
+      } catch {
+        // Backend not reachable yet — retry until it's up
+        if (!cancelled) {
+          retryTimeout = setTimeout(checkStatus, 2000);
+        }
       }
-    })();
+    };
+
+    checkStatus();
+
     return () => {
       cancelled = true;
+      clearTimeout(retryTimeout);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -194,7 +205,7 @@ const Calendar: React.FC = () => {
     </div>
   );
 
-  const eventsContent = isAuthenticated ? (
+  const eventsContent = !serverReady ? null : isAuthenticated ? (
     <ul className={styles.eventsList}>
       {Array.from(eventsByDay.entries())
         .sort((a, b) => a[0] - b[0])
