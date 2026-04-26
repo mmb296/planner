@@ -1,14 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 import { API_ENDPOINTS } from '../../config/api';
+import { useCalendarAuth } from '../../hooks/useCalendarAuth';
 import { usePeriodDays } from '../../hooks/usePeriodDays';
 import { usePeriodPrediction } from '../../hooks/usePeriodPrediction';
-import {
-  disconnectCalendar,
-  fetchEvents,
-  getCalendarConnectionStatus,
-  listCalendars
-} from '../../services/calendarApi';
+import { fetchEvents, listCalendars } from '../../services/calendarApi';
 import { CalendarService } from '../../services/calendarService';
 import { CalendarEvent, Calendar as CalendarType } from '../../types';
 import {
@@ -24,8 +20,8 @@ import Day from './Day';
 import DaysSelect from './DaysSelect';
 
 const Calendar: React.FC = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [serverReady, setServerReady] = useState(false);
+  const { status, clearAuth } = useCalendarAuth();
+  const isAuthenticated = status === 'authenticated';
   const [calendars, setCalendars] = useState<CalendarType[]>([]);
   const [selectedCalendarIds, setSelectedCalendarIds] = useState<Set<string>>(
     new Set()
@@ -41,12 +37,7 @@ const Calendar: React.FC = () => {
   const { prediction, refetch: refetchPrediction } = usePeriodPrediction();
 
   const clearAuthentication = async () => {
-    try {
-      await disconnectCalendar();
-    } catch {
-      /* ignore */
-    }
-    setIsAuthenticated(false);
+    await clearAuth();
     setCalendars([]);
     setAllEvents([]);
     setSelectedCalendarIds(new Set());
@@ -85,34 +76,9 @@ const Calendar: React.FC = () => {
   };
 
   useEffect(() => {
-    let cancelled = false;
-    let retryTimeout: ReturnType<typeof setTimeout>;
-
-    const checkStatus = async () => {
-      try {
-        const connected = await getCalendarConnectionStatus();
-        if (cancelled) return;
-        setServerReady(true);
-        setIsAuthenticated(connected);
-        if (connected) {
-          await fetchCalendars();
-        }
-      } catch {
-        // Backend not reachable yet — retry until it's up
-        if (!cancelled) {
-          retryTimeout = setTimeout(checkStatus, 2000);
-        }
-      }
-    };
-
-    checkStatus();
-
-    return () => {
-      cancelled = true;
-      clearTimeout(retryTimeout);
-    };
+    if (isAuthenticated) fetchCalendars();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     if (!isAuthenticated || calendars.length === 0) return;
@@ -205,40 +171,41 @@ const Calendar: React.FC = () => {
     </div>
   );
 
-  const eventsContent = !serverReady ? null : isAuthenticated ? (
-    <ul className={styles.eventsList}>
-      {Array.from(eventsByDay.entries())
-        .sort((a, b) => a[0] - b[0])
-        .map(([daysOut, events]) => {
-          const date = getFutureDate(daysOut);
-          const dateStr = formatDateString(date);
-          return (
-            <Day
-              key={daysOut}
-              label={CalendarService.getDayLabel(daysOut)}
-              date={date}
-              events={events}
-              isPeriodDay={periodDays.has(dateStr)}
-              onDotToggle={(date) => {
-                togglePeriodDay(formatDateString(date));
-              }}
-            />
-          );
-        })}
-    </ul>
-  ) : (
-    <div className={styles.placeholder}>
-      <p>Sign in with Google Calendar to view your events</p>
-      <button
-        onClick={() => {
-          window.location.href = API_ENDPOINTS.CALENDAR_AUTH_START;
-        }}
-        className={styles.signInButton}
-      >
-        Sign In with Google Calendar
-      </button>
-    </div>
-  );
+  const eventsContent =
+    status === 'loading' ? null : isAuthenticated ? (
+      <ul className={styles.eventsList}>
+        {Array.from(eventsByDay.entries())
+          .sort((a, b) => a[0] - b[0])
+          .map(([daysOut, events]) => {
+            const date = getFutureDate(daysOut);
+            const dateStr = formatDateString(date);
+            return (
+              <Day
+                key={daysOut}
+                label={CalendarService.getDayLabel(daysOut)}
+                date={date}
+                events={events}
+                isPeriodDay={periodDays.has(dateStr)}
+                onDotToggle={(date) => {
+                  togglePeriodDay(formatDateString(date));
+                }}
+              />
+            );
+          })}
+      </ul>
+    ) : (
+      <div className={styles.placeholder}>
+        <p>Sign in with Google Calendar to view your events</p>
+        <button
+          onClick={() => {
+            window.location.href = API_ENDPOINTS.CALENDAR_AUTH_START;
+          }}
+          className={styles.signInButton}
+        >
+          Sign In with Google Calendar
+        </button>
+      </div>
+    );
 
   return (
     <div className={styles.calendar}>
