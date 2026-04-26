@@ -2,16 +2,16 @@ import { dbGet, dbRun } from './connection.js';
 
 export async function createCalendarWatchTable() {
   await dbRun(`
-        CREATE TABLE IF NOT EXISTS calendar_watch (
-          calendar_id TEXT PRIMARY KEY,
-          channel_id TEXT,
-          channel_token TEXT,
-          resource_id TEXT,
-          expiration_ms INTEGER,
-          sync_token TEXT,
-          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-      `);
+    CREATE TABLE IF NOT EXISTS calendar_watch (
+      calendar_id TEXT PRIMARY KEY,
+      channel_id TEXT,
+      channel_token TEXT,
+      resource_id TEXT,
+      expiration_ms INTEGER,
+      sync_token TEXT,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
 }
 
 export type CalendarWatchRow = {

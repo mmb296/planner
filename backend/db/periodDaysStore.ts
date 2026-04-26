@@ -2,11 +2,11 @@ import { dbAll, dbGet, dbRun } from './connection.js';
 
 export async function createPeriodDaysTable() {
   await dbRun(`
-        CREATE TABLE IF NOT EXISTS period_days (
-          date DATE PRIMARY KEY,
-          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-      `);
+    CREATE TABLE IF NOT EXISTS period_days (
+      date DATE PRIMARY KEY,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
 }
 
 export const PeriodDaysDB = {

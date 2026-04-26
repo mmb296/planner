@@ -2,22 +2,22 @@ import { dbAll, dbGet, dbRun } from './connection.js';
 
 export async function createGmailTable() {
   await dbRun(`
-        CREATE TABLE IF NOT EXISTS gmail_messages (
-          id TEXT PRIMARY KEY,
-          thread_id TEXT,
-          subject TEXT,
-          from_address TEXT,
-          snippet TEXT,
-          internal_date_ms INTEGER,
-          body_text TEXT,
-          fetched_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-      `);
+    CREATE TABLE IF NOT EXISTS gmail_messages (
+      id TEXT PRIMARY KEY,
+      thread_id TEXT,
+      subject TEXT,
+      from_address TEXT,
+      snippet TEXT,
+      internal_date_ms INTEGER,
+      body_text TEXT,
+      fetched_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
 
   await dbRun(`
-        CREATE INDEX IF NOT EXISTS idx_gmail_messages_internal_date
-        ON gmail_messages (internal_date_ms)
-      `);
+    CREATE INDEX IF NOT EXISTS idx_gmail_messages_internal_date
+    ON gmail_messages (internal_date_ms)
+  `);
 }
 
 export const GmailDB = {
@@ -61,12 +61,12 @@ export const GmailDB = {
 
   async getMessagesWithBody(limit?: number): Promise<any[]> {
     const query = `
-        SELECT id, thread_id, subject, from_address, snippet, internal_date_ms, body_text
-        FROM gmail_messages
-        WHERE body_text IS NOT NULL AND body_text <> ''
-        ORDER BY internal_date_ms DESC
-        ${limit ? 'LIMIT ?' : ''}
-      `;
+      SELECT id, thread_id, subject, from_address, snippet, internal_date_ms, body_text
+      FROM gmail_messages
+      WHERE body_text IS NOT NULL AND body_text <> ''
+      ORDER BY internal_date_ms DESC
+      ${limit ? 'LIMIT ?' : ''}
+    `;
 
     const params = limit ? [limit] : [];
     const rows = await dbAll(query, params);

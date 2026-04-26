@@ -22,16 +22,16 @@ export type OAuthTokenInput = {
 
 export async function createOauthTable() {
   await dbRun(`
-        CREATE TABLE IF NOT EXISTS oauth_tokens (
-          integration TEXT PRIMARY KEY CHECK (integration IN ('gmail', 'calendar')),
-          access_token TEXT,
-          refresh_token TEXT,
-          scope TEXT,
-          token_type TEXT,
-          expiry_date INTEGER,
-          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-      `);
+    CREATE TABLE IF NOT EXISTS oauth_tokens (
+      integration TEXT PRIMARY KEY CHECK (integration IN ('gmail', 'calendar')),
+      access_token TEXT,
+      refresh_token TEXT,
+      scope TEXT,
+      token_type TEXT,
+      expiry_date INTEGER,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
 }
 
 // Google OAuth tokens: one row per integration (Gmail, Calendar)
