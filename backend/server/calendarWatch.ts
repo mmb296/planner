@@ -1,16 +1,13 @@
 import { randomBytes, randomUUID } from 'crypto';
-import type { OAuth2Client } from 'google-auth-library';
-import type { calendar_v3 } from 'googleapis';
 import { google } from 'googleapis';
 
-import {
-  CalendarWatchDB,
-  OAuthIntegration,
-  OAuthTokenDB
-} from '../db/database.js';
+import { CalendarWatchDB } from '../db/calendarWatchStore.js';
+import { OAuthIntegration, OAuthTokenDB } from '../db/oauthStore.js';
 import { broadcastCalendarEventsUpdated } from './calendarSse.js';
 
 import type { Express, Request, Response } from 'express';
+import type { OAuth2Client } from 'google-auth-library';
+import type { calendar_v3 } from 'googleapis';
 const PRIMARY_CALENDAR = 'primary';
 /** Default 7 days (seconds) for Google Calendar notification channel TTL */
 const WATCH_TTL_SECONDS = '604800';

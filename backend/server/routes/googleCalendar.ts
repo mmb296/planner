@@ -2,7 +2,7 @@ import express from 'express';
 import { OAuth2Client } from 'google-auth-library';
 import { google } from 'googleapis';
 
-import { OAuthIntegration, OAuthTokenDB } from '../../db/database.js';
+import { OAuthIntegration, OAuthTokenDB } from '../../db/oauthStore.js';
 import { stopCalendarWatchChannel } from '../calendarWatch.js';
 import {
   clearGoogleOAuthSession,

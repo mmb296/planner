@@ -1,6 +1,6 @@
 import express from 'express';
 
-import { PeriodDaysDB } from '../../db/database.js';
+import { PeriodDaysDB } from '../../db/periodDaysStore.js';
 
 function getPeriodStarts(periodDays: string[]): Date[] {
   const dates = periodDays.map((d) => new Date(d));
