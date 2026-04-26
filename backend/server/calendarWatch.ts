@@ -1,7 +1,7 @@
 import { randomBytes, randomUUID } from 'crypto';
 import { google } from 'googleapis';
 
-import { CalendarWatchDB } from '../db/database.js';
+import { CalendarWatchDB } from '../db/calendarWatchStore.js';
 import { OAuthIntegration, OAuthTokenDB } from '../db/oauthStore.js';
 import { broadcastCalendarEventsUpdated } from './calendarSse.js';
 
