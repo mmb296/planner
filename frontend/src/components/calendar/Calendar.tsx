@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import { API_ENDPOINTS } from '../../config/api';
 import { useCalendarAuth } from '../../hooks/useCalendarAuth';
@@ -28,12 +28,12 @@ const Calendar: React.FC = () => {
     new Set()
   );
   const [numDays, setNumDays] = useState(14);
-  const clearAuthentication = async () => {
+  const clearAuthentication = useCallback(async () => {
     await clearAuth();
     setCalendars([]);
-    setAllEvents([]);
     setSelectedCalendarIds(new Set());
-  };
+    setAllEvents([]);
+  }, [clearAuth]);
   const { allEvents, setAllEvents } = useCalendarEvents(
     isAuthenticated,
     calendars,

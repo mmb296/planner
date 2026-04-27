@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import {
   disconnectCalendar,
@@ -34,14 +34,14 @@ export function useCalendarAuth() {
     };
   }, []);
 
-  const clearAuth = async () => {
+  const clearAuth = useCallback(async () => {
     try {
       await disconnectCalendar();
     } catch {
       /* ignore */
     }
     setStatus('unauthenticated');
-  };
+  }, []);
 
   return { status, clearAuth };
 }

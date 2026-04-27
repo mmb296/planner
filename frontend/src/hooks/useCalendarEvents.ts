@@ -16,8 +16,6 @@ export function useCalendarEvents(
   calendarsRef.current = calendars;
   const numDaysRef = useRef(numDays);
   numDaysRef.current = numDays;
-  const clearAuthenticationRef = useRef(onAuthError);
-  clearAuthenticationRef.current = onAuthError;
 
   const fetchUpcomingEvents = async (daysToFetch = numDays) => {
     try {
@@ -54,7 +52,7 @@ export function useCalendarEvents(
           .then(setAllEvents)
           .catch((err: unknown) => {
             if (err instanceof Error && err.message === 'AUTH_ERROR') {
-              void clearAuthenticationRef.current();
+              void onAuthError();
             }
           });
       } catch {
@@ -65,7 +63,7 @@ export function useCalendarEvents(
     return () => {
       es.close();
     };
-  }, [isAuthenticated, calendars.length]);
+  }, [isAuthenticated, calendars.length, onAuthError]);
 
   return { allEvents, setAllEvents, fetchUpcomingEvents };
 }
