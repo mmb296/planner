@@ -27,18 +27,19 @@ const Calendar: React.FC = () => {
   const isAuthenticated = status === 'authenticated';
 
   const signOutRef = useRef<() => Promise<void>>(async () => {});
+  const onAuthError = useCallback(() => signOutRef.current(), []);
 
   const {
     calendars,
     selectedCalendarIds,
     clearCalendars,
     toggleCalendarSelection
-  } = useCalendars(isAuthenticated, () => signOutRef.current());
+  } = useCalendars(isAuthenticated, onAuthError);
   const { allEvents, clearEvents } = useCalendarEvents(
     isAuthenticated,
     calendars,
     numDays,
-    () => signOutRef.current()
+    onAuthError
   );
 
   const signOut = useCallback(async () => {
