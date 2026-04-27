@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { API_ENDPOINTS } from '../../config/api';
 import { useCalendarAuth } from '../../hooks/useCalendarAuth';
@@ -26,26 +26,28 @@ const Calendar: React.FC = () => {
   const { status, clearAuth } = useCalendarAuth();
   const isAuthenticated = status === 'authenticated';
 
-  const signOut = useCallback(async () => {
-    await clearAuth();
-    setCalendars([]);
-    setSelectedCalendarIds(new Set());
-    setAllEvents([]);
-  }, [clearAuth]);
+  const signOutRef = useRef<() => Promise<void>>(async () => {});
 
   const {
     calendars,
-    setCalendars,
     selectedCalendarIds,
-    setSelectedCalendarIds
-  } = useCalendars(isAuthenticated, signOut);
-
-  const { allEvents, setAllEvents } = useCalendarEvents(
+    setSelectedCalendarIds,
+    clearCalendars
+  } = useCalendars(isAuthenticated, () => signOutRef.current());
+  const { allEvents, clearEvents } = useCalendarEvents(
     isAuthenticated,
     calendars,
     numDays,
-    signOut
+    () => signOutRef.current()
   );
+
+  const signOut = useCallback(async () => {
+    await clearAuth();
+    clearCalendars();
+    clearEvents();
+  }, [clearAuth, clearCalendars, clearEvents]);
+
+  signOutRef.current = signOut;
 
   const {
     periodDays,

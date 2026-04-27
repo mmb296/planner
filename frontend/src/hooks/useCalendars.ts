@@ -28,10 +28,15 @@ export function useCalendars(
     if (isAuthenticated) fetchCalendars();
   }, [isAuthenticated, fetchCalendars]);
 
+  const clearCalendars = useCallback(() => {
+    setCalendars([]);
+    setSelectedCalendarIds(new Set());
+  }, []);
+
   return {
     calendars,
-    setCalendars,
     selectedCalendarIds,
-    setSelectedCalendarIds
+    setSelectedCalendarIds,
+    clearCalendars
   };
 }

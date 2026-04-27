@@ -59,5 +59,7 @@ export function useCalendarEvents(
     };
   }, [isAuthenticated, calendars.length, onAuthError, fetchUpcomingEvents]);
 
-  return { allEvents, setAllEvents };
+  const clearEvents = useCallback(() => setAllEvents([]), []);
+
+  return { allEvents, clearEvents };
 }
