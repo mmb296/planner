@@ -28,7 +28,7 @@ const Calendar: React.FC = () => {
     new Set()
   );
   const [numDays, setNumDays] = useState(14);
-  const clearAuthentication = useCallback(async () => {
+  const signOut = useCallback(async () => {
     await clearAuth();
     setCalendars([]);
     setSelectedCalendarIds(new Set());
@@ -38,7 +38,7 @@ const Calendar: React.FC = () => {
     isAuthenticated,
     calendars,
     numDays,
-    clearAuthentication
+    signOut
   );
   const [showPeriodModal, setShowPeriodModal] = useState(false);
   const {
@@ -55,7 +55,7 @@ const Calendar: React.FC = () => {
       setSelectedCalendarIds(new Set(list.map((cal) => cal.id)));
     } catch (error: unknown) {
       if (error instanceof Error && error.message === 'AUTH_ERROR') {
-        await clearAuthentication();
+        await signOut();
       }
     }
   };
