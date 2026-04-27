@@ -23,7 +23,7 @@ export type CalendarWatchRow = {
   sync_token: string | null;
 };
 
-function parseCalendarWatchRow(row: any): CalendarWatchRow {
+function parseCalendarWatchRow(row: CalendarWatchRow): CalendarWatchRow {
   return {
     ...row,
     expiration_ms: row.expiration_ms != null ? Number(row.expiration_ms) : null
@@ -32,7 +32,7 @@ function parseCalendarWatchRow(row: any): CalendarWatchRow {
 
 export const CalendarWatchDB = {
   async getByCalendarId(calendarId: string): Promise<CalendarWatchRow | null> {
-    const row: any = await dbGet(
+    const row = await dbGet<CalendarWatchRow>(
       'SELECT * FROM calendar_watch WHERE calendar_id = ?',
       [calendarId]
     );
@@ -41,7 +41,7 @@ export const CalendarWatchDB = {
   },
 
   async getByChannelId(channelId: string): Promise<CalendarWatchRow | null> {
-    const row: any = await dbGet(
+    const row = await dbGet<CalendarWatchRow>(
       'SELECT * FROM calendar_watch WHERE channel_id = ?',
       [channelId]
     );

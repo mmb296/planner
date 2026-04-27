@@ -4,7 +4,7 @@ import { OAuth2Client } from 'google-auth-library';
 import { google } from 'googleapis';
 import OpenAI from 'openai';
 
-import { GmailDB } from '../../db/gmailStore';
+import { GmailDB, GmailMessageRow } from '../../db/gmailStore';
 import {
   clearGmailOAuthSession,
   isInvalidGrant
@@ -77,17 +77,7 @@ function extractDetails(payload: any) {
   return { subject, from, internalDateMs, snippet, bodyText };
 }
 
-interface GmailMessage {
-  id: string;
-  thread_id?: string | null;
-  subject?: string | null;
-  from_address?: string | null;
-  snippet?: string | null;
-  internal_date_ms?: number | null;
-  body_text?: string | null;
-}
-
-function hasRequiredFields(message: GmailMessage) {
+function hasRequiredFields(message: GmailMessageRow) {
   const subject = message.subject?.trim();
   const from = message.from_address?.trim();
   const body = message.body_text?.trim();

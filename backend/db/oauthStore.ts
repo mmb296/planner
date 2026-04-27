@@ -77,7 +77,7 @@ export const OAuthTokenDB = {
   },
 
   async getToken(integration: OAuthIntegration): Promise<OAuthToken | null> {
-    const row: any = await dbGet(
+    const row = await dbGet<OAuthToken>(
       'SELECT * FROM oauth_tokens WHERE integration = ?',
       [integration]
     );

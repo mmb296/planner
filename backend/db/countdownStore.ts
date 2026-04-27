@@ -11,9 +11,11 @@ export async function createCountdownTable() {
   `);
 }
 
+type CountdownRow = { target_date: string; title: string | null };
+
 export const CountdownConfigDB = {
   async get(): Promise<{ target_date: string; title?: string } | null> {
-    const row: any = await dbGet(
+    const row = await dbGet<CountdownRow>(
       'SELECT target_date, title FROM countdown_config WHERE id = 1'
     );
     if (!row) return null;

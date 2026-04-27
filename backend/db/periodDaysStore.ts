@@ -11,7 +11,7 @@ export async function createPeriodDaysTable() {
 
 export const PeriodDaysDB = {
   async toggle(date: string): Promise<{ isPeriod: boolean }> {
-    const existing = await dbGet(
+    const existing = await dbGet<{ date: string }>(
       'SELECT date FROM period_days WHERE date = ?',
       [date]
     );
@@ -26,18 +26,18 @@ export const PeriodDaysDB = {
   },
 
   async getByDateRange(startDate: string, endDate?: string): Promise<string[]> {
-    const actualEndDate = endDate || new Date().toISOString().split('T')[0]; // Format as YYYY-MM-DD
-    const rows = (await dbAll(
+    const actualEndDate = endDate || new Date().toISOString().split('T')[0];
+    const rows = await dbAll<{ date: string }>(
       'SELECT date FROM period_days WHERE date >= ? AND date <= ? ORDER BY date',
       [startDate, actualEndDate]
-    )) as any[];
+    );
     return rows.map((row) => row.date);
   },
 
   async getAll(): Promise<string[]> {
-    const rows = (await dbAll(
+    const rows = await dbAll<{ date: string }>(
       'SELECT date FROM period_days ORDER BY date'
-    )) as any[];
+    );
     return rows.map((row) => row.date);
   }
 };
