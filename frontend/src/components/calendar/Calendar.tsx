@@ -1,12 +1,13 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { API_ENDPOINTS } from '../../config/api';
 import { useCalendarAuth } from '../../hooks/useCalendarAuth';
+import { useCalendarEvents } from '../../hooks/useCalendarEvents';
 import { usePeriodDays } from '../../hooks/usePeriodDays';
 import { usePeriodPrediction } from '../../hooks/usePeriodPrediction';
-import { fetchEvents, listCalendars } from '../../services/calendarApi';
+import { listCalendars } from '../../services/calendarApi';
 import { CalendarService } from '../../services/calendarService';
-import { CalendarEvent, Calendar as CalendarType } from '../../types';
+import { Calendar as CalendarType } from '../../types';
 import {
   formatDateString,
   formatPredictionDate,
@@ -26,8 +27,19 @@ const Calendar: React.FC = () => {
   const [selectedCalendarIds, setSelectedCalendarIds] = useState<Set<string>>(
     new Set()
   );
-  const [allEvents, setAllEvents] = useState<CalendarEvent[]>([]);
   const [numDays, setNumDays] = useState(14);
+  const clearAuthentication = async () => {
+    await clearAuth();
+    setCalendars([]);
+    setAllEvents([]);
+    setSelectedCalendarIds(new Set());
+  };
+  const { allEvents, setAllEvents } = useCalendarEvents(
+    isAuthenticated,
+    calendars,
+    numDays,
+    clearAuthentication
+  );
   const [showPeriodModal, setShowPeriodModal] = useState(false);
   const {
     periodDays,
@@ -35,20 +47,6 @@ const Calendar: React.FC = () => {
     refetch: refetchPeriodDays
   } = usePeriodDays(getTodayDate(), getFutureDate(numDays - 1));
   const { prediction, refetch: refetchPrediction } = usePeriodPrediction();
-
-  const clearAuthentication = async () => {
-    await clearAuth();
-    setCalendars([]);
-    setAllEvents([]);
-    setSelectedCalendarIds(new Set());
-  };
-
-  const clearAuthenticationRef = useRef(clearAuthentication);
-  clearAuthenticationRef.current = clearAuthentication;
-  const calendarsRef = useRef(calendars);
-  calendarsRef.current = calendars;
-  const numDaysRef = useRef(numDays);
-  numDaysRef.current = numDays;
 
   const fetchCalendars = async () => {
     try {
@@ -62,58 +60,10 @@ const Calendar: React.FC = () => {
     }
   };
 
-  const fetchUpcomingEvents = async (daysToFetch = numDays) => {
-    try {
-      const timeMin = getTodayDate();
-      const timeMax = getFutureDate(daysToFetch);
-      const events = await fetchEvents(calendars, timeMin, timeMax);
-      setAllEvents(events);
-    } catch (error: unknown) {
-      if (error instanceof Error && error.message === 'AUTH_ERROR') {
-        await clearAuthentication();
-      }
-    }
-  };
-
   useEffect(() => {
     if (isAuthenticated) fetchCalendars();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated]);
-
-  useEffect(() => {
-    if (!isAuthenticated || calendars.length === 0) return;
-    fetchUpcomingEvents(numDays);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [numDays, calendars, isAuthenticated]);
-
-  /** Live updates when the server finishes a Google Calendar push sync */
-  useEffect(() => {
-    if (!isAuthenticated || calendars.length === 0) return;
-
-    const es = new EventSource(API_ENDPOINTS.CALENDAR_EVENTS_STREAM);
-
-    es.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data) as { type?: string };
-        if (data.type !== 'calendar_updated') return;
-        const timeMin = getTodayDate();
-        const timeMax = getFutureDate(numDaysRef.current);
-        void fetchEvents(calendarsRef.current, timeMin, timeMax)
-          .then(setAllEvents)
-          .catch((err: unknown) => {
-            if (err instanceof Error && err.message === 'AUTH_ERROR') {
-              void clearAuthenticationRef.current();
-            }
-          });
-      } catch {
-        /* ignore malformed payloads */
-      }
-    };
-
-    return () => {
-      es.close();
-    };
-  }, [isAuthenticated, calendars.length]);
 
   // Refetch period days and prediction when the period calendar modal closes
   useEffect(() => {
