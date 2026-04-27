@@ -31,8 +31,8 @@ const Calendar: React.FC = () => {
   const {
     calendars,
     selectedCalendarIds,
-    setSelectedCalendarIds,
-    clearCalendars
+    clearCalendars,
+    toggleCalendarSelection
   } = useCalendars(isAuthenticated, () => signOutRef.current());
   const { allEvents, clearEvents } = useCalendarEvents(
     isAuthenticated,
@@ -95,15 +95,9 @@ const Calendar: React.FC = () => {
             <input
               type="checkbox"
               checked={selectedCalendarIds.has(calendar.id)}
-              onChange={(e) => {
-                const newSelected = new Set(selectedCalendarIds);
-                if (e.target.checked) {
-                  newSelected.add(calendar.id);
-                } else {
-                  newSelected.delete(calendar.id);
-                }
-                setSelectedCalendarIds(newSelected);
-              }}
+              onChange={(e) =>
+                toggleCalendarSelection(calendar.id, e.target.checked)
+              }
             />
             {calendar.summary}
           </label>

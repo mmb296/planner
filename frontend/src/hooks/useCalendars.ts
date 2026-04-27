@@ -33,10 +33,22 @@ export function useCalendars(
     setSelectedCalendarIds(new Set());
   }, []);
 
+  const toggleCalendarSelection = useCallback(
+    (id: string, checked: boolean) => {
+      setSelectedCalendarIds((prev) => {
+        const next = new Set(prev);
+        if (checked) next.add(id);
+        else next.delete(id);
+        return next;
+      });
+    },
+    []
+  );
+
   return {
     calendars,
     selectedCalendarIds,
-    setSelectedCalendarIds,
-    clearCalendars
+    clearCalendars,
+    toggleCalendarSelection
   };
 }
