@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { API_ENDPOINTS } from '../config/api';
 import { fetchEvents } from '../services/calendarApi';
@@ -17,24 +17,26 @@ export function useCalendarEvents(
   const numDaysRef = useRef(numDays);
   numDaysRef.current = numDays;
 
-  const fetchUpcomingEvents = async (daysToFetch = numDays) => {
-    try {
-      const timeMin = getTodayDate();
-      const timeMax = getFutureDate(daysToFetch);
-      const events = await fetchEvents(calendars, timeMin, timeMax);
-      setAllEvents(events);
-    } catch (error: unknown) {
-      if (error instanceof Error && error.message === 'AUTH_ERROR') {
-        await onAuthError();
+  const fetchUpcomingEvents = useCallback(
+    async (calsToFetch = calendars, daysToFetch = numDays) => {
+      try {
+        const timeMin = getTodayDate();
+        const timeMax = getFutureDate(daysToFetch);
+        const events = await fetchEvents(calsToFetch, timeMin, timeMax);
+        setAllEvents(events);
+      } catch (error: unknown) {
+        if (error instanceof Error && error.message === 'AUTH_ERROR') {
+          await onAuthError();
+        }
       }
-    }
-  };
+    },
+    [onAuthError]
+  );
 
   useEffect(() => {
     if (!isAuthenticated || calendars.length === 0) return;
-    fetchUpcomingEvents(numDays);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [numDays, calendars, isAuthenticated]);
+    fetchUpcomingEvents(calendars, numDays);
+  }, [numDays, calendars, isAuthenticated, fetchUpcomingEvents]);
 
   /** Live updates when the server finishes a Google Calendar push sync */
   useEffect(() => {
@@ -46,15 +48,7 @@ export function useCalendarEvents(
       try {
         const data = JSON.parse(event.data) as { type?: string };
         if (data.type !== 'calendar_updated') return;
-        const timeMin = getTodayDate();
-        const timeMax = getFutureDate(numDaysRef.current);
-        void fetchEvents(calendarsRef.current, timeMin, timeMax)
-          .then(setAllEvents)
-          .catch((err: unknown) => {
-            if (err instanceof Error && err.message === 'AUTH_ERROR') {
-              void onAuthError();
-            }
-          });
+        fetchUpcomingEvents(calendarsRef.current, numDaysRef.current);
       } catch {
         /* ignore malformed payloads */
       }
@@ -63,7 +57,7 @@ export function useCalendarEvents(
     return () => {
       es.close();
     };
-  }, [isAuthenticated, calendars.length, onAuthError]);
+  }, [isAuthenticated, calendars.length, onAuthError, fetchUpcomingEvents]);
 
-  return { allEvents, setAllEvents, fetchUpcomingEvents };
+  return { allEvents, setAllEvents };
 }
