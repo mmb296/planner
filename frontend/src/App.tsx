@@ -3,6 +3,7 @@ import './App.css';
 import Calendar from './components/calendar/Calendar';
 import CountdownBanner from './components/CountdownBanner';
 import TaskList from './components/tasks/TaskList';
+import { CalendarProvider } from './context/CalendarContext';
 
 function App() {
   return (
@@ -10,7 +11,9 @@ function App() {
       <CountdownBanner />
       <div className="App-content">
         <TaskList />
-        <Calendar />
+        <CalendarProvider>
+          <Calendar />
+        </CalendarProvider>
       </div>
     </div>
   );

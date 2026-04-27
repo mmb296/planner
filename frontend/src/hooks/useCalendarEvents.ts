@@ -1,17 +1,17 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 import { API_ENDPOINTS } from '../config/api';
+import { CalendarAction } from '../context/CalendarContext';
 import { fetchEvents } from '../services/calendarApi';
-import { Calendar, CalendarEvent } from '../types';
+import { Calendar } from '../types';
 import { getFutureDate, getTodayDate } from '../utils/dateTime';
 
 export function useCalendarEvents(
   isAuthenticated: boolean,
   calendars: Calendar[],
   numDays: number,
-  onAuthError: () => Promise<void>
+  dispatch: React.Dispatch<CalendarAction>
 ) {
-  const [allEvents, setAllEvents] = useState<CalendarEvent[]>([]);
   const calendarsRef = useRef(calendars);
   calendarsRef.current = calendars;
   const numDaysRef = useRef(numDays);
@@ -23,14 +23,14 @@ export function useCalendarEvents(
         const timeMin = getTodayDate();
         const timeMax = getFutureDate(daysToFetch);
         const events = await fetchEvents(calsToFetch, timeMin, timeMax);
-        setAllEvents(events);
+        dispatch({ type: 'SET_EVENTS', events });
       } catch (error: unknown) {
         if (error instanceof Error && error.message === 'AUTH_ERROR') {
-          await onAuthError();
+          dispatch({ type: 'CLEAR_AUTH' });
         }
       }
     },
-    [onAuthError]
+    [dispatch]
   );
 
   useEffect(() => {
@@ -38,7 +38,6 @@ export function useCalendarEvents(
     fetchUpcomingEvents(calendars, numDays);
   }, [numDays, calendars, isAuthenticated, fetchUpcomingEvents]);
 
-  /** Live updates when the server finishes a Google Calendar push sync */
   useEffect(() => {
     if (!isAuthenticated || calendars.length === 0) return;
 
@@ -57,9 +56,5 @@ export function useCalendarEvents(
     return () => {
       es.close();
     };
-  }, [isAuthenticated, calendars.length, onAuthError, fetchUpcomingEvents]);
-
-  const clearEvents = useCallback(() => setAllEvents([]), []);
-
-  return { allEvents, clearEvents };
+  }, [isAuthenticated, calendars.length, fetchUpcomingEvents]);
 }

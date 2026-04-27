@@ -1,9 +1,7 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { API_ENDPOINTS } from '../../config/api';
-import { useCalendarAuth } from '../../hooks/useCalendarAuth';
-import { useCalendarEvents } from '../../hooks/useCalendarEvents';
-import { useCalendars } from '../../hooks/useCalendars';
+import { useCalendarContext } from '../../context/CalendarContext';
 import { usePeriodDays } from '../../hooks/usePeriodDays';
 import { usePeriodPrediction } from '../../hooks/usePeriodPrediction';
 import { CalendarService } from '../../services/calendarService';
@@ -20,35 +18,10 @@ import Day from './Day';
 import DaysSelect from './DaysSelect';
 
 const Calendar: React.FC = () => {
-  const [numDays, setNumDays] = useState(14);
   const [showPeriodModal, setShowPeriodModal] = useState(false);
-
-  const { status, clearAuth } = useCalendarAuth();
+  const { state, dispatch } = useCalendarContext();
+  const { status, calendars, selectedCalendarIds, allEvents, numDays } = state;
   const isAuthenticated = status === 'authenticated';
-
-  const signOutRef = useRef<() => Promise<void>>(async () => {});
-  const onAuthError = useCallback(() => signOutRef.current(), []);
-
-  const {
-    calendars,
-    selectedCalendarIds,
-    clearCalendars,
-    toggleCalendarSelection
-  } = useCalendars(isAuthenticated, onAuthError);
-  const { allEvents, clearEvents } = useCalendarEvents(
-    isAuthenticated,
-    calendars,
-    numDays,
-    onAuthError
-  );
-
-  const signOut = useCallback(async () => {
-    await clearAuth();
-    clearCalendars();
-    clearEvents();
-  }, [clearAuth, clearCalendars, clearEvents]);
-
-  signOutRef.current = signOut;
 
   const {
     periodDays,
@@ -97,7 +70,11 @@ const Calendar: React.FC = () => {
               type="checkbox"
               checked={selectedCalendarIds.has(calendar.id)}
               onChange={(e) =>
-                toggleCalendarSelection(calendar.id, e.target.checked)
+                dispatch({
+                  type: 'TOGGLE_CALENDAR',
+                  id: calendar.id,
+                  checked: e.target.checked
+                })
               }
             />
             {calendar.summary}
@@ -154,7 +131,10 @@ const Calendar: React.FC = () => {
           })}
         </h1>
         {isAuthenticated && (
-          <DaysSelect value={numDays} onChange={setNumDays} />
+          <DaysSelect
+            value={numDays}
+            onChange={(n) => dispatch({ type: 'SET_NUM_DAYS', numDays: n })}
+          />
         )}
       </header>
       <div className={styles.predictionBanner}>
