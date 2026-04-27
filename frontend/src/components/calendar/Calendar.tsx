@@ -3,11 +3,10 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { API_ENDPOINTS } from '../../config/api';
 import { useCalendarAuth } from '../../hooks/useCalendarAuth';
 import { useCalendarEvents } from '../../hooks/useCalendarEvents';
+import { useCalendars } from '../../hooks/useCalendars';
 import { usePeriodDays } from '../../hooks/usePeriodDays';
 import { usePeriodPrediction } from '../../hooks/usePeriodPrediction';
-import { listCalendars } from '../../services/calendarApi';
 import { CalendarService } from '../../services/calendarService';
-import { Calendar as CalendarType } from '../../types';
 import {
   formatDateString,
   formatPredictionDate,
@@ -21,49 +20,39 @@ import Day from './Day';
 import DaysSelect from './DaysSelect';
 
 const Calendar: React.FC = () => {
+  const [numDays, setNumDays] = useState(14);
+  const [showPeriodModal, setShowPeriodModal] = useState(false);
+
   const { status, clearAuth } = useCalendarAuth();
   const isAuthenticated = status === 'authenticated';
-  const [calendars, setCalendars] = useState<CalendarType[]>([]);
-  const [selectedCalendarIds, setSelectedCalendarIds] = useState<Set<string>>(
-    new Set()
-  );
-  const [numDays, setNumDays] = useState(14);
+
   const signOut = useCallback(async () => {
     await clearAuth();
     setCalendars([]);
     setSelectedCalendarIds(new Set());
     setAllEvents([]);
   }, [clearAuth]);
+
+  const {
+    calendars,
+    setCalendars,
+    selectedCalendarIds,
+    setSelectedCalendarIds
+  } = useCalendars(isAuthenticated, signOut);
+
   const { allEvents, setAllEvents } = useCalendarEvents(
     isAuthenticated,
     calendars,
     numDays,
     signOut
   );
-  const [showPeriodModal, setShowPeriodModal] = useState(false);
+
   const {
     periodDays,
     togglePeriodDay,
     refetch: refetchPeriodDays
   } = usePeriodDays(getTodayDate(), getFutureDate(numDays - 1));
   const { prediction, refetch: refetchPrediction } = usePeriodPrediction();
-
-  const fetchCalendars = async () => {
-    try {
-      const list = await listCalendars();
-      setCalendars(list);
-      setSelectedCalendarIds(new Set(list.map((cal) => cal.id)));
-    } catch (error: unknown) {
-      if (error instanceof Error && error.message === 'AUTH_ERROR') {
-        await signOut();
-      }
-    }
-  };
-
-  useEffect(() => {
-    if (isAuthenticated) fetchCalendars();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated]);
 
   // Refetch period days and prediction when the period calendar modal closes
   useEffect(() => {
