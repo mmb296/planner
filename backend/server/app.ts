@@ -16,8 +16,6 @@ import { registerTaskRoutes } from './routes/tasks.js';
 
 dotenv.config();
 
-const PORT = process.env.PORT || 5000;
-
 export const app = express();
 
 // Middleware
@@ -33,9 +31,9 @@ registerTaskRoutes(app);
 registerPeriodDaysRoutes(app);
 registerSettingsRoutes(app);
 
-export async function initializeApp() {
-  const gmailOAuth2Client = await setupGmailAuth(app, PORT);
-  const calendarOAuth2Client = await setupGoogleCalendarAuth(app, PORT);
+export async function initializeApp(port: string | number) {
+  const gmailOAuth2Client = await setupGmailAuth(app, port);
+  const calendarOAuth2Client = await setupGoogleCalendarAuth(app, port);
   registerGmailRoutes(app, gmailOAuth2Client);
   registerGoogleCalendarRoutes(app, calendarOAuth2Client);
   registerCalendarSseRoute(app);
