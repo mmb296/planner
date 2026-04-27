@@ -21,6 +21,15 @@ export async function createTaskTables() {
   `);
 }
 
+export type RecurringTaskRow = {
+  id: number;
+  title: string;
+  repeat_days: number;
+  created_at: string;
+  updated_at: string;
+  completed_at: string | null;
+};
+
 export const RecurringTaskDB = {
   async create(task: { title: string; repeat_days: number }) {
     return await dbRun(
@@ -30,9 +39,9 @@ export const RecurringTaskDB = {
     );
   },
 
-  async getAll() {
-    return await dbAll(`
-      SELECT 
+  async getAll(): Promise<RecurringTaskRow[]> {
+    return dbAll<RecurringTaskRow>(`
+      SELECT
         rt.id,
         rt.title,
         rt.repeat_days,
@@ -46,10 +55,10 @@ export const RecurringTaskDB = {
     `);
   },
 
-  async getById(id: number) {
-    return await dbGet(
+  async getById(id: number): Promise<RecurringTaskRow | undefined> {
+    return dbGet<RecurringTaskRow>(
       `
-        SELECT 
+        SELECT
           rt.id,
           rt.title,
           rt.repeat_days,

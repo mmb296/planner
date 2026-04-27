@@ -20,6 +20,16 @@ export async function createGmailTable() {
   `);
 }
 
+export type GmailMessageRow = {
+  id: string;
+  thread_id: string | null;
+  subject: string | null;
+  from_address: string | null;
+  snippet: string | null;
+  internal_date_ms: number | null;
+  body_text: string | null;
+};
+
 export const GmailDB = {
   async upsertMessage(message: {
     id: string;
@@ -53,13 +63,13 @@ export const GmailDB = {
   },
 
   async getMaxInternalDateMs(): Promise<number> {
-    const row: any = await dbGet(
+    const row = await dbGet<{ maxVal: number }>(
       `SELECT COALESCE(MAX(internal_date_ms), 0) AS maxVal FROM gmail_messages`
     );
     return Number(row?.maxVal || 0);
   },
 
-  async getMessagesWithBody(limit?: number): Promise<any[]> {
+  async getMessagesWithBody(limit?: number): Promise<GmailMessageRow[]> {
     const query = `
       SELECT id, thread_id, subject, from_address, snippet, internal_date_ms, body_text
       FROM gmail_messages
@@ -67,19 +77,16 @@ export const GmailDB = {
       ORDER BY internal_date_ms DESC
       ${limit ? 'LIMIT ?' : ''}
     `;
-
-    const params = limit ? [limit] : [];
-    const rows = await dbAll(query, params);
-    return rows as any[];
+    return dbAll<GmailMessageRow>(query, limit ? [limit] : []);
   },
 
-  async getMessageById(id: string): Promise<any | null> {
-    const row = await dbGet(
+  async getMessageById(id: string): Promise<GmailMessageRow | null> {
+    const row = await dbGet<GmailMessageRow>(
       `SELECT id, thread_id, subject, from_address, snippet, internal_date_ms, body_text
          FROM gmail_messages
          WHERE id = ?`,
       [id]
     );
-    return row || null;
+    return row ?? null;
   }
 };

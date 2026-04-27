@@ -7,20 +7,23 @@ type DbResult = {
 
 const db = new sqlite3.Database('./planner.db');
 
-export const dbGet = (sql: string, params: any[] = []) => {
+export const dbGet = <T>(
+  sql: string,
+  params: unknown[] = []
+): Promise<T | undefined> => {
   return new Promise((resolve, reject) => {
     db.get(sql, params, (err, row) => {
       if (err) reject(err);
-      else resolve(row);
+      else resolve(row as T | undefined);
     });
   });
 };
 
-export const dbAll = (sql: string, params: any[] = []) => {
+export const dbAll = <T>(sql: string, params: unknown[] = []): Promise<T[]> => {
   return new Promise((resolve, reject) => {
     db.all(sql, params, (err, rows) => {
       if (err) reject(err);
-      else resolve(rows);
+      else resolve(rows as T[]);
     });
   });
 };
