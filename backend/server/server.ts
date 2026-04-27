@@ -7,7 +7,7 @@ const PORT = process.env.PORT || 5000;
 
 try {
   await initDatabase();
-  await initializeApp();
+  await initializeApp(PORT);
   applyErrorMiddleware(app);
   app.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}`);
