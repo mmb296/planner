@@ -1,5 +1,6 @@
 import dotenv from 'dotenv';
 import express from 'express';
+import { OAuth2Client } from 'google-auth-library';
 import { google } from 'googleapis';
 import OpenAI from 'openai';
 
@@ -11,7 +12,9 @@ import {
 
 dotenv.config();
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const openai = process.env.OPENAI_API_KEY
+  ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+  : null;
 
 type Header = { name?: string; value?: string };
 
@@ -139,8 +142,10 @@ If isAppointment is false, return null for all other fields.`
   }
 }
 
-export function registerGmailRoutes(app: express.Express, oauth2Client: any) {
-  // Gmail polling route (simple incremental fetch)
+export function registerGmailRoutes(
+  app: express.Express,
+  oauth2Client: OAuth2Client
+) {
   app.get('/api/gmail/messages', async (req, res) => {
     try {
       const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
@@ -208,7 +213,6 @@ export function registerGmailRoutes(app: express.Express, oauth2Client: any) {
     }
   });
 
-  // AI appointment suggestion route
   app.get('/api/ai/appointments/suggestions', async (req, res) => {
     if (!openai) {
       return res
@@ -242,7 +246,6 @@ export function registerGmailRoutes(app: express.Express, oauth2Client: any) {
     res.json({ count: suggestions.length, suggestions });
   });
 
-  // AI suggestion for a specific message
   app.get('/api/ai/appointments/suggestions/:messageId', async (req, res) => {
     if (!openai) {
       return res
