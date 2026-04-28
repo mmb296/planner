@@ -29,7 +29,6 @@ const PeriodModal: React.FC<PeriodModalProps> = ({ isOpen, onClose }) => {
     refetch: refetchPeriodDays
   } = usePeriodDays(getMonthStart(currentMonth), getMonthEnd(currentMonth));
 
-  // Navigate months
   const goToPreviousMonth = () => {
     setCurrentMonth(getPreviousMonth(currentMonth));
   };
@@ -49,7 +48,6 @@ const PeriodModal: React.FC<PeriodModalProps> = ({ isOpen, onClose }) => {
     }
   }, [isOpen, refetchPeriodDays]);
 
-  // Close on escape key
   useEffect(() => {
     if (!isOpen) return;
 
