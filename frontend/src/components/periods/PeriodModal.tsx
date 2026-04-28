@@ -40,14 +40,12 @@ const PeriodModal: React.FC<PeriodModalProps> = ({ isOpen, onClose }) => {
     setCurrentMonth(new Date());
   };
 
-  // Reset to today's month and refetch period days when modal opens
   useEffect(() => {
     if (isOpen) {
       setCurrentMonth(getTodayDate());
       refetchPeriodDays();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen]);
+  }, [isOpen, refetchPeriodDays]);
 
   // Close on escape key
   useEffect(() => {
