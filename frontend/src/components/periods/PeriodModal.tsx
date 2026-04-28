@@ -19,6 +19,8 @@ type PeriodModalProps = {
   onClose: () => void;
 };
 
+const WEEK_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
 const PeriodModal: React.FC<PeriodModalProps> = ({ isOpen, onClose }) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const {
@@ -27,7 +29,6 @@ const PeriodModal: React.FC<PeriodModalProps> = ({ isOpen, onClose }) => {
     refetch: refetchPeriodDays
   } = usePeriodDays(getMonthStart(currentMonth), getMonthEnd(currentMonth));
 
-  // Navigate months
   const goToPreviousMonth = () => {
     setCurrentMonth(getPreviousMonth(currentMonth));
   };
@@ -40,16 +41,13 @@ const PeriodModal: React.FC<PeriodModalProps> = ({ isOpen, onClose }) => {
     setCurrentMonth(new Date());
   };
 
-  // Reset to today's month and refetch period days when modal opens
   useEffect(() => {
     if (isOpen) {
       setCurrentMonth(getTodayDate());
       refetchPeriodDays();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen]);
+  }, [isOpen, refetchPeriodDays]);
 
-  // Close on escape key
   useEffect(() => {
     if (!isOpen) return;
 
@@ -67,8 +65,6 @@ const PeriodModal: React.FC<PeriodModalProps> = ({ isOpen, onClose }) => {
 
   const days = getDaysInMonth(currentMonth);
   const monthName = formatMonthName(currentMonth);
-
-  const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   return (
     <div className={styles.overlay} onClick={onClose}>
@@ -98,7 +94,7 @@ const PeriodModal: React.FC<PeriodModalProps> = ({ isOpen, onClose }) => {
         </div>
 
         <div className={styles.calendarGrid}>
-          {weekDays.map((day) => (
+          {WEEK_DAYS.map((day) => (
             <div key={day} className={styles.weekDay}>
               {day}
             </div>

@@ -34,23 +34,16 @@ const Calendar: React.FC = () => {
   } = usePeriodDays(getTodayDate(), getFutureDate(numDays - 1));
   const { prediction, refetch: refetchPrediction } = usePeriodPrediction();
 
-  // Refetch period days and prediction when the period calendar modal closes
   useEffect(() => {
     if (!showPeriodModal) {
       refetchPeriodDays();
-      refetchPrediction();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showPeriodModal]);
+  }, [showPeriodModal, refetchPeriodDays]);
 
-  // Refetch prediction when period days change (after toggle)
-  // TODO: clean this up
   useEffect(() => {
     refetchPrediction();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [periodDays.size]);
+  }, [periodDays.size, refetchPrediction]);
 
-  // Filter and group events by day
   const eventsByDay = filterAndGroupEventsByDay(
     allEvents,
     selectedCalendarIds,

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { API_ENDPOINTS } from '../config/api';
 import { apiClient } from '../services/apiClient';
@@ -10,7 +10,7 @@ export function usePeriodDays(startDate: Date, endDate: Date) {
   const startDateStr = formatDateString(startDate);
   const endDateStr = formatDateString(endDate);
 
-  const fetchPeriodDays = async () => {
+  const fetchPeriodDays = useCallback(async () => {
     try {
       const dates = await apiClient.get<string[]>(
         `${API_ENDPOINTS.PERIOD_DAYS_RANGE}?startDate=${startDateStr}&endDate=${endDateStr}`
@@ -19,7 +19,7 @@ export function usePeriodDays(startDate: Date, endDate: Date) {
     } catch (error) {
       console.error('Failed to fetch period days:', error);
     }
-  };
+  }, [startDateStr, endDateStr]);
 
   const togglePeriodDay = async (date: string) => {
     try {
@@ -41,11 +41,9 @@ export function usePeriodDays(startDate: Date, endDate: Date) {
     }
   };
 
-  // Fetch period days when date range changes
   useEffect(() => {
     fetchPeriodDays();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [startDateStr, endDateStr]);
+  }, [fetchPeriodDays]);
 
   return { periodDays, togglePeriodDay, refetch: fetchPeriodDays };
 }
