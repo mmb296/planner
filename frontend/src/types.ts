@@ -2,18 +2,21 @@ export type Calendar = {
   id: string;
   backgroundColor: string;
   summary: string;
-  [key: string]: any;
 };
 
 export type CalendarEvent = {
   id: string;
+  calendarId: string;
   summary?: string;
   color?: string;
   start: {
     dateTime?: string;
     date?: string;
   };
-  [key: string]: any;
+  end: {
+    dateTime?: string;
+    date?: string;
+  };
 };
 
 export type Task = {

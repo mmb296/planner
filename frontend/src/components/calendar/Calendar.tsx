@@ -7,6 +7,7 @@ import { usePeriodPrediction } from '../../hooks/usePeriodPrediction';
 import { CalendarService } from '../../services/calendarService';
 import {
   formatDateString,
+  formatLongDate,
   formatPredictionDate,
   getFutureDate,
   getTodayDate
@@ -123,13 +124,7 @@ const Calendar: React.FC = () => {
   return (
     <div className={styles.calendar}>
       <header>
-        <h1>
-          {new Date().toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-          })}
-        </h1>
+        <h1>{formatLongDate(new Date())}</h1>
         {isAuthenticated && (
           <DaysSelect
             value={numDays}
