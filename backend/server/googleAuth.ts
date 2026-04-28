@@ -2,7 +2,7 @@ import express from 'express';
 import { google } from 'googleapis';
 
 import { OAuthIntegration, OAuthTokenDB } from '../db/oauthStore.js';
-import { registerPrimaryCalendarWatch } from './calendarWatch.js';
+import { registerAllCalendarWatches } from './calendarWatch.js';
 
 const GOOGLE_INTEGRATION_SCOPES: Record<OAuthIntegration, string[]> = {
   gmail: ['https://www.googleapis.com/auth/gmail.readonly'],
@@ -75,7 +75,7 @@ async function setupGoogleOAuthFlow(
       await OAuthTokenDB.saveToken(integration, tokens);
 
       if (integration === 'calendar') {
-        void registerPrimaryCalendarWatch(oauth2Client).catch((e) =>
+        void registerAllCalendarWatches(oauth2Client).catch((e) =>
           console.warn('[calendar watch] register after OAuth failed:', e)
         );
         res.redirect(process.env.FRONTEND_URL || 'http://localhost:3000');

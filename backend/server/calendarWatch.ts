@@ -8,7 +8,6 @@ import { broadcastCalendarEventsUpdated } from './calendarSse.js';
 import type { Express, Request, Response } from 'express';
 import type { OAuth2Client } from 'google-auth-library';
 import type { calendar_v3 } from 'googleapis';
-const PRIMARY_CALENDAR = 'primary';
 // Google requires TTL as a string in params
 const WATCH_TTL_SECONDS = '604800';
 const WATCH_RENEW_BUFFER_MS = 24 * 60 * 60 * 1000;
@@ -25,7 +24,65 @@ function getWebhookUrl(): string | undefined {
   return u.replace(/\/$/, '');
 }
 
-export async function registerPrimaryCalendarWatch(
+async function registerCalendarWatch(
+  cal: calendar_v3.Calendar,
+  calendarId: string,
+  webhookUrl: string
+): Promise<void> {
+  const existing = await CalendarWatchDB.getByCalendarId(calendarId);
+  if (existing?.channel_id && existing?.resource_id) {
+    try {
+      await cal.channels.stop({
+        requestBody: {
+          id: existing.channel_id,
+          resourceId: existing.resource_id
+        }
+      });
+    } catch (e) {
+      console.warn(
+        `[calendar watch] channels.stop (old channel for ${calendarId}):`,
+        e
+      );
+    }
+  }
+
+  const channelId = randomUUID();
+  const channelToken = randomBytes(24).toString('hex');
+
+  const { data: watch } = await cal.events.watch({
+    calendarId,
+    requestBody: {
+      id: channelId,
+      type: 'web_hook',
+      address: webhookUrl,
+      token: channelToken,
+      params: { ttl: WATCH_TTL_SECONDS }
+    }
+  });
+
+  const expirationRaw = watch.expiration;
+  const expirationMs =
+    typeof expirationRaw === 'string'
+      ? parseInt(expirationRaw, 10)
+      : Number(expirationRaw);
+
+  const syncToken = await fetchFullSyncToken(cal, calendarId);
+
+  await CalendarWatchDB.save({
+    calendar_id: calendarId,
+    channel_id: watch.id!,
+    resource_id: watch.resourceId!,
+    expiration_ms: expirationMs,
+    sync_token: syncToken ?? null,
+    channel_token: channelToken
+  });
+
+  console.log(
+    `[calendar watch] Watch active for ${calendarId}; expires ${new Date(expirationMs).toISOString()}`
+  );
+}
+
+export async function registerAllCalendarWatches(
   oauth2Client: OAuth2Client
 ): Promise<void> {
   const webhookUrl = getWebhookUrl();
@@ -37,62 +94,15 @@ export async function registerPrimaryCalendarWatch(
   }
 
   const saved = await CalendarOAuthTokenDB.getToken();
-  if (!saved?.refresh_token && !saved?.access_token) {
-    return;
-  }
+  if (!saved?.refresh_token && !saved?.access_token) return;
   oauth2Client.setCredentials(saved);
 
   const cal = google.calendar({ version: 'v3', auth: oauth2Client });
+  const { data } = await cal.calendarList.list();
+  const calendarIds = (data.items ?? []).map((c) => c.id!).filter(Boolean);
 
-  const existing = await CalendarWatchDB.getByCalendarId(PRIMARY_CALENDAR);
-  if (existing?.channel_id && existing?.resource_id) {
-    try {
-      await cal.channels.stop({
-        requestBody: {
-          id: existing.channel_id,
-          resourceId: existing.resource_id
-        }
-      });
-    } catch (e) {
-      console.warn('[calendar watch] channels.stop (old channel):', e);
-    }
-  }
-
-  const channelId = randomUUID();
-  const channelToken = randomBytes(24).toString('hex');
-
-  const { data: watch } = await cal.events.watch({
-    calendarId: PRIMARY_CALENDAR,
-    requestBody: {
-      id: channelId,
-      type: 'web_hook',
-      address: webhookUrl,
-      token: channelToken,
-      params: {
-        ttl: WATCH_TTL_SECONDS
-      }
-    }
-  });
-
-  const expirationRaw = watch.expiration;
-  const expirationMs =
-    typeof expirationRaw === 'string'
-      ? parseInt(expirationRaw, 10)
-      : Number(expirationRaw);
-
-  const syncToken = await fetchFullSyncToken(cal, PRIMARY_CALENDAR);
-
-  await CalendarWatchDB.save({
-    calendar_id: PRIMARY_CALENDAR,
-    channel_id: watch.id!,
-    resource_id: watch.resourceId!,
-    expiration_ms: expirationMs,
-    sync_token: syncToken ?? null,
-    channel_token: channelToken
-  });
-
-  console.log(
-    `[calendar watch] Watch active for primary calendar; expires ${new Date(expirationMs).toISOString()}`
+  await Promise.all(
+    calendarIds.map((id) => registerCalendarWatch(cal, id, webhookUrl))
   );
 }
 
@@ -204,46 +214,60 @@ async function runIncrementalSync(
   }
 }
 
-export async function stopCalendarWatchChannel(
+export async function stopAllCalendarWatches(
   oauth2Client: OAuth2Client
 ): Promise<void> {
-  const row = await CalendarWatchDB.getByCalendarId(PRIMARY_CALENDAR);
+  const rows = await CalendarWatchDB.getAll();
   const saved = await CalendarOAuthTokenDB.getToken();
-  if (row?.channel_id && row?.resource_id && saved?.refresh_token) {
+
+  if (rows.length > 0 && saved?.refresh_token) {
     oauth2Client.setCredentials(saved);
-    try {
-      const cal = google.calendar({ version: 'v3', auth: oauth2Client });
-      await cal.channels.stop({
-        requestBody: {
-          id: row.channel_id,
-          resourceId: row.resource_id
-        }
-      });
-    } catch (e) {
-      console.warn('[calendar watch] channels.stop:', e);
-    }
+    const cal = google.calendar({ version: 'v3', auth: oauth2Client });
+    await Promise.all(
+      rows
+        .filter((r) => r.channel_id && r.resource_id)
+        .map((r) =>
+          cal.channels
+            .stop({
+              requestBody: { id: r.channel_id!, resourceId: r.resource_id! }
+            })
+            .catch((e) =>
+              console.warn(
+                `[calendar watch] channels.stop (${r.calendar_id}):`,
+                e
+              )
+            )
+        )
+    );
   }
-  await CalendarWatchDB.clear(PRIMARY_CALENDAR);
+
+  await CalendarWatchDB.clearAll();
 }
 
 export async function renewCalendarWatchIfNeeded(
   oauth2Client: OAuth2Client
 ): Promise<void> {
-  if (!getWebhookUrl()) {
-    return;
-  }
+  const webhookUrl = getWebhookUrl();
+  if (!webhookUrl) return;
+
   const saved = await CalendarOAuthTokenDB.getToken();
-  if (!saved?.refresh_token && !saved?.access_token) {
-    return;
-  }
+  if (!saved?.refresh_token && !saved?.access_token) return;
+  oauth2Client.setCredentials(saved);
 
-  const row = await CalendarWatchDB.getByCalendarId(PRIMARY_CALENDAR);
+  const cal = google.calendar({ version: 'v3', auth: oauth2Client });
+  const { data } = await cal.calendarList.list();
+  const calendarIds = (data.items ?? []).map((c) => c.id!).filter(Boolean);
+
   const now = Date.now();
-  const exp = row?.expiration_ms;
-
-  if (!row?.channel_id || !exp || exp - WATCH_RENEW_BUFFER_MS < now) {
-    await registerPrimaryCalendarWatch(oauth2Client);
-  }
+  await Promise.all(
+    calendarIds.map(async (calendarId) => {
+      const row = await CalendarWatchDB.getByCalendarId(calendarId);
+      const exp = row?.expiration_ms;
+      if (!row?.channel_id || !exp || exp - WATCH_RENEW_BUFFER_MS < now) {
+        await registerCalendarWatch(cal, calendarId, webhookUrl);
+      }
+    })
+  );
 }
 
 export function registerCalendarWebhookRoute(
