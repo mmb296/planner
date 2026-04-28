@@ -37,9 +37,8 @@ const Calendar: React.FC = () => {
   useEffect(() => {
     if (!showPeriodModal) {
       refetchPeriodDays();
-      refetchPrediction();
     }
-  }, [showPeriodModal, refetchPeriodDays, refetchPrediction]);
+  }, [showPeriodModal, refetchPeriodDays]);
 
   useEffect(() => {
     refetchPrediction();
