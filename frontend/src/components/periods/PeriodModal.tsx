@@ -19,6 +19,8 @@ type PeriodModalProps = {
   onClose: () => void;
 };
 
+const WEEK_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
 const PeriodModal: React.FC<PeriodModalProps> = ({ isOpen, onClose }) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const {
@@ -66,8 +68,6 @@ const PeriodModal: React.FC<PeriodModalProps> = ({ isOpen, onClose }) => {
   const days = getDaysInMonth(currentMonth);
   const monthName = formatMonthName(currentMonth);
 
-  const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
   return (
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
@@ -96,7 +96,7 @@ const PeriodModal: React.FC<PeriodModalProps> = ({ isOpen, onClose }) => {
         </div>
 
         <div className={styles.calendarGrid}>
-          {weekDays.map((day) => (
+          {WEEK_DAYS.map((day) => (
             <div key={day} className={styles.weekDay}>
               {day}
             </div>
