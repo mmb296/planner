@@ -17,6 +17,15 @@ async function listCalendarIds(cal: calendar_v3.Calendar): Promise<string[]> {
   return (data.items ?? []).map((c) => c.id!).filter(Boolean);
 }
 
+async function getCalendarClient(
+  oauth2Client: OAuth2Client
+): Promise<calendar_v3.Calendar | null> {
+  const saved = await CalendarOAuthTokenDB.getToken();
+  if (!saved?.refresh_token && !saved?.access_token) return null;
+  oauth2Client.setCredentials(saved);
+  return google.calendar({ version: 'v3', auth: oauth2Client });
+}
+
 function getWebhookUrl(): string | undefined {
   const u = process.env.CALENDAR_WEBHOOK_URL?.trim();
   if (!u) return undefined;
@@ -98,13 +107,10 @@ export async function registerAllCalendarWatches(
     return;
   }
 
-  const saved = await CalendarOAuthTokenDB.getToken();
-  if (!saved?.refresh_token && !saved?.access_token) return;
-  oauth2Client.setCredentials(saved);
+  const cal = await getCalendarClient(oauth2Client);
+  if (!cal) return;
 
-  const cal = google.calendar({ version: 'v3', auth: oauth2Client });
   const calendarIds = await listCalendarIds(cal);
-
   await Promise.all(
     calendarIds.map((id) => registerCalendarWatch(cal, id, webhookUrl))
   );
@@ -169,18 +175,11 @@ async function runIncrementalSync(
   oauth2Client: OAuth2Client,
   calendarId: string
 ): Promise<void> {
-  const saved = await CalendarOAuthTokenDB.getToken();
-  if (!saved?.refresh_token && !saved?.access_token) {
-    return;
-  }
-  oauth2Client.setCredentials(saved);
+  const cal = await getCalendarClient(oauth2Client);
+  if (!cal) return;
 
   const row = await CalendarWatchDB.getByCalendarId(calendarId);
-  if (!row?.calendar_id) {
-    return;
-  }
-
-  const cal = google.calendar({ version: 'v3', auth: oauth2Client });
+  if (!row?.calendar_id) return;
 
   if (!row.sync_token) {
     const token = await fetchFullSyncToken(cal, calendarId);
@@ -254,13 +253,10 @@ export async function renewCalendarWatchIfNeeded(
   const webhookUrl = getWebhookUrl();
   if (!webhookUrl) return;
 
-  const saved = await CalendarOAuthTokenDB.getToken();
-  if (!saved?.refresh_token && !saved?.access_token) return;
-  oauth2Client.setCredentials(saved);
+  const cal = await getCalendarClient(oauth2Client);
+  if (!cal) return;
 
-  const cal = google.calendar({ version: 'v3', auth: oauth2Client });
   const calendarIds = await listCalendarIds(cal);
-
   const now = Date.now();
   await Promise.all(
     calendarIds.map(async (calendarId) => {
