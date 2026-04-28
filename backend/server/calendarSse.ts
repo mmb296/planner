@@ -4,9 +4,6 @@ const HEARTBEAT_MS = 25_000;
 
 const sseClients = new Set<Response>();
 
-/**
- * Notify all connected browsers to refetch calendar events (after push sync, etc.).
- */
 export function broadcastCalendarEventsUpdated(): void {
   const line = `data: ${JSON.stringify({ type: 'calendar_updated' })}\n\n`;
   for (const res of sseClients) {
@@ -28,11 +25,7 @@ export function registerCalendarSseRoute(app: Express): void {
     const socket = req.socket;
     socket.setTimeout(0);
 
-    if (
-      typeof (res as { flushHeaders?: () => void }).flushHeaders === 'function'
-    ) {
-      (res as { flushHeaders: () => void }).flushHeaders();
-    }
+    res.flushHeaders();
 
     sseClients.add(res);
 

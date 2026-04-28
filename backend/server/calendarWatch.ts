@@ -9,10 +9,10 @@ import type { Express, Request, Response } from 'express';
 import type { OAuth2Client } from 'google-auth-library';
 import type { calendar_v3 } from 'googleapis';
 const PRIMARY_CALENDAR = 'primary';
-/** Default 7 days (seconds) for Google Calendar notification channel TTL */
+// Google requires TTL as a string in params
 const WATCH_TTL_SECONDS = '604800';
+const WATCH_RENEW_BUFFER_MS = 24 * 60 * 60 * 1000;
 
-/** Full public HTTPS URL, e.g. https://abc.ngrok-free.dev/api/calendar/webhook */
 function getWebhookUrl(): string | undefined {
   const u = process.env.CALENDAR_WEBHOOK_URL?.trim();
   if (!u) return undefined;
@@ -25,10 +25,6 @@ function getWebhookUrl(): string | undefined {
   return u.replace(/\/$/, '');
 }
 
-/**
- * Register (or replace) an events.watch channel for the primary calendar.
- * No-op if CALENDAR_WEBHOOK_URL is unset or Calendar is not connected.
- */
 export async function registerPrimaryCalendarWatch(
   oauth2Client: OAuth2Client
 ): Promise<void> {
@@ -126,31 +122,32 @@ async function incrementalSyncPages(
   calendarId: string,
   syncToken: string
 ): Promise<string | undefined> {
-  let pageToken: string | undefined;
   let nextSync: string | undefined;
-  let first = true;
-  do {
-    const req: calendar_v3.Params$Resource$Events$List = {
-      calendarId,
-      singleEvents: true,
-      maxResults: 250,
-      pageToken
-    };
-    if (first) {
-      req.syncToken = syncToken;
-      first = false;
-    }
-    const { data } = await cal.events.list(req);
+
+  let { data } = await cal.events.list({
+    calendarId,
+    singleEvents: true,
+    maxResults: 250,
+    syncToken
+  });
+
+  while (true) {
     if (data.items?.length) {
       console.log(
         `[calendar watch] ${data.items.length} changed event(s) in incremental page`
       );
     }
-    pageToken = data.nextPageToken || undefined;
-    if (data.nextSyncToken) {
-      nextSync = data.nextSyncToken;
-    }
-  } while (pageToken);
+    if (data.nextSyncToken) nextSync = data.nextSyncToken;
+    if (!data.nextPageToken) break;
+
+    ({ data } = await cal.events.list({
+      calendarId,
+      singleEvents: true,
+      maxResults: 250,
+      pageToken: data.nextPageToken
+    }));
+  }
+
   return nextSync;
 }
 
@@ -188,12 +185,13 @@ async function runIncrementalSync(
       await CalendarWatchDB.updateSyncToken(calendarId, newToken);
     }
     broadcastCalendarEventsUpdated();
-  } catch (e: any) {
-    const gone =
-      e?.code === 410 ||
-      e?.response?.status === 410 ||
-      String(e?.message || '').includes('410');
-    if (gone) {
+  } catch (e: unknown) {
+    const status =
+      (e as { code?: number })?.code ??
+      (e as { response?: { status?: number } })?.response?.status;
+    const is410 =
+      status === 410 || String((e as Error)?.message ?? '').includes('410');
+    if (is410) {
       console.warn(
         '[calendar watch] sync token invalid (410); performing full resync'
       );
@@ -206,7 +204,6 @@ async function runIncrementalSync(
   }
 }
 
-/** Stop Google channel and clear local watch state (best-effort). */
 export async function stopCalendarWatchChannel(
   oauth2Client: OAuth2Client
 ): Promise<void> {
@@ -242,17 +239,13 @@ export async function renewCalendarWatchIfNeeded(
 
   const row = await CalendarWatchDB.getByCalendarId(PRIMARY_CALENDAR);
   const now = Date.now();
-  const bufferMs = 24 * 60 * 60 * 1000;
   const exp = row?.expiration_ms;
 
-  if (!row?.channel_id || !exp || exp - bufferMs < now) {
+  if (!row?.channel_id || !exp || exp - WATCH_RENEW_BUFFER_MS < now) {
     await registerPrimaryCalendarWatch(oauth2Client);
   }
 }
 
-/**
- * Google Calendar watch notifications (POST). Respond 200 quickly; sync async.
- */
 export function registerCalendarWebhookRoute(
   app: Express,
   oauth2Client: OAuth2Client
