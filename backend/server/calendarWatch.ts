@@ -225,11 +225,9 @@ export async function stopAllCalendarWatches(
   oauth2Client: OAuth2Client
 ): Promise<void> {
   const rows = await CalendarWatchDB.getAll();
-  const saved = await CalendarOAuthTokenDB.getToken();
+  const cal = await getCalendarClient(oauth2Client);
 
-  if (rows.length > 0 && saved?.refresh_token) {
-    oauth2Client.setCredentials(saved);
-    const cal = google.calendar({ version: 'v3', auth: oauth2Client });
+  if (rows.length > 0 && cal) {
     await Promise.all(
       rows
         .filter((r) => r.channel_id && r.resource_id)
