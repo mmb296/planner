@@ -1,7 +1,6 @@
 import React from 'react';
 
-import { API_ENDPOINTS } from '../../config/api';
-import { apiClient } from '../../services/apiClient';
+import { updateTask } from '../../services/taskApi';
 import { Task } from '../../types';
 import TaskForm from './TaskForm';
 
@@ -12,10 +11,7 @@ type EditTaskProps = {
 
 const EditTask: React.FC<EditTaskProps> = ({ task, onTaskEdit }) => {
   const handleTaskEdit = async (title: string, repeatDays: number) => {
-    await apiClient.put(API_ENDPOINTS.TASK(task.id), {
-      title,
-      repeat_days: repeatDays
-    });
+    await updateTask(task.id, title, repeatDays);
     onTaskEdit();
   };
 

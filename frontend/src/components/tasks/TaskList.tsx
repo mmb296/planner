@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from 'react';
 
-import { API_ENDPOINTS } from '../../config/api';
-import { apiClient } from '../../services/apiClient';
+import {
+  completeTask,
+  deleteTask,
+  getTasks,
+  uncompleteTask
+} from '../../services/taskApi';
 import { Task } from '../../types';
 import { daysFromNow } from '../../utils/dateTime';
 import AddTask from './AddTask';
@@ -13,8 +17,7 @@ const TaskList: React.FC = () => {
 
   const fetchTasks = async () => {
     try {
-      const tasksData = await apiClient.get<Task[]>(API_ENDPOINTS.TASKS);
-      setTasks(tasksData);
+      setTasks(await getTasks());
     } catch {
       setTasks([]);
     }
@@ -22,16 +25,16 @@ const TaskList: React.FC = () => {
 
   const recordTaskCompletion = async (taskId: number) => {
     try {
-      await apiClient.post(API_ENDPOINTS.TASK_COMPLETE(taskId));
+      await completeTask(taskId);
       await fetchTasks();
     } catch (error) {
       console.error('Failed to complete task:', error);
     }
   };
 
-  const deleteTask = async (taskId: number) => {
+  const handleDeleteTask = async (taskId: number) => {
     try {
-      await apiClient.delete(API_ENDPOINTS.TASK(taskId));
+      await deleteTask(taskId);
       await fetchTasks();
     } catch (error) {
       console.error('Failed to delete task:', error);
@@ -40,7 +43,7 @@ const TaskList: React.FC = () => {
 
   const deleteTaskCompletion = async (taskId: number) => {
     try {
-      await apiClient.post(API_ENDPOINTS.TASK_UNCOMPLETE(taskId));
+      await uncompleteTask(taskId);
       await fetchTasks();
     } catch (error) {
       console.error('Failed to uncomplete task:', error);
@@ -76,7 +79,7 @@ const TaskList: React.FC = () => {
         completed={completed}
         onTaskComplete={recordTaskCompletion}
         onTaskUncomplete={deleteTaskCompletion}
-        onTaskDelete={deleteTask}
+        onTaskDelete={handleDeleteTask}
         onTaskEdit={fetchTasks}
         task={task}
       />
