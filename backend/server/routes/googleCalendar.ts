@@ -3,7 +3,7 @@ import { OAuth2Client } from 'google-auth-library';
 import { google } from 'googleapis';
 
 import { CalendarOAuthTokenDB } from '../../db/oauthStore.js';
-import { stopCalendarWatchChannel } from '../calendarWatch.js';
+import { stopAllCalendarWatches } from '../calendarWatch.js';
 import {
   clearCalendarOAuthSession,
   isInvalidGrant
@@ -119,7 +119,7 @@ export function registerGoogleCalendarRoutes(
   });
 
   app.delete('/api/calendar/auth', async (req, res) => {
-    await stopCalendarWatchChannel(calendarOAuth2Client);
+    await stopAllCalendarWatches(calendarOAuth2Client);
     await CalendarOAuthTokenDB.clearToken();
     calendarOAuth2Client.setCredentials({});
     res.json({ message: 'Calendar disconnected' });

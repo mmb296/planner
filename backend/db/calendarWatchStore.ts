@@ -1,4 +1,4 @@
-import { dbGet, dbRun } from './connection.js';
+import { dbAll, dbGet, dbRun } from './connection.js';
 
 export async function createCalendarWatchTable() {
   await dbRun(`
@@ -88,9 +88,18 @@ export const CalendarWatchDB = {
     );
   },
 
+  async getAll(): Promise<CalendarWatchRow[]> {
+    const rows = await dbAll<CalendarWatchRow>('SELECT * FROM calendar_watch');
+    return rows.map(parseCalendarWatchRow);
+  },
+
   async clear(calendarId: string): Promise<void> {
     await dbRun('DELETE FROM calendar_watch WHERE calendar_id = ?', [
       calendarId
     ]);
+  },
+
+  async clearAll(): Promise<void> {
+    await dbRun('DELETE FROM calendar_watch');
   }
 };
