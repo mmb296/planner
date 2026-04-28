@@ -155,6 +155,7 @@ async function syncCalendar(
   if (!row?.calendar_id) return;
 
   if (!row.sync_token) {
+    // On init, always save (even null) to record that we attempted a full sync.
     const token = await fetchSyncToken(cal, calendarId);
     await CalendarWatchDB.updateSyncToken(calendarId, token ?? null);
     broadcastCalendarEventsUpdated();
@@ -162,6 +163,7 @@ async function syncCalendar(
   }
 
   try {
+    // On advance, only save if non-null to avoid overwriting a valid token on a no-op page.
     const newToken = await fetchSyncToken(cal, calendarId, row.sync_token);
     if (newToken) {
       await CalendarWatchDB.updateSyncToken(calendarId, newToken);
@@ -181,6 +183,7 @@ async function syncCalendar(
       console.warn(
         '[calendar watch] sync token invalid (410); performing full resync'
       );
+      // Full resync after 410 — always save to replace the invalid token.
       const token = await fetchSyncToken(cal, calendarId);
       await CalendarWatchDB.updateSyncToken(calendarId, token ?? null);
       broadcastCalendarEventsUpdated();
