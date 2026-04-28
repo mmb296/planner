@@ -56,6 +56,14 @@ export function getEndTime(event: CalendarEvent): number {
   return endDate.getTime();
 }
 
+export function formatLongDate(date: Date): string {
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+}
+
 export function formatHeaderDate(date: Date): string {
   return date.toLocaleDateString('en-US', {
     weekday: 'long',
