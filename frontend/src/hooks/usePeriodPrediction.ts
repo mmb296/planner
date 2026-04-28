@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { API_ENDPOINTS } from '../config/api';
 import { apiClient } from '../services/apiClient';
@@ -11,7 +11,7 @@ export type PeriodPrediction = {
 export function usePeriodPrediction() {
   const [prediction, setPrediction] = useState<PeriodPrediction | null>(null);
 
-  const fetchPrediction = async () => {
+  const fetchPrediction = useCallback(async () => {
     try {
       const data = await apiClient.get<PeriodPrediction>(
         API_ENDPOINTS.PERIOD_DAYS_PREDICTION
@@ -21,7 +21,7 @@ export function usePeriodPrediction() {
       console.error('Error fetching period prediction:', error);
       setPrediction(null);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchPrediction();

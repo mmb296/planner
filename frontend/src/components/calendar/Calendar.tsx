@@ -40,15 +40,13 @@ const Calendar: React.FC = () => {
       refetchPeriodDays();
       refetchPrediction();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showPeriodModal, refetchPeriodDays]);
+  }, [showPeriodModal, refetchPeriodDays, refetchPrediction]);
 
   // Refetch prediction when period days change (after toggle)
   // TODO: clean this up
   useEffect(() => {
     refetchPrediction();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [periodDays.size]);
+  }, [periodDays.size, refetchPrediction]);
 
   // Filter and group events by day
   const eventsByDay = filterAndGroupEventsByDay(
