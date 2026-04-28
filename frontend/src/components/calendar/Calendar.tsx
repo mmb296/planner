@@ -4,7 +4,10 @@ import { API_ENDPOINTS } from '../../config/api';
 import { useCalendarContext } from '../../context/CalendarContext';
 import { usePeriodDays } from '../../hooks/usePeriodDays';
 import { usePeriodPrediction } from '../../hooks/usePeriodPrediction';
-import { CalendarService } from '../../services/calendarService';
+import {
+  filterAndGroupEventsByDay,
+  getDayLabel
+} from '../../services/calendarService';
 import {
   formatDateString,
   formatLongDate,
@@ -48,7 +51,7 @@ const Calendar: React.FC = () => {
   }, [periodDays.size]);
 
   // Filter and group events by day
-  const eventsByDay = CalendarService.filterAndGroupEventsByDay(
+  const eventsByDay = filterAndGroupEventsByDay(
     allEvents,
     selectedCalendarIds,
     numDays
@@ -96,7 +99,7 @@ const Calendar: React.FC = () => {
             return (
               <Day
                 key={daysOut}
-                label={CalendarService.getDayLabel(daysOut)}
+                label={getDayLabel(daysOut)}
                 date={date}
                 events={events}
                 isPeriodDay={periodDays.has(dateStr)}
