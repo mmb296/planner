@@ -41,7 +41,7 @@ const Calendar: React.FC = () => {
       refetchPrediction();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showPeriodModal]);
+  }, [showPeriodModal, refetchPeriodDays]);
 
   // Refetch prediction when period days change (after toggle)
   // TODO: clean this up
