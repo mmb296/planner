@@ -247,7 +247,7 @@ export async function stopAllCalendarWatches(
   await CalendarWatchDB.clearAll();
 }
 
-export async function renewCalendarWatchIfNeeded(
+export async function renewExpiringCalendarWatches(
   oauth2Client: OAuth2Client
 ): Promise<void> {
   const webhookUrl = getWebhookUrl();

@@ -4,7 +4,7 @@ import express from 'express';
 import { registerCalendarSseRoute } from './calendarSse.js';
 import {
   registerCalendarWebhookRoute,
-  renewCalendarWatchIfNeeded
+  renewExpiringCalendarWatches
 } from './calendarWatch.js';
 import { setupGmailAuth, setupGoogleCalendarAuth } from './googleAuth.js';
 import { applyMiddleware } from './middleware.js';
@@ -38,7 +38,7 @@ export async function initializeApp(port: string | number) {
   registerGoogleCalendarRoutes(app, calendarOAuth2Client);
   registerCalendarSseRoute(app);
   registerCalendarWebhookRoute(app, calendarOAuth2Client);
-  void renewCalendarWatchIfNeeded(calendarOAuth2Client).catch((e) =>
+  void renewExpiringCalendarWatches(calendarOAuth2Client).catch((e) =>
     console.warn('[calendar watch] startup renew failed:', e)
   );
 }
