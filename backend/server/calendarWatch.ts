@@ -12,6 +12,11 @@ import type { calendar_v3 } from 'googleapis';
 const WATCH_TTL_SECONDS = '604800';
 const WATCH_RENEW_BUFFER_MS = 24 * 60 * 60 * 1000;
 
+async function listCalendarIds(cal: calendar_v3.Calendar): Promise<string[]> {
+  const { data } = await cal.calendarList.list();
+  return (data.items ?? []).map((c) => c.id!).filter(Boolean);
+}
+
 function getWebhookUrl(): string | undefined {
   const u = process.env.CALENDAR_WEBHOOK_URL?.trim();
   if (!u) return undefined;
@@ -98,8 +103,7 @@ export async function registerAllCalendarWatches(
   oauth2Client.setCredentials(saved);
 
   const cal = google.calendar({ version: 'v3', auth: oauth2Client });
-  const { data } = await cal.calendarList.list();
-  const calendarIds = (data.items ?? []).map((c) => c.id!).filter(Boolean);
+  const calendarIds = await listCalendarIds(cal);
 
   await Promise.all(
     calendarIds.map((id) => registerCalendarWatch(cal, id, webhookUrl))
@@ -255,8 +259,7 @@ export async function renewCalendarWatchIfNeeded(
   oauth2Client.setCredentials(saved);
 
   const cal = google.calendar({ version: 'v3', auth: oauth2Client });
-  const { data } = await cal.calendarList.list();
-  const calendarIds = (data.items ?? []).map((c) => c.id!).filter(Boolean);
+  const calendarIds = await listCalendarIds(cal);
 
   const now = Date.now();
   await Promise.all(
