@@ -199,11 +199,15 @@ async function syncCalendar(
     }
     broadcastCalendarEventsUpdated();
   } catch (e: unknown) {
-    const status =
-      (e as { code?: number })?.code ??
-      (e as { response?: { status?: number } })?.response?.status;
+    const err = e as {
+      code?: number;
+      response?: { status?: number };
+      message?: string;
+    };
     const is410 =
-      status === 410 || String((e as Error)?.message ?? '').includes('410');
+      err?.code === 410 ||
+      err?.response?.status === 410 ||
+      err?.message?.includes('410');
     if (is410) {
       console.warn(
         '[calendar watch] sync token invalid (410); performing full resync'
