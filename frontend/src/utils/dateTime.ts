@@ -61,7 +61,7 @@ export function formatLongDate(date: Date): string {
   });
 }
 
-export function formatHeaderDate(date: Date): string {
+export function formatWeekdayDate(date: Date): string {
   return date.toLocaleDateString('en-US', {
     weekday: 'long',
     month: 'short',

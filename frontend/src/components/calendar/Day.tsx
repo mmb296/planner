@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { CalendarEvent } from '../../types';
-import { formatHeaderDate, getStartTime } from '../../utils/dateTime';
+import { formatWeekdayDate, getStartTime } from '../../utils/dateTime';
 import styles from './Day.module.css';
 import Dot from './Dot';
 import Event from './Event';
@@ -30,7 +30,7 @@ const Day: React.FC<DayProps> = ({
       <div className={styles.dayHeader}>
         <span className={styles.dayLabel}>{label}</span>
         <div className={styles.dayHeaderRight}>
-          <span className={styles.dayDate}>{formatHeaderDate(date)}</span>
+          <span className={styles.dayDate}>{formatWeekdayDate(date)}</span>
           <Dot isPeriodDay={isPeriodDay} onClick={() => onDotToggle(date)} />
         </div>
       </div>
