@@ -34,7 +34,6 @@ const Calendar: React.FC = () => {
   } = usePeriodDays(getTodayDate(), getFutureDate(numDays - 1));
   const { prediction, refetch: refetchPrediction } = usePeriodPrediction();
 
-  // Refetch period days and prediction when the period calendar modal closes
   useEffect(() => {
     if (!showPeriodModal) {
       refetchPeriodDays();
@@ -42,8 +41,6 @@ const Calendar: React.FC = () => {
     }
   }, [showPeriodModal, refetchPeriodDays, refetchPrediction]);
 
-  // Refetch prediction when period days change (after toggle)
-  // TODO: clean this up
   useEffect(() => {
     refetchPrediction();
   }, [periodDays.size, refetchPrediction]);
