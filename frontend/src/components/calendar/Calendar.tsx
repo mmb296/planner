@@ -44,7 +44,6 @@ const Calendar: React.FC = () => {
     refetchPrediction();
   }, [periodDays.size, refetchPrediction]);
 
-  // Filter and group events by day
   const eventsByDay = filterAndGroupEventsByDay(
     allEvents,
     selectedCalendarIds,
