@@ -171,7 +171,7 @@ async function incrementalSyncPages(
   return nextSync;
 }
 
-async function runIncrementalSync(
+async function syncCalendar(
   oauth2Client: OAuth2Client,
   calendarId: string
 ): Promise<void> {
@@ -317,8 +317,8 @@ async function handleCalendarWebhook(
   if (resourceState === 'exists' || resourceState === 'not_exists') {
     const calId = row.calendar_id;
     setImmediate(() => {
-      runIncrementalSync(oauth2Client, calId).catch((e) =>
-        console.error('[calendar watch] incremental sync failed:', e)
+      syncCalendar(oauth2Client, calId).catch((e) =>
+        console.error('[calendar watch] sync failed:', e)
       );
     });
   }
