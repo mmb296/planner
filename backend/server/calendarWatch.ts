@@ -80,7 +80,7 @@ async function registerCalendarWatch(
       ? parseInt(expirationRaw, 10)
       : Number(expirationRaw);
 
-  const syncToken = await fetchFullSyncToken(cal, calendarId);
+  const syncToken = await initializeSyncToken(cal, calendarId);
 
   await CalendarWatchDB.save({
     calendar_id: calendarId,
@@ -116,7 +116,7 @@ export async function registerAllCalendarWatches(
   );
 }
 
-async function fetchFullSyncToken(
+async function initializeSyncToken(
   cal: calendar_v3.Calendar,
   calendarId: string
 ): Promise<string | undefined> {
@@ -137,7 +137,7 @@ async function fetchFullSyncToken(
   return nextSyncToken;
 }
 
-async function incrementalSyncPages(
+async function advanceSyncToken(
   cal: calendar_v3.Calendar,
   calendarId: string,
   syncToken: string
@@ -182,18 +182,14 @@ async function syncCalendar(
   if (!row?.calendar_id) return;
 
   if (!row.sync_token) {
-    const token = await fetchFullSyncToken(cal, calendarId);
+    const token = await initializeSyncToken(cal, calendarId);
     await CalendarWatchDB.updateSyncToken(calendarId, token ?? null);
     broadcastCalendarEventsUpdated();
     return;
   }
 
   try {
-    const newToken = await incrementalSyncPages(
-      cal,
-      calendarId,
-      row.sync_token
-    );
+    const newToken = await advanceSyncToken(cal, calendarId, row.sync_token);
     if (newToken) {
       await CalendarWatchDB.updateSyncToken(calendarId, newToken);
     }
@@ -212,7 +208,7 @@ async function syncCalendar(
       console.warn(
         '[calendar watch] sync token invalid (410); performing full resync'
       );
-      const token = await fetchFullSyncToken(cal, calendarId);
+      const token = await initializeSyncToken(cal, calendarId);
       await CalendarWatchDB.updateSyncToken(calendarId, token ?? null);
       broadcastCalendarEventsUpdated();
     } else {
