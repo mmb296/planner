@@ -43,7 +43,7 @@ export function usePeriodDays(startDate: Date, endDate: Date) {
 
   useEffect(() => {
     fetchPeriodDays();
-  }, [startDateStr, endDateStr, fetchPeriodDays]);
+  }, [fetchPeriodDays]);
 
   return { periodDays, togglePeriodDay, refetch: fetchPeriodDays };
 }
