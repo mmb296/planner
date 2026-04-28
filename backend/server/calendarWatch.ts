@@ -80,7 +80,7 @@ async function registerCalendarWatch(
       ? parseInt(expirationRaw, 10)
       : Number(expirationRaw);
 
-  const syncToken = await initializeSyncToken(cal, calendarId);
+  const syncToken = await fetchSyncToken(cal, calendarId);
 
   await CalendarWatchDB.save({
     calendar_id: calendarId,
@@ -116,50 +116,23 @@ export async function registerAllCalendarWatches(
   );
 }
 
-async function initializeSyncToken(
-  cal: calendar_v3.Calendar,
-  calendarId: string
-): Promise<string | undefined> {
-  let pageToken: string | undefined;
-  let nextSyncToken: string | undefined;
-  do {
-    const { data } = await cal.events.list({
-      calendarId,
-      singleEvents: true,
-      maxResults: 250,
-      pageToken
-    });
-    pageToken = data.nextPageToken || undefined;
-    if (data.nextSyncToken) {
-      nextSyncToken = data.nextSyncToken;
-    }
-  } while (pageToken);
-  return nextSyncToken;
-}
-
-async function advanceSyncToken(
+async function fetchSyncToken(
   cal: calendar_v3.Calendar,
   calendarId: string,
-  syncToken: string
+  syncToken?: string
 ): Promise<string | undefined> {
-  let nextSync: string | undefined;
+  let nextSyncToken: string | undefined;
 
   let { data } = await cal.events.list({
     calendarId,
     singleEvents: true,
     maxResults: 250,
-    syncToken
+    ...(syncToken ? { syncToken } : {})
   });
 
   while (true) {
-    if (data.items?.length) {
-      console.log(
-        `[calendar watch] ${data.items.length} changed event(s) in incremental page`
-      );
-    }
-    if (data.nextSyncToken) nextSync = data.nextSyncToken;
+    if (data.nextSyncToken) nextSyncToken = data.nextSyncToken;
     if (!data.nextPageToken) break;
-
     ({ data } = await cal.events.list({
       calendarId,
       singleEvents: true,
@@ -168,7 +141,7 @@ async function advanceSyncToken(
     }));
   }
 
-  return nextSync;
+  return nextSyncToken;
 }
 
 async function syncCalendar(
@@ -182,14 +155,14 @@ async function syncCalendar(
   if (!row?.calendar_id) return;
 
   if (!row.sync_token) {
-    const token = await initializeSyncToken(cal, calendarId);
+    const token = await fetchSyncToken(cal, calendarId);
     await CalendarWatchDB.updateSyncToken(calendarId, token ?? null);
     broadcastCalendarEventsUpdated();
     return;
   }
 
   try {
-    const newToken = await advanceSyncToken(cal, calendarId, row.sync_token);
+    const newToken = await fetchSyncToken(cal, calendarId, row.sync_token);
     if (newToken) {
       await CalendarWatchDB.updateSyncToken(calendarId, newToken);
     }
@@ -208,7 +181,7 @@ async function syncCalendar(
       console.warn(
         '[calendar watch] sync token invalid (410); performing full resync'
       );
-      const token = await initializeSyncToken(cal, calendarId);
+      const token = await fetchSyncToken(cal, calendarId);
       await CalendarWatchDB.updateSyncToken(calendarId, token ?? null);
       broadcastCalendarEventsUpdated();
     } else {
