@@ -155,7 +155,6 @@ async function syncCalendar(
   if (!row?.calendar_id) return;
 
   if (!row.sync_token) {
-    // On init, always save (even null) to record that we attempted a full sync.
     const token = await fetchSyncToken(cal, calendarId);
     await CalendarWatchDB.updateSyncToken(calendarId, token ?? null);
     broadcastCalendarEventsUpdated();
