@@ -76,9 +76,6 @@ function extractDetails(payload: any) {
 async function extractAppointmentDetails(
   message: GmailMessageRow
 ): Promise<AppointmentSuggestion | null> {
-  if (!message.subject || !message.body_text || !message.from_address)
-    return null;
-
   const emailContent = `Subject: ${message.subject}\nFrom: ${message.from_address}\n\n${message.body_text}`;
 
   const prompt = `You are an assistant that extracts appointment information from emails.
@@ -104,7 +101,7 @@ ${emailContent}`;
     if (!result.isAppointment) return null;
     return {
       messageId: message.id,
-      subject: message.subject,
+      subject: message.subject!,
       title: result.title,
       date: result.date,
       time: result.time,

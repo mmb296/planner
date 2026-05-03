@@ -84,6 +84,7 @@ export const GmailDB = {
       SELECT id, thread_id, subject, from_address, snippet, internal_date_ms, body_text
       FROM gmail_messages
       WHERE body_text IS NOT NULL AND body_text <> ''
+      AND subject IS NOT NULL AND from_address IS NOT NULL
       ORDER BY internal_date_ms DESC
       ${limit ? 'LIMIT ?' : ''}
     `;
