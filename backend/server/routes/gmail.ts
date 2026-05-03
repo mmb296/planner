@@ -69,18 +69,7 @@ function extractDetails(payload: any) {
   return { subject, from, internalDateMs, snippet, bodyText };
 }
 
-function hasRequiredFields(message: GmailMessageRow) {
-  const subject = message.subject?.trim();
-  const from = message.from_address?.trim();
-  const body = message.body_text?.trim();
-  return Boolean(subject && from && body);
-}
-
-async function extractAppointmentDetails(
-  subject: string,
-  from: string,
-  bodyText: string
-): Promise<{
+async function extractAppointmentDetails(message: GmailMessageRow): Promise<{
   isAppointment: boolean;
   title?: string;
   date?: string;
@@ -88,9 +77,10 @@ async function extractAppointmentDetails(
   location?: string;
   description?: string;
 } | null> {
-  if (!bodyText && !subject) return null;
+  if (!message.subject || !message.body_text || !message.from_address)
+    return null;
 
-  const emailContent = `Subject: ${subject || 'N/A'}\nFrom: ${from || 'N/A'}\n\n${bodyText}`;
+  const emailContent = `Subject: ${message.subject || 'N/A'}\nFrom: ${message.from_address || 'N/A'}\n\n${message.body_text}`;
 
   const prompt = `You are an assistant that extracts appointment information from emails.
 Return a JSON object with:
@@ -212,12 +202,7 @@ export function registerGmailRoutes(
     }> = [];
 
     for (const message of messages) {
-      if (!hasRequiredFields(message)) continue;
-      const suggestion = await extractAppointmentDetails(
-        message.subject as string,
-        message.from_address as string,
-        message.body_text as string
-      );
+      const suggestion = await extractAppointmentDetails(message);
       if (suggestion) suggestions.push(suggestion);
     }
 
@@ -241,17 +226,7 @@ export function registerGmailRoutes(
         .json({ error: `No stored Gmail message with id ${messageId}` });
     }
 
-    if (!hasRequiredFields(message)) {
-      return res.status(400).json({
-        error: 'Stored message is missing subject, from address, or body text'
-      });
-    }
-
-    const suggestion = await extractAppointmentDetails(
-      message.subject as string,
-      message.from_address as string,
-      message.body_text as string
-    );
+    const suggestion = await extractAppointmentDetails(message);
 
     res.json({ messageId, suggestion });
   });
