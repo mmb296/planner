@@ -215,6 +215,14 @@ export function registerGmailRoutes(
 
     const messages = await GmailDB.getUnactionedMessages();
     const suggestions = await extractAppointmentDetailsBatch(messages);
+
+    const appointmentIds = new Set(suggestions.map((s) => s.messageId));
+    for (const message of messages) {
+      if (!appointmentIds.has(message.id)) {
+        await GmailDB.setSuggestionStatus(message.id, 'dismissed');
+      }
+    }
+
     res.json({ count: suggestions.length, suggestions });
   });
 
