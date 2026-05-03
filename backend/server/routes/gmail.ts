@@ -32,17 +32,13 @@ function extractDetails(payload: any) {
     : 0;
   const snippet = payload?.snippet as string | undefined;
 
-  // Extract body text
   let bodyText = '';
   if (payload?.payload) {
     const p = payload.payload;
 
-    // Simple message with body
     if (p.body?.data) {
       bodyText = Buffer.from(p.body.data, 'base64').toString('utf-8');
-    }
-    // Multipart message
-    else if (p.parts && Array.isArray(p.parts)) {
+    } else if (p.parts && Array.isArray(p.parts)) {
       const textParts: string[] = [];
       const htmlParts: string[] = [];
 
@@ -60,7 +56,6 @@ function extractDetails(payload: any) {
           }
         }
 
-        // Recursively check nested parts
         if (part.parts && Array.isArray(part.parts)) {
           part.parts.forEach(extractFromPart);
         }
