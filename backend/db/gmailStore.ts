@@ -88,17 +88,15 @@ export const GmailDB = {
     return Number(row?.maxVal || 0);
   },
 
-  async getUnactionedMessages(limit?: number): Promise<GmailMessageRow[]> {
-    const query = `
-      SELECT id, thread_id, subject, from_address, snippet, internal_date_ms, body_text, suggestion_status
-        FROM gmail_messages
-        WHERE suggestion_status IS NULL
-          AND body_text IS NOT NULL AND body_text <> ''
-          AND subject IS NOT NULL AND from_address IS NOT NULL
-        ORDER BY internal_date_ms DESC
-        ${limit ? 'LIMIT ?' : ''}
-    `;
-    return dbAll<GmailMessageRow>(query, limit ? [limit] : []);
+  async getUnactionedMessages(): Promise<GmailMessageRow[]> {
+    return dbAll<GmailMessageRow>(
+      `SELECT id, thread_id, subject, from_address, snippet, internal_date_ms, body_text, suggestion_status
+         FROM gmail_messages
+         WHERE suggestion_status IS NULL
+           AND body_text IS NOT NULL AND body_text <> ''
+           AND subject IS NOT NULL AND from_address IS NOT NULL
+         ORDER BY internal_date_ms DESC`
+    );
   },
 
   async getMessageById(id: string): Promise<GmailMessageRow | null> {

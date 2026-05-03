@@ -192,10 +192,7 @@ export function registerGmailRoutes(
         .json({ error: 'GEMINI_API_KEY not configured on the server' });
     }
 
-    const limitParam = req.query.limit as string | undefined;
-    const limit = limitParam ? Math.max(parseInt(limitParam, 10), 1) : 25;
-
-    const messages = await GmailDB.getUnactionedMessages(limit);
+    const messages = await GmailDB.getUnactionedMessages();
     const suggestions: AppointmentSuggestion[] = [];
 
     for (const message of messages) {
