@@ -73,33 +73,44 @@ function extractDetails(payload: any) {
   return { subject, from, internalDateMs, snippet, bodyText };
 }
 
-async function extractAppointmentDetails(
-  message: GmailMessageRow
-): Promise<AppointmentSuggestion | null> {
-  const sentDate = message.internal_date_ms
-    ? new Date(message.internal_date_ms).toLocaleDateString('en-US', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      })
-    : null;
+async function extractAppointmentDetailsBatch(
+  messages: GmailMessageRow[]
+): Promise<AppointmentSuggestion[]> {
+  if (messages.length === 0) return [];
 
-  const emailContent = `Subject: ${message.subject}\nFrom: ${message.from_address}\n\n${message.body_text}`;
+  const emailBlocks = messages.map((message) => {
+    const sentDate = message.internal_date_ms
+      ? new Date(message.internal_date_ms).toLocaleDateString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        })
+      : null;
+
+    return `---
+messageId: ${message.id}
+${sentDate ? `Sent: ${sentDate}` : ''}
+Subject: ${message.subject}
+From: ${message.from_address}
+
+${message.body_text}`;
+  });
 
   const prompt = `You are an assistant that extracts appointment information from emails.
-${sentDate ? `This email was sent on ${sentDate}. Use this to resolve relative day references like "Wednesday" or "next Friday" to exact dates.` : ''}
-Return a JSON object with:
-- isAppointment: boolean (true if this email contains an appointment/meeting/event)
-- title: string (event title/summary)
+For each email that contains an appointment, meeting, or scheduled event, use the sent date to resolve relative day references like "Wednesday" or "next Friday" to exact dates.
+Return a JSON array containing only emails that are appointments. Each element should have:
+- messageId: string (the messageId provided above)
+- subject: string (the subject line provided above)
+- title: string (event title/summary, or null if not found)
 - date: string (ISO format YYYY-MM-DD, or null if not found)
-- time: string (HH:MM format using 24-hour clock, or null if not found)
-- location: string (physical address or virtual meeting link/details, or null if not found)
+- time: string (HH:MM 24-hour format, or null if not found)
+- location: string (physical address or virtual meeting link, or null if not found)
 - description: string (brief description, or null if not found)
-If isAppointment is false, return null for all other fields.
+If an email does not contain an appointment, omit it from the array entirely.
 
-Email:
-${emailContent}`;
+Emails:
+${emailBlocks.join('\n\n')}`;
 
   try {
     const model = gemini!.getGenerativeModel({
@@ -107,20 +118,20 @@ ${emailContent}`;
       generationConfig: { responseMimeType: 'application/json' }
     });
     const response = await model.generateContent(prompt);
-    const result = JSON.parse(response.response.text());
-    if (!result.isAppointment) return null;
-    return {
-      messageId: message.id,
-      subject: message.subject!,
-      title: result.title,
-      date: result.date,
-      time: result.time,
-      location: result.location,
-      description: result.description
-    };
+    const results = JSON.parse(response.response.text());
+
+    return results.map((r: any) => ({
+      messageId: r.messageId,
+      subject: r.subject,
+      title: r.title,
+      date: r.date,
+      time: r.time,
+      location: r.location,
+      description: r.description
+    }));
   } catch (error) {
     console.error('Error extracting appointment details:', error);
-    return null;
+    return [];
   }
 }
 
@@ -203,35 +214,15 @@ export function registerGmailRoutes(
     }
 
     const messages = await GmailDB.getUnactionedMessages();
-    const suggestions: AppointmentSuggestion[] = [];
+    const suggestions = await extractAppointmentDetailsBatch(messages);
 
+    const appointmentIds = new Set(suggestions.map((s) => s.messageId));
     for (const message of messages) {
-      const suggestion = await extractAppointmentDetails(message);
-      if (suggestion) suggestions.push(suggestion);
+      if (!appointmentIds.has(message.id)) {
+        await GmailDB.setSuggestionStatus(message.id, 'dismissed');
+      }
     }
 
     res.json({ count: suggestions.length, suggestions });
-  });
-
-  app.get('/api/ai/appointments/suggestions/:messageId', async (req, res) => {
-    if (!gemini) {
-      return res
-        .status(500)
-        .json({ error: 'GEMINI_API_KEY not configured on the server' });
-    }
-
-    const { messageId } = req.params;
-    const message = (await GmailDB.getMessageById(
-      messageId
-    )) as GmailMessageRow | null;
-    if (!message) {
-      return res
-        .status(404)
-        .json({ error: `No stored Gmail message with id ${messageId}` });
-    }
-
-    const suggestion = await extractAppointmentDetails(message);
-
-    res.json({ messageId, suggestion });
   });
 }
