@@ -5,7 +5,11 @@ import { google } from 'googleapis';
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-import { GmailDB, GmailMessageRow } from '../../db/gmailStore';
+import {
+  AppointmentSuggestion,
+  GmailDB,
+  GmailMessageRow
+} from '../../db/gmailStore';
 import {
   clearGmailOAuthSession,
   isInvalidGrant
@@ -69,18 +73,13 @@ function extractDetails(payload: any) {
   return { subject, from, internalDateMs, snippet, bodyText };
 }
 
-async function extractAppointmentDetails(message: GmailMessageRow): Promise<{
-  isAppointment: boolean;
-  title?: string;
-  date?: string;
-  time?: string;
-  location?: string;
-  description?: string;
-} | null> {
+async function extractAppointmentDetails(
+  message: GmailMessageRow
+): Promise<AppointmentSuggestion | null> {
   if (!message.subject || !message.body_text || !message.from_address)
     return null;
 
-  const emailContent = `Subject: ${message.subject || 'N/A'}\nFrom: ${message.from_address || 'N/A'}\n\n${message.body_text}`;
+  const emailContent = `Subject: ${message.subject}\nFrom: ${message.from_address}\n\n${message.body_text}`;
 
   const prompt = `You are an assistant that extracts appointment information from emails.
 Return a JSON object with:
@@ -102,7 +101,16 @@ ${emailContent}`;
     });
     const response = await model.generateContent(prompt);
     const result = JSON.parse(response.response.text());
-    return result.isAppointment ? result : null;
+    if (!result.isAppointment) return null;
+    return {
+      messageId: message.id,
+      subject: message.subject,
+      title: result.title,
+      date: result.date,
+      time: result.time,
+      location: result.location,
+      description: result.description
+    };
   } catch (error) {
     console.error('Error extracting appointment details:', error);
     return null;
@@ -192,14 +200,7 @@ export function registerGmailRoutes(
 
     const messages: GmailMessageRow[] =
       await GmailDB.getMessagesWithBody(limit);
-    const suggestions: Array<{
-      isAppointment: boolean;
-      title?: string;
-      date?: string;
-      time?: string;
-      location?: string;
-      description?: string;
-    }> = [];
+    const suggestions: AppointmentSuggestion[] = [];
 
     for (const message of messages) {
       const suggestion = await extractAppointmentDetails(message);

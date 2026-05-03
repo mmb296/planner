@@ -30,6 +30,16 @@ export type GmailMessageRow = {
   body_text: string | null;
 };
 
+export type AppointmentSuggestion = {
+  messageId: string;
+  subject: string;
+  title?: string;
+  date?: string;
+  time?: string;
+  location?: string;
+  description?: string;
+};
+
 export const GmailDB = {
   async upsertMessage(message: {
     id: string;
