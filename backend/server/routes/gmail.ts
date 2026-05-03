@@ -2,7 +2,8 @@ import dotenv from 'dotenv';
 import express from 'express';
 import { OAuth2Client } from 'google-auth-library';
 import { google } from 'googleapis';
-import OpenAI from 'openai';
+
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 import { GmailDB, GmailMessageRow } from '../../db/gmailStore';
 import {
@@ -12,9 +13,11 @@ import {
 
 dotenv.config();
 
-const openai = process.env.OPENAI_API_KEY
-  ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+const gemini = process.env.GEMINI_API_KEY
+  ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
   : null;
+
+const AI_MODEL = process.env.AI_MODEL || 'gemini-3-flash-preview';
 
 type Header = { name?: string; value?: string };
 
@@ -100,13 +103,7 @@ async function extractAppointmentDetails(
 
   const emailContent = `Subject: ${subject || 'N/A'}\nFrom: ${from || 'N/A'}\n\n${bodyText}`;
 
-  try {
-    const response = await openai.chat.completions.create({
-      model: 'gpt-5-nano',
-      messages: [
-        {
-          role: 'system',
-          content: `You are an assistant that extracts appointment information from emails. 
+  const prompt = `You are an assistant that extracts appointment information from emails.
 Return a JSON object with:
 - isAppointment: boolean (true if this email contains an appointment/meeting/event)
 - title: string (event title/summary)
@@ -114,17 +111,18 @@ Return a JSON object with:
 - time: string (HH:MM format using 24-hour clock, or null if not found)
 - location: string (physical address or virtual meeting link/details, or null if not found)
 - description: string (brief description, or null if not found)
-If isAppointment is false, return null for all other fields.`
-        },
-        {
-          role: 'user',
-          content: emailContent
-        }
-      ],
-      response_format: { type: 'json_object' }
-    });
+If isAppointment is false, return null for all other fields.
 
-    const result = JSON.parse(response.choices[0]?.message?.content || '{}');
+Email:
+${emailContent}`;
+
+  try {
+    const model = gemini!.getGenerativeModel({
+      model: AI_MODEL,
+      generationConfig: { responseMimeType: 'application/json' }
+    });
+    const response = await model.generateContent(prompt);
+    const result = JSON.parse(response.response.text());
     return result.isAppointment ? result : null;
   } catch (error) {
     console.error('Error extracting appointment details:', error);
@@ -204,16 +202,17 @@ export function registerGmailRoutes(
   });
 
   app.get('/api/ai/appointments/suggestions', async (req, res) => {
-    if (!openai) {
+    if (!gemini) {
       return res
         .status(500)
-        .json({ error: 'OpenAI API key not configured on the server' });
+        .json({ error: 'GEMINI_API_KEY not configured on the server' });
     }
 
     const limitParam = req.query.limit as string | undefined;
     const limit = limitParam ? Math.max(parseInt(limitParam, 10), 1) : 25;
 
-    const messages: GmailMessage[] = await GmailDB.getMessagesWithBody(limit);
+    const messages: GmailMessageRow[] =
+      await GmailDB.getMessagesWithBody(limit);
     const suggestions: Array<{
       isAppointment: boolean;
       title?: string;
@@ -237,16 +236,16 @@ export function registerGmailRoutes(
   });
 
   app.get('/api/ai/appointments/suggestions/:messageId', async (req, res) => {
-    if (!openai) {
+    if (!gemini) {
       return res
         .status(500)
-        .json({ error: 'OpenAI API key not configured on the server' });
+        .json({ error: 'GEMINI_API_KEY not configured on the server' });
     }
 
     const { messageId } = req.params;
     const message = (await GmailDB.getMessageById(
       messageId
-    )) as GmailMessage | null;
+    )) as GmailMessageRow | null;
     if (!message) {
       return res
         .status(404)
