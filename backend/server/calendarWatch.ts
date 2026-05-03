@@ -63,16 +63,28 @@ async function registerCalendarWatch(
   const channelId = randomUUID();
   const channelToken = randomBytes(24).toString('hex');
 
-  const { data: watch } = await cal.events.watch({
-    calendarId,
-    requestBody: {
-      id: channelId,
-      type: 'web_hook',
-      address: webhookUrl,
-      token: channelToken,
-      params: { ttl: WATCH_TTL_SECONDS }
+  let watch: calendar_v3.Schema$Channel;
+  try {
+    const resp = await cal.events.watch({
+      calendarId,
+      requestBody: {
+        id: channelId,
+        type: 'web_hook',
+        address: webhookUrl,
+        token: channelToken,
+        params: { ttl: WATCH_TTL_SECONDS }
+      }
+    });
+    watch = resp.data;
+  } catch (e: any) {
+    if (e?.cause?.message?.includes('Push notifications are not supported')) {
+      console.info(
+        `[calendar watch] skipping ${calendarId} (push not supported)`
+      );
+      return;
     }
-  });
+    throw e;
+  }
 
   const expirationRaw = watch.expiration;
   const expirationMs =
