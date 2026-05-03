@@ -18,7 +18,15 @@ export async function createGmailTable() {
     CREATE INDEX IF NOT EXISTS idx_gmail_messages_internal_date
     ON gmail_messages (internal_date_ms)
   `);
+
+  try {
+    await dbRun(`ALTER TABLE gmail_messages ADD COLUMN suggestion_status TEXT`);
+  } catch {
+    /* column already exists */
+  }
 }
+
+export type SuggestionStatus = 'accepted' | 'dismissed';
 
 export type GmailMessageRow = {
   id: string;
@@ -28,6 +36,7 @@ export type GmailMessageRow = {
   snippet: string | null;
   internal_date_ms: number | null;
   body_text: string | null;
+  suggestion_status: SuggestionStatus | null;
 };
 
 export type AppointmentSuggestion = {
@@ -79,25 +88,35 @@ export const GmailDB = {
     return Number(row?.maxVal || 0);
   },
 
-  async getMessagesWithBody(limit?: number): Promise<GmailMessageRow[]> {
+  async getUnactionedMessages(limit?: number): Promise<GmailMessageRow[]> {
     const query = `
-      SELECT id, thread_id, subject, from_address, snippet, internal_date_ms, body_text
-      FROM gmail_messages
-      WHERE body_text IS NOT NULL AND body_text <> ''
-      AND subject IS NOT NULL AND from_address IS NOT NULL
-      ORDER BY internal_date_ms DESC
-      ${limit ? 'LIMIT ?' : ''}
+      SELECT id, thread_id, subject, from_address, snippet, internal_date_ms, body_text, suggestion_status
+        FROM gmail_messages
+        WHERE suggestion_status IS NULL
+          AND body_text IS NOT NULL AND body_text <> ''
+          AND subject IS NOT NULL AND from_address IS NOT NULL
+        ORDER BY internal_date_ms DESC
+        ${limit ? 'LIMIT ?' : ''}
     `;
     return dbAll<GmailMessageRow>(query, limit ? [limit] : []);
   },
 
   async getMessageById(id: string): Promise<GmailMessageRow | null> {
     const row = await dbGet<GmailMessageRow>(
-      `SELECT id, thread_id, subject, from_address, snippet, internal_date_ms, body_text
-         FROM gmail_messages
-         WHERE id = ?`,
+      `SELECT id, thread_id, subject, from_address, snippet, internal_date_ms, body_text, suggestion_status
+         FROM gmail_messages WHERE id = ?`,
       [id]
     );
     return row ?? null;
+  },
+
+  async setSuggestionStatus(
+    id: string,
+    status: SuggestionStatus
+  ): Promise<void> {
+    await dbRun(
+      `UPDATE gmail_messages SET suggestion_status = ? WHERE id = ?`,
+      [status, id]
+    );
   }
 };
