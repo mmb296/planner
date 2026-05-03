@@ -8,7 +8,7 @@ import {
 } from './calendarWatch.js';
 import { setupGmailAuth, setupGoogleCalendarAuth } from './googleAuth.js';
 import { applyMiddleware } from './middleware.js';
-import { registerGmailRoutes } from './routes/gmail.js';
+import { registerGmailRoutes, runGmailPipeline } from './routes/gmail.js';
 import { registerGoogleCalendarRoutes } from './routes/googleCalendar.js';
 import { registerPeriodDaysRoutes } from './routes/periodDays.js';
 import { registerSettingsRoutes } from './routes/settings.js';
@@ -35,6 +35,9 @@ export async function initializeApp(port: string | number) {
   const gmailOAuth2Client = await setupGmailAuth(app, port);
   const calendarOAuth2Client = await setupGoogleCalendarAuth(app, port);
   registerGmailRoutes(app, gmailOAuth2Client);
+  void runGmailPipeline(gmailOAuth2Client).catch((e) =>
+    console.warn('[gmail pipeline] startup failed:', e)
+  );
   registerGoogleCalendarRoutes(app, calendarOAuth2Client);
   registerCalendarSseRoute(app);
   registerCalendarWebhookRoute(app, calendarOAuth2Client);

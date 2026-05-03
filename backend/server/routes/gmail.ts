@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 import express from 'express';
 import { OAuth2Client } from 'google-auth-library';
-import { google } from 'googleapis';
+import { gmail_v1, google } from 'googleapis';
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
@@ -25,7 +25,7 @@ const AI_MODEL = process.env.AI_MODEL || 'gemini-3-flash-preview';
 
 type Header = { name?: string; value?: string };
 
-function extractDetails(payload: any) {
+function extractDetails(payload: gmail_v1.Schema$Message) {
   const headers = (payload?.payload?.headers || []) as Header[];
   const subject = headers.find(
     (h) => h.name?.toLowerCase() === 'subject'
@@ -46,7 +46,7 @@ function extractDetails(payload: any) {
       const textParts: string[] = [];
       const htmlParts: string[] = [];
 
-      function extractFromPart(part: any) {
+      function extractFromPart(part: gmail_v1.Schema$MessagePart) {
         if (part.body?.data) {
           const decoded = Buffer.from(part.body.data, 'base64').toString(
             'utf-8'
@@ -70,7 +70,14 @@ function extractDetails(payload: any) {
     }
   }
 
-  return { subject, from, internalDateMs, snippet, bodyText };
+  return {
+    threadId: payload.threadId,
+    subject,
+    from,
+    internalDateMs,
+    snippet,
+    bodyText
+  };
 }
 
 async function extractAppointmentDetailsBatch(
@@ -135,65 +142,76 @@ ${emailBlocks.join('\n\n')}`;
   }
 }
 
+async function syncGmailMessages(oauth2Client: OAuth2Client): Promise<number> {
+  const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
+  const maxSeen = await GmailDB.getMaxInternalDateMs();
+  let pageToken: string | undefined = undefined;
+  let savedCount = 0;
+
+  const baseQuery =
+    'subject:(appointment OR confirmation OR interview OR "your visit" OR scheduled OR booking OR reminder)';
+  const query =
+    maxSeen > 0
+      ? `${baseQuery} after:${Math.floor(maxSeen / 1000)}`
+      : `${baseQuery} newer_than:7d`;
+
+  do {
+    const listResp: any = await gmail.users.messages.list({
+      userId: 'me',
+      q: query,
+      maxResults: 100,
+      pageToken
+    });
+
+    const messages = listResp.data.messages || [];
+    for (const msg of messages) {
+      if (!msg.id) continue;
+      const full = await gmail.users.messages.get({ userId: 'me', id: msg.id });
+      const details = extractDetails(full.data);
+
+      await GmailDB.upsertMessage({
+        id: msg.id,
+        thread_id: details.threadId || undefined,
+        subject: details.subject,
+        from_address: details.from,
+        snippet: details.snippet,
+        internal_date_ms: details.internalDateMs,
+        body_text: details.bodyText || undefined
+      });
+      savedCount += 1;
+    }
+
+    pageToken = listResp.data.nextPageToken || undefined;
+  } while (pageToken);
+
+  return savedCount;
+}
+
+export async function runGmailPipeline(
+  oauth2Client: OAuth2Client
+): Promise<void> {
+  try {
+    const synced = await syncGmailMessages(oauth2Client);
+    console.log(`[gmail pipeline] synced ${synced} new messages`);
+  } catch (error) {
+    if (isInvalidGrant(error)) {
+      await clearGmailOAuthSession(oauth2Client);
+      console.warn('[gmail pipeline] Gmail OAuth invalid — skipping sync');
+    } else {
+      console.error('[gmail pipeline] sync error:', error);
+    }
+  }
+}
+
 export function registerGmailRoutes(
   app: express.Express,
   oauth2Client: OAuth2Client
 ) {
   app.get('/api/gmail/messages', async (req, res) => {
     try {
-      const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
-
-      const maxSeen = await GmailDB.getMaxInternalDateMs();
-      let newMaxSeen = maxSeen;
-      let pageToken: string | undefined = undefined;
-      let savedCount = 0;
-
-      const baseQuery =
-        'subject:(appointment OR confirmation OR interview OR "your visit" OR scheduled OR booking OR reminder)';
-      const query =
-        maxSeen > 0
-          ? `${baseQuery} after:${Math.floor(maxSeen / 1000)}`
-          : `${baseQuery} newer_than:7d`;
-
-      do {
-        const listResp: any = await gmail.users.messages.list({
-          userId: 'me',
-          q: query,
-          maxResults: 100,
-          pageToken
-        });
-
-        const messages = listResp.data.messages || [];
-        for (const msg of messages) {
-          if (!msg.id) continue;
-          const full = await gmail.users.messages.get({
-            userId: 'me',
-            id: msg.id
-          });
-          const payload = full.data;
-          const { subject, from, internalDateMs, snippet, bodyText } =
-            extractDetails(payload);
-
-          // Dedupe: skip if not newer than max seen (handles edge cases where after: returns same timestamp)
-          if (internalDateMs && internalDateMs <= maxSeen) continue;
-
-          await GmailDB.upsertMessage({
-            id: msg.id,
-            thread_id: payload.threadId || undefined,
-            subject: subject || undefined,
-            from_address: from || undefined,
-            snippet: snippet || undefined,
-            internal_date_ms: internalDateMs || undefined,
-            body_text: bodyText || undefined
-          });
-          savedCount += 1;
-          if (internalDateMs > newMaxSeen) newMaxSeen = internalDateMs;
-        }
-
-        pageToken = listResp.data.nextPageToken || undefined;
-      } while (pageToken);
-
-      res.json({ saved: savedCount, maxSeenInternalDateMs: newMaxSeen });
+      const saved = await syncGmailMessages(oauth2Client);
+      const maxSeenInternalDateMs = await GmailDB.getMaxInternalDateMs();
+      res.json({ saved, maxSeenInternalDateMs });
     } catch (error) {
       if (isInvalidGrant(error)) {
         await clearGmailOAuthSession(oauth2Client);
