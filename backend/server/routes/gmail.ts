@@ -49,11 +49,8 @@ function extractDetails(payload: any) {
           );
           const mimeType = part.mimeType?.toLowerCase() || '';
 
-          if (mimeType === 'text/plain') {
-            textParts.push(decoded);
-          } else if (mimeType === 'text/html') {
-            htmlParts.push(decoded);
-          }
+          if (mimeType === 'text/plain') textParts.push(decoded);
+          else if (mimeType === 'text/html') htmlParts.push(decoded);
         }
 
         if (part.parts && Array.isArray(part.parts)) {
@@ -64,11 +61,8 @@ function extractDetails(payload: any) {
       p.parts.forEach(extractFromPart);
 
       // Prefer plain text over HTML
-      if (textParts.length > 0) {
-        bodyText = textParts.join('\n');
-      } else if (htmlParts.length > 0) {
-        bodyText = htmlParts.join('\n');
-      }
+      bodyText =
+        textParts.length > 0 ? textParts.join('\n') : htmlParts.join('\n');
     }
   }
 
