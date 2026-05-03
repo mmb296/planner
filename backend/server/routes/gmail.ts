@@ -225,25 +225,4 @@ export function registerGmailRoutes(
 
     res.json({ count: suggestions.length, suggestions });
   });
-
-  app.get('/api/ai/appointments/suggestions/:messageId', async (req, res) => {
-    if (!gemini) {
-      return res
-        .status(500)
-        .json({ error: 'GEMINI_API_KEY not configured on the server' });
-    }
-
-    const { messageId } = req.params;
-    const message = (await GmailDB.getMessageById(
-      messageId
-    )) as GmailMessageRow | null;
-    if (!message) {
-      return res
-        .status(404)
-        .json({ error: `No stored Gmail message with id ${messageId}` });
-    }
-
-    const suggestions = await extractAppointmentDetailsBatch([message]);
-    res.json({ messageId, suggestion: suggestions[0] ?? null });
-  });
 }
