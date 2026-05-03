@@ -127,8 +127,12 @@ export function registerGmailRoutes(
       let pageToken: string | undefined = undefined;
       let savedCount = 0;
 
+      const baseQuery =
+        'subject:(appointment OR confirmation OR interview OR "your visit" OR scheduled OR booking OR reminder)';
       const query =
-        maxSeen > 0 ? `after:${Math.floor(maxSeen / 1000)}` : 'newer_than:7d';
+        maxSeen > 0
+          ? `${baseQuery} after:${Math.floor(maxSeen / 1000)}`
+          : `${baseQuery} newer_than:7d`;
 
       do {
         const listResp: any = await gmail.users.messages.list({
