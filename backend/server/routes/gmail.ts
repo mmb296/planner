@@ -5,7 +5,11 @@ import { google } from 'googleapis';
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-import { GmailDB, GmailMessageRow } from '../../db/gmailStore';
+import {
+  AppointmentSuggestion,
+  GmailDB,
+  GmailMessageRow
+} from '../../db/gmailStore';
 import {
   clearGmailOAuthSession,
   isInvalidGrant
@@ -32,17 +36,13 @@ function extractDetails(payload: any) {
     : 0;
   const snippet = payload?.snippet as string | undefined;
 
-  // Extract body text
   let bodyText = '';
   if (payload?.payload) {
     const p = payload.payload;
 
-    // Simple message with body
     if (p.body?.data) {
       bodyText = Buffer.from(p.body.data, 'base64').toString('utf-8');
-    }
-    // Multipart message
-    else if (p.parts && Array.isArray(p.parts)) {
+    } else if (p.parts && Array.isArray(p.parts)) {
       const textParts: string[] = [];
       const htmlParts: string[] = [];
 
@@ -53,14 +53,10 @@ function extractDetails(payload: any) {
           );
           const mimeType = part.mimeType?.toLowerCase() || '';
 
-          if (mimeType === 'text/plain') {
-            textParts.push(decoded);
-          } else if (mimeType === 'text/html') {
-            htmlParts.push(decoded);
-          }
+          if (mimeType === 'text/plain') textParts.push(decoded);
+          else if (mimeType === 'text/html') htmlParts.push(decoded);
         }
 
-        // Recursively check nested parts
         if (part.parts && Array.isArray(part.parts)) {
           part.parts.forEach(extractFromPart);
         }
@@ -69,41 +65,30 @@ function extractDetails(payload: any) {
       p.parts.forEach(extractFromPart);
 
       // Prefer plain text over HTML
-      if (textParts.length > 0) {
-        bodyText = textParts.join('\n');
-      } else if (htmlParts.length > 0) {
-        bodyText = htmlParts.join('\n');
-      }
+      bodyText =
+        textParts.length > 0 ? textParts.join('\n') : htmlParts.join('\n');
     }
   }
 
   return { subject, from, internalDateMs, snippet, bodyText };
 }
 
-function hasRequiredFields(message: GmailMessageRow) {
-  const subject = message.subject?.trim();
-  const from = message.from_address?.trim();
-  const body = message.body_text?.trim();
-  return Boolean(subject && from && body);
-}
-
 async function extractAppointmentDetails(
-  subject: string,
-  from: string,
-  bodyText: string
-): Promise<{
-  isAppointment: boolean;
-  title?: string;
-  date?: string;
-  time?: string;
-  location?: string;
-  description?: string;
-} | null> {
-  if (!bodyText && !subject) return null;
+  message: GmailMessageRow
+): Promise<AppointmentSuggestion | null> {
+  const sentDate = message.internal_date_ms
+    ? new Date(message.internal_date_ms).toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      })
+    : null;
 
-  const emailContent = `Subject: ${subject || 'N/A'}\nFrom: ${from || 'N/A'}\n\n${bodyText}`;
+  const emailContent = `Subject: ${message.subject}\nFrom: ${message.from_address}\n\n${message.body_text}`;
 
   const prompt = `You are an assistant that extracts appointment information from emails.
+${sentDate ? `This email was sent on ${sentDate}. Use this to resolve relative day references like "Wednesday" or "next Friday" to exact dates.` : ''}
 Return a JSON object with:
 - isAppointment: boolean (true if this email contains an appointment/meeting/event)
 - title: string (event title/summary)
@@ -123,7 +108,16 @@ ${emailContent}`;
     });
     const response = await model.generateContent(prompt);
     const result = JSON.parse(response.response.text());
-    return result.isAppointment ? result : null;
+    if (!result.isAppointment) return null;
+    return {
+      messageId: message.id,
+      subject: message.subject!,
+      title: result.title,
+      date: result.date,
+      time: result.time,
+      location: result.location,
+      description: result.description
+    };
   } catch (error) {
     console.error('Error extracting appointment details:', error);
     return null;
@@ -144,7 +138,7 @@ export function registerGmailRoutes(
       let savedCount = 0;
 
       const baseQuery =
-        '"Ignite Physical Therapy & Sports Performance" "Appointment"';
+        'subject:(appointment OR confirmation OR interview OR "your visit" OR scheduled OR booking OR reminder)';
       const query =
         maxSeen > 0
           ? `${baseQuery} after:${Math.floor(maxSeen / 1000)}`
@@ -208,27 +202,11 @@ export function registerGmailRoutes(
         .json({ error: 'GEMINI_API_KEY not configured on the server' });
     }
 
-    const limitParam = req.query.limit as string | undefined;
-    const limit = limitParam ? Math.max(parseInt(limitParam, 10), 1) : 25;
-
-    const messages: GmailMessageRow[] =
-      await GmailDB.getMessagesWithBody(limit);
-    const suggestions: Array<{
-      isAppointment: boolean;
-      title?: string;
-      date?: string;
-      time?: string;
-      location?: string;
-      description?: string;
-    }> = [];
+    const messages = await GmailDB.getUnactionedMessages();
+    const suggestions: AppointmentSuggestion[] = [];
 
     for (const message of messages) {
-      if (!hasRequiredFields(message)) continue;
-      const suggestion = await extractAppointmentDetails(
-        message.subject as string,
-        message.from_address as string,
-        message.body_text as string
-      );
+      const suggestion = await extractAppointmentDetails(message);
       if (suggestion) suggestions.push(suggestion);
     }
 
@@ -252,17 +230,7 @@ export function registerGmailRoutes(
         .json({ error: `No stored Gmail message with id ${messageId}` });
     }
 
-    if (!hasRequiredFields(message)) {
-      return res.status(400).json({
-        error: 'Stored message is missing subject, from address, or body text'
-      });
-    }
-
-    const suggestion = await extractAppointmentDetails(
-      message.subject as string,
-      message.from_address as string,
-      message.body_text as string
-    );
+    const suggestion = await extractAppointmentDetails(message);
 
     res.json({ messageId, suggestion });
   });
