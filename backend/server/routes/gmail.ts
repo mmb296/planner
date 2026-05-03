@@ -76,9 +76,19 @@ function extractDetails(payload: any) {
 async function extractAppointmentDetails(
   message: GmailMessageRow
 ): Promise<AppointmentSuggestion | null> {
+  const sentDate = message.internal_date_ms
+    ? new Date(message.internal_date_ms).toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      })
+    : null;
+
   const emailContent = `Subject: ${message.subject}\nFrom: ${message.from_address}\n\n${message.body_text}`;
 
   const prompt = `You are an assistant that extracts appointment information from emails.
+${sentDate ? `This email was sent on ${sentDate}. Use this to resolve relative day references like "Wednesday" or "next Friday" to exact dates.` : ''}
 Return a JSON object with:
 - isAppointment: boolean (true if this email contains an appointment/meeting/event)
 - title: string (event title/summary)
