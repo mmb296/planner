@@ -81,6 +81,45 @@ function extractDetails(payload: gmail_v1.Schema$Message) {
   };
 }
 
+const proposeAppointmentTool = {
+  functionDeclarations: [
+    {
+      name: 'propose_appointment',
+      description:
+        'Propose a calendar appointment extracted from an email. Only call this for emails that clearly contain a scheduled event with both a title and a date.',
+      parameters: {
+        type: 'object',
+        properties: {
+          messageId: {
+            type: 'string',
+            description: 'The messageId of the source email'
+          },
+          subject: { type: 'string', description: 'The email subject line' },
+          title: { type: 'string', description: 'Event title or summary' },
+          date: { type: 'string', description: 'ISO format YYYY-MM-DD' },
+          startTime: {
+            type: 'string',
+            description: 'Start time HH:MM 24-hour, if present'
+          },
+          endTime: {
+            type: 'string',
+            description: 'End time HH:MM 24-hour, if present'
+          },
+          location: {
+            type: 'string',
+            description: 'Physical address or virtual meeting link, if present'
+          },
+          description: {
+            type: 'string',
+            description: 'Brief description, if present'
+          }
+        },
+        required: ['messageId', 'subject', 'title', 'date']
+      }
+    }
+  ]
+};
+
 async function extractAppointmentDetailsBatch(
   messages: GmailMessageRow[]
 ): Promise<AppointmentSuggestion[]> {
