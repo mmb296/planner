@@ -6,7 +6,7 @@ A personal planning app that brings together Google Calendar, task management an
 
 - **Google Calendar** — View events across multiple calendars with color-coded display and real-time push notification sync
 - **Tasks** — Create recurring tasks with customizable repeat intervals and track completions
-- **Gmail** — Syncs appointment-related emails on startup and surfaces AI-parsed suggestions (title, date, time, location) with one-click accept to create a Google Calendar event or dismiss
+- **Gmail** — Syncs appointment-related emails on startup and runs a human-in-the-loop pipeline using Gemini function calling to surface appointment suggestions (title, date, time, location) for user confirmation before creating a Google Calendar event
 
 ## Tech Stack
 
