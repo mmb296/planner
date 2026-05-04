@@ -8,7 +8,11 @@ import {
   GmailDB,
   GmailMessageRow
 } from '../../db/gmailStore';
-import { GmailOAuthSession } from '../googleOAuthSession.js';
+import {
+  CalendarOAuthSession,
+  GmailOAuthSession
+} from '../googleOAuthSession.js';
+import { createCalendarEvent, CreateEventBody } from './googleCalendar.js';
 
 import type { gmail_v1 } from 'googleapis';
 
@@ -108,7 +112,7 @@ Return a JSON array containing only emails that are appointments. Each element s
 - subject: string (the subject line provided above)
 - title: string (event title/summary, or null if not found)
 - date: string (ISO format YYYY-MM-DD, or null if not found)
-- time: string (start time, HH:MM 24-hour format, or null if not found)
+- startTime: string (start time, HH:MM 24-hour format, or null if not found)
 - endTime: string (end time, HH:MM 24-hour format, or null if not found)
 - location: string (physical address or virtual meeting link, or null if not found)
 - description: string (brief description, or null if not found)
@@ -130,7 +134,7 @@ ${emailBlocks.join('\n\n')}`;
       subject: r.subject,
       title: r.title,
       date: r.date,
-      time: r.time,
+      startTime: r.startTime,
       endTime: r.endTime,
       location: r.location,
       description: r.description
@@ -193,7 +197,8 @@ export async function syncGmailMessages(
 
 export function registerGmailRoutes(
   app: express.Express,
-  session: GmailOAuthSession
+  session: GmailOAuthSession,
+  calendarSession: CalendarOAuthSession
 ) {
   app.get('/api/gmail/messages', async (req, res) => {
     const gmail = session.getGmailClient();
@@ -236,6 +241,28 @@ export function registerGmailRoutes(
     const { messageId } = req.params;
     const message = await GmailDB.getMessageById(messageId);
     if (!message) return res.status(404).json({ error: 'Message not found' });
+
+    const { title, date, startTime, endTime, location, description, timeZone } =
+      req.body as CreateEventBody;
+
+    const cal = calendarSession.getCalendarClient();
+    if (cal) {
+      try {
+        await createCalendarEvent(cal, {
+          title,
+          date,
+          startTime,
+          endTime,
+          location,
+          description,
+          timeZone
+        });
+      } catch (error) {
+        if (await calendarSession.rejectIfInvalidGrant(error, res)) return;
+        throw error;
+      }
+    }
+
     await GmailDB.setSuggestionStatus(messageId, 'accepted');
     res.status(204).send();
   });
