@@ -3,6 +3,12 @@ import { google } from 'googleapis';
 
 import { OAuthIntegration, OAuthTokenDB } from '../db/oauthStore.js';
 import { registerAllCalendarWatches } from './calendarWatch.js';
+import {
+  CalendarOAuthSession,
+  GmailOAuthSession
+} from './googleOAuthSession.js';
+
+import type { OAuth2Client } from 'google-auth-library';
 
 const GOOGLE_INTEGRATION_SCOPES: Record<OAuthIntegration, string[]> = {
   gmail: ['https://www.googleapis.com/auth/gmail.readonly'],
@@ -18,11 +24,14 @@ function googleOAuthPaths(integration: OAuthIntegration) {
   return { authPath: base, callbackPath: `${base}/callback` };
 }
 
-async function setupGoogleOAuthFlow(
+async function setupGoogleOAuthFlow<
+  S extends GmailOAuthSession | CalendarOAuthSession
+>(
   app: express.Express,
   port: string | number,
-  integration: OAuthIntegration
-) {
+  integration: OAuthIntegration,
+  createSession: (client: OAuth2Client) => S
+): Promise<S> {
   const { authPath, callbackPath } = googleOAuthPaths(integration);
   const label = googleOAuthIntegrationLabel(integration);
 
@@ -33,6 +42,7 @@ async function setupGoogleOAuthFlow(
     process.env.GOOGLE_CLIENT_SECRET,
     callbackUri
   );
+  const session = createSession(oauth2Client);
 
   const saved = await OAuthTokenDB.getToken(integration);
   if (saved) {
@@ -74,8 +84,8 @@ async function setupGoogleOAuthFlow(
       oauth2Client.setCredentials(tokens);
       await OAuthTokenDB.saveToken(integration, tokens);
 
-      if (integration === 'calendar') {
-        void registerAllCalendarWatches(oauth2Client).catch((e) =>
+      if (session instanceof CalendarOAuthSession) {
+        void registerAllCalendarWatches(session).catch((e) =>
           console.warn('[calendar watch] register after OAuth failed:', e)
         );
         res.redirect(process.env.FRONTEND_URL || 'http://localhost:3000');
@@ -88,16 +98,29 @@ async function setupGoogleOAuthFlow(
     }
   });
 
-  return oauth2Client;
+  return session;
 }
 
-export function setupGmailAuth(app: express.Express, port: string | number) {
-  return setupGoogleOAuthFlow(app, port, 'gmail');
+export function setupGmailAuth(
+  app: express.Express,
+  port: string | number
+): Promise<GmailOAuthSession> {
+  return setupGoogleOAuthFlow(
+    app,
+    port,
+    'gmail',
+    (c) => new GmailOAuthSession(c)
+  );
 }
 
 export function setupGoogleCalendarAuth(
   app: express.Express,
   port: string | number
-) {
-  return setupGoogleOAuthFlow(app, port, 'calendar');
+): Promise<CalendarOAuthSession> {
+  return setupGoogleOAuthFlow(
+    app,
+    port,
+    'calendar',
+    (c) => new CalendarOAuthSession(c)
+  );
 }

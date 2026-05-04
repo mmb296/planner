@@ -7,11 +7,6 @@ import {
   renewExpiringCalendarWatches
 } from './calendarWatch.js';
 import { setupGmailAuth, setupGoogleCalendarAuth } from './googleAuth.js';
-import {
-  clearCalendarOAuthSession,
-  clearGmailOAuthSession,
-  isInvalidGrant
-} from './googleOAuthInvalidGrant.js';
 import { applyMiddleware } from './middleware.js';
 import { registerGmailRoutes, syncGmailMessages } from './routes/gmail.js';
 import { registerGoogleCalendarRoutes } from './routes/googleCalendar.js';
@@ -37,32 +32,29 @@ registerPeriodDaysRoutes(app);
 registerSettingsRoutes(app);
 
 export async function initializeApp(port: string | number) {
-  const gmailOAuth2Client = await setupGmailAuth(app, port);
-  const calendarOAuth2Client = await setupGoogleCalendarAuth(app, port);
-  registerGmailRoutes(app, gmailOAuth2Client);
-  void syncGmailMessages(gmailOAuth2Client)
-    .then((synced) => {
-      console.log(`[gmail pipeline] synced ${synced} new messages`);
-    })
-    .catch((e) => {
-      if (isInvalidGrant(e)) {
-        void clearGmailOAuthSession(gmailOAuth2Client);
-        console.warn('[gmail pipeline] Gmail OAuth invalid — skipping sync');
-      } else {
-        console.error('[gmail pipeline] sync error:', e);
-      }
-    });
-  registerGoogleCalendarRoutes(app, calendarOAuth2Client);
+  const gmailSession = await setupGmailAuth(app, port);
+  const calendarSession = await setupGoogleCalendarAuth(app, port);
+  registerGmailRoutes(app, gmailSession);
+  const gmail = gmailSession.getGmailClient();
+  if (gmail) {
+    void syncGmailMessages(gmail)
+      .then((synced) => {
+        console.log(`[gmail pipeline] synced ${synced} new messages`);
+      })
+      .catch(async (e) => {
+        if (await gmailSession.clearIfInvalidGrant(e))
+          console.warn('[gmail pipeline] Gmail OAuth invalid — skipping sync');
+        else console.error('[gmail pipeline] sync error:', e);
+      });
+  }
+  registerGoogleCalendarRoutes(app, calendarSession);
   registerCalendarSseRoute(app);
-  registerCalendarWebhookRoute(app, calendarOAuth2Client);
-  void renewExpiringCalendarWatches(calendarOAuth2Client).catch((e) => {
-    if (isInvalidGrant(e)) {
-      void clearCalendarOAuthSession(calendarOAuth2Client);
+  registerCalendarWebhookRoute(app, calendarSession);
+  void renewExpiringCalendarWatches(calendarSession).catch(async (e) => {
+    if (await calendarSession.clearIfInvalidGrant(e))
       console.warn(
         '[calendar watch] Calendar OAuth invalid — skipping watch renewal'
       );
-    } else {
-      console.error('[calendar watch] startup renew failed:', e);
-    }
+    else console.error('[calendar watch] startup renew failed:', e);
   });
 }

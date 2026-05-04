@@ -1,56 +1,32 @@
 import express from 'express';
-import { OAuth2Client } from 'google-auth-library';
-import { google } from 'googleapis';
 
-import { CalendarOAuthTokenDB } from '../../db/oauthStore.js';
 import { stopAllCalendarWatches } from '../calendarWatch.js';
-import {
-  clearCalendarOAuthSession,
-  isInvalidGrant
-} from '../googleOAuthInvalidGrant.js';
+import { CalendarOAuthSession } from '../googleOAuthSession.js';
 
 export function registerGoogleCalendarRoutes(
   app: express.Express,
-  calendarOAuth2Client: OAuth2Client
+  session: CalendarOAuthSession
 ) {
-  app.get('/api/calendar/status', async (req, res) => {
-    const t = await CalendarOAuthTokenDB.getToken();
-    const connected = !!(t?.refresh_token || t?.access_token);
-    res.json({ connected });
+  app.get('/api/calendar/status', (req, res) => {
+    res.json({ connected: session.isConnected() });
   });
 
   app.get('/api/calendar/calendars', async (req, res) => {
-    const saved = await CalendarOAuthTokenDB.getToken();
-    if (!saved?.refresh_token && !saved?.access_token) {
-      return res.status(401).json({ error: 'Calendar not connected' });
-    }
-    calendarOAuth2Client.setCredentials(saved);
+    const cal = session.getCalendarClient();
+    if (!cal) return res.status(401).json({ error: 'Calendar not connected' });
 
     try {
-      const cal = google.calendar({
-        version: 'v3',
-        auth: calendarOAuth2Client
-      });
       const { data } = await cal.calendarList.list();
       res.json(data.items || []);
     } catch (error) {
-      if (isInvalidGrant(error)) {
-        await clearCalendarOAuthSession(calendarOAuth2Client);
-        return res.status(401).json({
-          error:
-            'Calendar access expired or was revoked. Sign in with Google Calendar again.'
-        });
-      }
+      if (await session.rejectIfInvalidGrant(error, res)) return;
       throw error;
     }
   });
 
   app.get('/api/calendar/events', async (req, res) => {
-    const saved = await CalendarOAuthTokenDB.getToken();
-    if (!saved?.refresh_token && !saved?.access_token) {
-      return res.status(401).json({ error: 'Calendar not connected' });
-    }
-    calendarOAuth2Client.setCredentials(saved);
+    const cal = session.getCalendarClient();
+    if (!cal) return res.status(401).json({ error: 'Calendar not connected' });
 
     const timeMin = req.query.timeMin as string | undefined;
     const timeMax = req.query.timeMax as string | undefined;
@@ -67,11 +43,6 @@ export function registerGoogleCalendarRoutes(
       : [];
 
     try {
-      const cal = google.calendar({
-        version: 'v3',
-        auth: calendarOAuth2Client
-      });
-
       const { data: listData } = await cal.calendarList.list();
       const items = listData.items || [];
       const colorById = new Map(
@@ -107,21 +78,14 @@ export function registerGoogleCalendarRoutes(
 
       res.json(allEvents);
     } catch (error) {
-      if (isInvalidGrant(error)) {
-        await clearCalendarOAuthSession(calendarOAuth2Client);
-        return res.status(401).json({
-          error:
-            'Calendar access expired or was revoked. Sign in with Google Calendar again.'
-        });
-      }
+      if (await session.rejectIfInvalidGrant(error, res)) return;
       throw error;
     }
   });
 
   app.delete('/api/calendar/auth', async (req, res) => {
-    await stopAllCalendarWatches(calendarOAuth2Client);
-    await CalendarOAuthTokenDB.clearToken();
-    calendarOAuth2Client.setCredentials({});
+    await stopAllCalendarWatches(session);
+    await session.clearSession();
     res.json({ message: 'Calendar disconnected' });
   });
 }
