@@ -16,6 +16,17 @@
   overflow: hidden;
 }
 
+.sidebar {
+  width: 300px;
+  background: #ffffff;
+  box-shadow: 3px 0 5px rgba(0, 0, 0, 0.1);
+  outline: 0.5px solid #e0e0e0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
 button {
   cursor: pointer;
 }

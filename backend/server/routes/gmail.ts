@@ -227,4 +227,20 @@ export function registerGmailRoutes(
 
     res.json({ count: suggestions.length, suggestions });
   });
+
+  app.post('/api/gmail/messages/:messageId/accept', async (req, res) => {
+    const { messageId } = req.params;
+    const message = await GmailDB.getMessageById(messageId);
+    if (!message) return res.status(404).json({ error: 'Message not found' });
+    await GmailDB.setSuggestionStatus(messageId, 'accepted');
+    res.status(204).send();
+  });
+
+  app.post('/api/gmail/messages/:messageId/dismiss', async (req, res) => {
+    const { messageId } = req.params;
+    const message = await GmailDB.getMessageById(messageId);
+    if (!message) return res.status(404).json({ error: 'Message not found' });
+    await GmailDB.setSuggestionStatus(messageId, 'dismissed');
+    res.status(204).send();
+  });
 }
