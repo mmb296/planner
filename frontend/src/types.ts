@@ -25,6 +25,7 @@ export type AppointmentSuggestion = {
   title?: string;
   date?: string;
   time?: string;
+  endTime?: string;
   location?: string;
   description?: string;
 };

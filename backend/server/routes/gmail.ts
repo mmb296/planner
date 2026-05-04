@@ -108,7 +108,8 @@ Return a JSON array containing only emails that are appointments. Each element s
 - subject: string (the subject line provided above)
 - title: string (event title/summary, or null if not found)
 - date: string (ISO format YYYY-MM-DD, or null if not found)
-- time: string (HH:MM 24-hour format, or null if not found)
+- time: string (start time, HH:MM 24-hour format, or null if not found)
+- endTime: string (end time, HH:MM 24-hour format, or null if not found)
 - location: string (physical address or virtual meeting link, or null if not found)
 - description: string (brief description, or null if not found)
 If an email does not contain an appointment, omit it from the array entirely.
@@ -130,6 +131,7 @@ ${emailBlocks.join('\n\n')}`;
       title: r.title,
       date: r.date,
       time: r.time,
+      endTime: r.endTime,
       location: r.location,
       description: r.description
     }));
