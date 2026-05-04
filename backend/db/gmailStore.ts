@@ -31,6 +31,13 @@ export async function createGmailTable() {
       last_sync_at_ms INTEGER NOT NULL DEFAULT 0
     )
   `);
+  try {
+    await dbRun(
+      `ALTER TABLE gmail_sync_state ADD COLUMN last_sync_at_ms INTEGER NOT NULL DEFAULT 0`
+    );
+  } catch {
+    /* column already exists */
+  }
   await dbRun(
     `INSERT INTO gmail_sync_state (id, last_sync_at_ms) VALUES (1, 0) ON CONFLICT DO NOTHING`
   );
