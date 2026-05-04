@@ -24,6 +24,16 @@ export async function createGmailTable() {
   } catch {
     /* column already exists */
   }
+
+  await dbRun(`
+    CREATE TABLE IF NOT EXISTS gmail_sync_state (
+      id INTEGER PRIMARY KEY CHECK (id = 1),
+      last_sync_at_ms INTEGER NOT NULL DEFAULT 0
+    )
+  `);
+  await dbRun(
+    `INSERT INTO gmail_sync_state (id, last_sync_at_ms) VALUES (1, 0) ON CONFLICT DO NOTHING`
+  );
 }
 
 export type SuggestionStatus = 'accepted' | 'dismissed';
@@ -86,6 +96,20 @@ export const GmailDB = {
       `SELECT COALESCE(MAX(internal_date_ms), 0) AS maxVal FROM gmail_messages`
     );
     return Number(row?.maxVal || 0);
+  },
+
+  async getLastSyncAt(): Promise<number> {
+    const row = await dbGet<{ last_sync_at_ms: number }>(
+      `SELECT last_sync_at_ms FROM gmail_sync_state WHERE id = 1`
+    );
+    return Number(row?.last_sync_at_ms || 0);
+  },
+
+  async setLastSyncAt(ms: number): Promise<void> {
+    await dbRun(
+      `UPDATE gmail_sync_state SET last_sync_at_ms = ? WHERE id = 1`,
+      [ms]
+    );
   },
 
   async getUnactionedMessages(): Promise<GmailMessageRow[]> {

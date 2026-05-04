@@ -146,15 +146,18 @@ export async function syncGmailMessages(
   oauth2Client: OAuth2Client
 ): Promise<number> {
   const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
-  const maxSeen = await GmailDB.getMaxInternalDateMs();
+  const syncStartMs = Date.now();
+  const maxEmailMs = await GmailDB.getMaxInternalDateMs();
+  const lastSyncAt = await GmailDB.getLastSyncAt();
+  const queryFromMs = Math.max(maxEmailMs, lastSyncAt);
   let pageToken: string | undefined = undefined;
   let savedCount = 0;
 
   const baseQuery =
     'subject:(appointment OR confirmation OR interview OR "your visit" OR scheduled OR booking OR reminder)';
   const query =
-    maxSeen > 0
-      ? `${baseQuery} after:${Math.floor(maxSeen / 1000)}`
+    queryFromMs > 0
+      ? `${baseQuery} after:${Math.floor(queryFromMs / 1000)}`
       : `${baseQuery} newer_than:7d`;
 
   do {
@@ -180,12 +183,13 @@ export async function syncGmailMessages(
         internal_date_ms: details.internalDateMs,
         body_text: details.bodyText || undefined
       });
-      if (details.internalDateMs > maxSeen) savedCount += 1;
+      if (details.internalDateMs > maxEmailMs) savedCount += 1;
     }
 
     pageToken = listResp.data.nextPageToken || undefined;
   } while (pageToken);
 
+  await GmailDB.setLastSyncAt(syncStartMs);
   return savedCount;
 }
 
@@ -196,8 +200,7 @@ export function registerGmailRoutes(
   app.get('/api/gmail/messages', async (req, res) => {
     try {
       const saved = await syncGmailMessages(oauth2Client);
-      const maxSeenInternalDateMs = await GmailDB.getMaxInternalDateMs();
-      res.json({ saved, maxSeenInternalDateMs });
+      res.json({ saved });
     } catch (error) {
       if (isInvalidGrant(error)) {
         await clearGmailOAuthSession(oauth2Client);
