@@ -142,7 +142,9 @@ ${emailBlocks.join('\n\n')}`;
   }
 }
 
-async function syncGmailMessages(oauth2Client: OAuth2Client): Promise<number> {
+export async function syncGmailMessages(
+  oauth2Client: OAuth2Client
+): Promise<number> {
   const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
   const maxSeen = await GmailDB.getMaxInternalDateMs();
   let pageToken: string | undefined = undefined;
@@ -185,22 +187,6 @@ async function syncGmailMessages(oauth2Client: OAuth2Client): Promise<number> {
   } while (pageToken);
 
   return savedCount;
-}
-
-export async function runGmailPipeline(
-  oauth2Client: OAuth2Client
-): Promise<void> {
-  try {
-    const synced = await syncGmailMessages(oauth2Client);
-    console.log(`[gmail pipeline] synced ${synced} new messages`);
-  } catch (error) {
-    if (isInvalidGrant(error)) {
-      await clearGmailOAuthSession(oauth2Client);
-      console.warn('[gmail pipeline] Gmail OAuth invalid — skipping sync');
-    } else {
-      console.error('[gmail pipeline] sync error:', error);
-    }
-  }
 }
 
 export function registerGmailRoutes(
