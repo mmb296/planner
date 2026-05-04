@@ -160,7 +160,7 @@ ${message.body_text}`;
   const prompt = `You are an assistant that extracts appointment information from emails.
 For each email that contains a potential appointment, meeting, or scheduled event with both a title and a date, call the propose_appointment tool.
 Use the sent date to resolve relative day references like "Wednesday" or "next Friday" to exact dates.
-If an email does not contain a clear appointment, do not call the tool for it.
+If an email does not contain a potential appointment, do not call the tool for it.
 
 Emails:
 ${emailBlocks.join('\n\n')}`;
@@ -193,7 +193,7 @@ export async function syncGmailMessages(
   let savedCount = 0;
 
   const baseQuery =
-    'subject:(appointment OR confirmation OR interview OR "your visit" OR scheduled OR booking OR reminder)';
+    'subject:(appointment OR meeting OR confirmation OR interview OR "your visit" OR scheduled OR booking OR reminder)';
   const query =
     queryFromMs > 0
       ? `${baseQuery} after:${Math.floor(queryFromMs / 1000)}`
