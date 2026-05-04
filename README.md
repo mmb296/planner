@@ -6,17 +6,17 @@ A personal planning app that brings together Google Calendar, task management an
 
 - **Google Calendar** — View events across multiple calendars with color-coded display and real-time push notification sync
 - **Tasks** — Create recurring tasks with customizable repeat intervals and track completions
-- **Gmail** — View emails with optional AI-powered analysis via OpenAI
+- **Gmail** — Syncs appointment-related emails on startup and surfaces AI-parsed suggestions (title, date, time, location) with one-click accept to create a Google Calendar event or dismiss
 
 ## Tech Stack
 
-| Layer         | Technology                                 |
-| ------------- | ------------------------------------------ |
-| Frontend      | React 19, TypeScript, Vite                 |
-| Backend       | Express 5, Node.js, TypeScript             |
-| Database      | SQLite (primary)                           |
-| Auth          | Google OAuth2                              |
-| External APIs | Google Calendar API, Gmail API, OpenAI API |
+| Layer         | Technology                                        |
+| ------------- | ------------------------------------------------- |
+| Frontend      | React 19, TypeScript, Vite                        |
+| Backend       | Express 5, Node.js, TypeScript                    |
+| Database      | SQLite (primary)                                  |
+| Auth          | Google OAuth2                                     |
+| External APIs | Google Calendar API, Gmail API, Google Gemini API |
 
 ## Project Structure
 
@@ -41,7 +41,7 @@ calendar/
 - Node.js
 - A [Google Cloud project](https://console.cloud.google.com/) with the Calendar API and Gmail API enabled
 - OAuth 2.0 credentials (Web application type) with your redirect URIs configured
-- An OpenAI API key (optional, for Gmail analysis)
+- A [Google Gemini API key](https://aistudio.google.com/) for appointment suggestion parsing
 
 ### Environment Variables
 
@@ -57,7 +57,8 @@ VITE_GOOGLE_CLIENT_ID=your_google_oauth_client_id
 ```
 GOOGLE_CLIENT_ID=your_google_oauth_client_id
 GOOGLE_CLIENT_SECRET=your_google_oauth_client_secret
-OPENAI_API_KEY=your_openai_api_key          # optional
+GEMINI_API_KEY=your_gemini_api_key          # required for appointment suggestions
+AI_MODEL=gemini-3-flash-preview             # optional, defaults to gemini-3-flash-preview
 FRONTEND_URL=http://localhost:3000
 PORT=5000
 
