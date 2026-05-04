@@ -34,7 +34,7 @@ registerSettingsRoutes(app);
 export async function initializeApp(port: string | number) {
   const gmailSession = await setupGmailAuth(app, port);
   const calendarSession = await setupGoogleCalendarAuth(app, port);
-  registerGmailRoutes(app, gmailSession);
+  registerGmailRoutes(app, gmailSession, calendarSession);
   const gmail = gmailSession.getGmailClient();
   if (gmail) {
     void syncGmailMessages(gmail)

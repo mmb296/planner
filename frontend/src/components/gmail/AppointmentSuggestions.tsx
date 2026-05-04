@@ -46,7 +46,7 @@ const SuggestionCard: React.FC<{
     }
   };
 
-  const dateTime = formatDateTime(suggestion.date, suggestion.time);
+  const dateTime = formatDateTime(suggestion.date, suggestion.startTime);
 
   return (
     <li className={styles.card}>
@@ -130,7 +130,7 @@ const AppointmentSuggestions: React.FC = () => {
             key={s.messageId}
             suggestion={s}
             onAccept={async () => {
-              await acceptSuggestion(s.messageId);
+              await acceptSuggestion(s);
               remove(s.messageId);
             }}
             onDismiss={async () => {

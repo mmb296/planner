@@ -59,9 +59,10 @@ export type GmailMessageRow = {
 export type AppointmentSuggestion = {
   messageId: string;
   subject: string;
-  title?: string;
-  date?: string;
-  time?: string;
+  title: string;
+  date: string;
+  startTime?: string;
+  endTime?: string;
   location?: string;
   description?: string;
 };

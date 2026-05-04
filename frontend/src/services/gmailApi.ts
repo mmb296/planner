@@ -10,8 +10,16 @@ export async function getSuggestions(): Promise<AppointmentSuggestion[]> {
   return data.suggestions;
 }
 
-export async function acceptSuggestion(messageId: string): Promise<void> {
-  await apiClient.post(API_ENDPOINTS.GMAIL_SUGGESTION_ACCEPT(messageId));
+export async function acceptSuggestion(
+  suggestion: AppointmentSuggestion
+): Promise<void> {
+  await apiClient.post(
+    API_ENDPOINTS.GMAIL_SUGGESTION_ACCEPT(suggestion.messageId),
+    {
+      ...suggestion,
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+    }
+  );
 }
 
 export async function dismissSuggestion(messageId: string): Promise<void> {
