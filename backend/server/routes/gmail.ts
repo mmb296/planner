@@ -1,7 +1,11 @@
 import dotenv from 'dotenv';
 import express from 'express';
 
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import {
+  FunctionDeclarationsTool,
+  GoogleGenerativeAI,
+  SchemaType
+} from '@google/generative-ai';
 
 import {
   AppointmentSuggestion,
@@ -81,6 +85,54 @@ function extractDetails(payload: gmail_v1.Schema$Message) {
   };
 }
 
+const proposeAppointmentTool: FunctionDeclarationsTool = {
+  functionDeclarations: [
+    {
+      name: 'propose_appointment',
+      description:
+        'Propose a calendar appointment extracted from an email. Only call this for emails that clearly contain a scheduled event with both a title and a date.',
+      parameters: {
+        type: SchemaType.OBJECT,
+        properties: {
+          messageId: {
+            type: SchemaType.STRING,
+            description: 'The messageId of the source email'
+          },
+          subject: {
+            type: SchemaType.STRING,
+            description: 'The email subject line'
+          },
+          title: {
+            type: SchemaType.STRING,
+            description: 'Event title or summary'
+          },
+          date: {
+            type: SchemaType.STRING,
+            description: 'ISO format YYYY-MM-DD'
+          },
+          startTime: {
+            type: SchemaType.STRING,
+            description: 'Start time HH:MM 24-hour, if present'
+          },
+          endTime: {
+            type: SchemaType.STRING,
+            description: 'End time HH:MM 24-hour, if present'
+          },
+          location: {
+            type: SchemaType.STRING,
+            description: 'Physical address or virtual meeting link, if present'
+          },
+          description: {
+            type: SchemaType.STRING,
+            description: 'Brief description, if present'
+          }
+        },
+        required: ['messageId', 'subject', 'title', 'date']
+      }
+    }
+  ]
+};
+
 async function extractAppointmentDetailsBatch(
   messages: GmailMessageRow[]
 ): Promise<AppointmentSuggestion[]> {
@@ -106,17 +158,9 @@ ${message.body_text}`;
   });
 
   const prompt = `You are an assistant that extracts appointment information from emails.
-For each email that contains an appointment, meeting, or scheduled event, use the sent date to resolve relative day references like "Wednesday" or "next Friday" to exact dates.
-Return a JSON array containing only emails that are appointments. Each element should have:
-- messageId: string (the messageId provided above)
-- subject: string (the subject line provided above)
-- title: string (event title/summary, or null if not found)
-- date: string (ISO format YYYY-MM-DD, or null if not found)
-- startTime: string (start time, HH:MM 24-hour format, or null if not found)
-- endTime: string (end time, HH:MM 24-hour format, or null if not found)
-- location: string (physical address or virtual meeting link, or null if not found)
-- description: string (brief description, or null if not found)
-Only include an email if it contains a potential appointment with both a title and a date. If either is missing, omit it from the array entirely.
+For each email that contains a potential appointment, meeting, or scheduled event with both a title and a date, call the propose_appointment tool.
+Use the sent date to resolve relative day references like "Wednesday" or "next Friday" to exact dates.
+If an email does not contain a potential appointment, do not call the tool for it.
 
 Emails:
 ${emailBlocks.join('\n\n')}`;
@@ -124,21 +168,14 @@ ${emailBlocks.join('\n\n')}`;
   try {
     const model = gemini!.getGenerativeModel({
       model: AI_MODEL,
-      generationConfig: { responseMimeType: 'application/json' }
+      tools: [proposeAppointmentTool]
     });
     const response = await model.generateContent(prompt);
-    const results = JSON.parse(response.response.text());
+    const parts = response.response.candidates?.[0]?.content?.parts ?? [];
 
-    return results.map((r: any) => ({
-      messageId: r.messageId,
-      subject: r.subject,
-      title: r.title,
-      date: r.date,
-      startTime: r.startTime,
-      endTime: r.endTime,
-      location: r.location,
-      description: r.description
-    }));
+    return parts
+      .filter((p) => p.functionCall?.name === 'propose_appointment')
+      .map((p) => p.functionCall!.args as AppointmentSuggestion);
   } catch (error) {
     console.error('Error extracting appointment details:', error);
     return [];
@@ -156,7 +193,7 @@ export async function syncGmailMessages(
   let savedCount = 0;
 
   const baseQuery =
-    'subject:(appointment OR confirmation OR interview OR "your visit" OR scheduled OR booking OR reminder)';
+    'subject:(appointment OR meeting OR confirmation OR interview OR "your visit" OR scheduled OR booking OR reminder)';
   const query =
     queryFromMs > 0
       ? `${baseQuery} after:${Math.floor(queryFromMs / 1000)}`
