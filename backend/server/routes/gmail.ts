@@ -178,7 +178,7 @@ async function syncGmailMessages(oauth2Client: OAuth2Client): Promise<number> {
         internal_date_ms: details.internalDateMs,
         body_text: details.bodyText || undefined
       });
-      savedCount += 1;
+      if (details.internalDateMs > maxSeen) savedCount += 1;
     }
 
     pageToken = listResp.data.nextPageToken || undefined;
