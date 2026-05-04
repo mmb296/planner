@@ -116,7 +116,7 @@ Return a JSON array containing only emails that are appointments. Each element s
 - endTime: string (end time, HH:MM 24-hour format, or null if not found)
 - location: string (physical address or virtual meeting link, or null if not found)
 - description: string (brief description, or null if not found)
-Only include an email if it contains a clear appointment with both a title and a date. If either is missing or ambiguous, omit it from the array entirely.
+Only include an email if it contains an appointment with both a title and a date. If either is missing, omit it from the array entirely.
 
 Emails:
 ${emailBlocks.join('\n\n')}`;
