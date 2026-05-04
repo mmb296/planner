@@ -1,12 +1,10 @@
 import { randomBytes, randomUUID } from 'crypto';
-import { google } from 'googleapis';
 
 import { CalendarWatchDB } from '../db/calendarWatchStore.js';
-import { CalendarOAuthTokenDB } from '../db/oauthStore.js';
 import { broadcastCalendarEventsUpdated } from './calendarSse.js';
+import { CalendarOAuthSession } from './googleOAuthSession.js';
 
 import type { Express, Request, Response } from 'express';
-import type { OAuth2Client } from 'google-auth-library';
 import type { calendar_v3 } from 'googleapis';
 // Google requires TTL as a string in params
 const WATCH_TTL_SECONDS = '604800';
@@ -15,15 +13,6 @@ const WATCH_RENEW_BUFFER_MS = 24 * 60 * 60 * 1000;
 async function listCalendarIds(cal: calendar_v3.Calendar): Promise<string[]> {
   const { data } = await cal.calendarList.list();
   return (data.items ?? []).map((c) => c.id!).filter(Boolean);
-}
-
-async function getCalendarClient(
-  oauth2Client: OAuth2Client
-): Promise<calendar_v3.Calendar | null> {
-  const saved = await CalendarOAuthTokenDB.getToken();
-  if (!saved?.refresh_token && !saved?.access_token) return null;
-  oauth2Client.setCredentials(saved);
-  return google.calendar({ version: 'v3', auth: oauth2Client });
 }
 
 function getWebhookUrl(): string | undefined {
@@ -109,7 +98,7 @@ async function registerCalendarWatch(
 }
 
 export async function registerAllCalendarWatches(
-  oauth2Client: OAuth2Client
+  session: CalendarOAuthSession
 ): Promise<void> {
   const webhookUrl = getWebhookUrl();
   if (!webhookUrl) {
@@ -119,7 +108,7 @@ export async function registerAllCalendarWatches(
     return;
   }
 
-  const cal = await getCalendarClient(oauth2Client);
+  const cal = session.getCalendarClient();
   if (!cal) return;
 
   const calendarIds = await listCalendarIds(cal);
@@ -157,10 +146,10 @@ async function fetchSyncToken(
 }
 
 async function syncCalendar(
-  oauth2Client: OAuth2Client,
+  session: CalendarOAuthSession,
   calendarId: string
 ): Promise<void> {
-  const cal = await getCalendarClient(oauth2Client);
+  const cal = session.getCalendarClient();
   if (!cal) return;
 
   const row = await CalendarWatchDB.getByCalendarId(calendarId);
@@ -205,10 +194,10 @@ async function syncCalendar(
 }
 
 export async function stopAllCalendarWatches(
-  oauth2Client: OAuth2Client
+  session: CalendarOAuthSession
 ): Promise<void> {
   const rows = await CalendarWatchDB.getAll();
-  const cal = await getCalendarClient(oauth2Client);
+  const cal = session.getCalendarClient();
 
   if (rows.length > 0 && cal) {
     await Promise.all(
@@ -233,12 +222,12 @@ export async function stopAllCalendarWatches(
 }
 
 export async function renewExpiringCalendarWatches(
-  oauth2Client: OAuth2Client
+  session: CalendarOAuthSession
 ): Promise<void> {
   const webhookUrl = getWebhookUrl();
   if (!webhookUrl) return;
 
-  const cal = await getCalendarClient(oauth2Client);
+  const cal = session.getCalendarClient();
   if (!cal) return;
 
   const calendarIds = await listCalendarIds(cal);
@@ -256,10 +245,10 @@ export async function renewExpiringCalendarWatches(
 
 export function registerCalendarWebhookRoute(
   app: Express,
-  oauth2Client: OAuth2Client
+  session: CalendarOAuthSession
 ): void {
   app.post('/api/calendar/webhook', (req: Request, res: Response) => {
-    void handleCalendarWebhook(req, res, oauth2Client).catch((err) => {
+    void handleCalendarWebhook(req, res, session).catch((err) => {
       console.error('[calendar watch] webhook handler error:', err);
       if (!res.headersSent) {
         res.status(500).end();
@@ -271,7 +260,7 @@ export function registerCalendarWebhookRoute(
 async function handleCalendarWebhook(
   req: Request,
   res: Response,
-  oauth2Client: OAuth2Client
+  session: CalendarOAuthSession
 ): Promise<void> {
   const channelId = req.get('X-Goog-Channel-ID');
   const resourceState = req.get('X-Goog-Resource-State');
@@ -302,7 +291,7 @@ async function handleCalendarWebhook(
   if (resourceState === 'exists' || resourceState === 'not_exists') {
     const calId = row.calendar_id;
     setImmediate(() => {
-      syncCalendar(oauth2Client, calId).catch((e) =>
+      syncCalendar(session, calId).catch((e) =>
         console.error('[calendar watch] sync failed:', e)
       );
     });

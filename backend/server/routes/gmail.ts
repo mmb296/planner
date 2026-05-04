@@ -1,7 +1,5 @@
 import dotenv from 'dotenv';
 import express from 'express';
-import { OAuth2Client } from 'google-auth-library';
-import { gmail_v1, google } from 'googleapis';
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
@@ -10,10 +8,9 @@ import {
   GmailDB,
   GmailMessageRow
 } from '../../db/gmailStore';
-import {
-  clearGmailOAuthSession,
-  isInvalidGrant
-} from '../googleOAuthInvalidGrant.js';
+import { GmailOAuthSession } from '../googleOAuthSession.js';
+
+import type { gmail_v1 } from 'googleapis';
 
 dotenv.config();
 
@@ -143,9 +140,8 @@ ${emailBlocks.join('\n\n')}`;
 }
 
 export async function syncGmailMessages(
-  oauth2Client: OAuth2Client
+  gmail: gmail_v1.Gmail
 ): Promise<number> {
-  const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
   const syncStartMs = Date.now();
   const maxEmailMs = await GmailDB.getMaxInternalDateMs();
   const lastSyncAt = await GmailDB.getLastSyncAt();
@@ -195,20 +191,19 @@ export async function syncGmailMessages(
 
 export function registerGmailRoutes(
   app: express.Express,
-  oauth2Client: OAuth2Client
+  session: GmailOAuthSession
 ) {
   app.get('/api/gmail/messages', async (req, res) => {
+    const gmail = session.getGmailClient();
+    if (!gmail)
+      return res
+        .status(401)
+        .json({ error: 'Gmail not connected. Sign in with Google.' });
     try {
-      const saved = await syncGmailMessages(oauth2Client);
+      const saved = await syncGmailMessages(gmail);
       res.json({ saved });
     } catch (error) {
-      if (isInvalidGrant(error)) {
-        await clearGmailOAuthSession(oauth2Client);
-        return res.status(401).json({
-          error:
-            'Gmail access expired or was revoked. Sign in with Google again.'
-        });
-      }
+      if (await session.handleInvalidGrant(error, res)) return;
       throw error;
     }
   });
