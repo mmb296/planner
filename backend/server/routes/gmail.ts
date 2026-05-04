@@ -112,7 +112,7 @@ Return a JSON array containing only emails that are appointments. Each element s
 - endTime: string (end time, HH:MM 24-hour format, or null if not found)
 - location: string (physical address or virtual meeting link, or null if not found)
 - description: string (brief description, or null if not found)
-If an email does not contain an appointment, omit it from the array entirely.
+Only include an email if it contains a clear appointment with both a title and a date. If either is missing or ambiguous, omit it from the array entirely.
 
 Emails:
 ${emailBlocks.join('\n\n')}`;
@@ -218,7 +218,9 @@ export function registerGmailRoutes(
     }
 
     const messages = await GmailDB.getUnactionedMessages();
-    const suggestions = await extractAppointmentDetailsBatch(messages);
+    const suggestions = (await extractAppointmentDetailsBatch(messages)).filter(
+      (s) => s.title && s.date
+    );
 
     const appointmentIds = new Set(suggestions.map((s) => s.messageId));
     for (const message of messages) {

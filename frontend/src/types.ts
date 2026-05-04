@@ -22,8 +22,8 @@ export type CalendarEvent = {
 export type AppointmentSuggestion = {
   messageId: string;
   subject: string;
-  title?: string;
-  date?: string;
+  title: string;
+  date: string;
   time?: string;
   endTime?: string;
   location?: string;

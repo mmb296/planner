@@ -12,7 +12,7 @@ import type { OAuth2Client } from 'google-auth-library';
 
 const GOOGLE_INTEGRATION_SCOPES: Record<OAuthIntegration, string[]> = {
   gmail: ['https://www.googleapis.com/auth/gmail.readonly'],
-  calendar: ['https://www.googleapis.com/auth/calendar.readonly']
+  calendar: ['https://www.googleapis.com/auth/calendar']
 };
 
 function googleOAuthIntegrationLabel(integration: OAuthIntegration): string {
