@@ -1,12 +1,10 @@
 import type { Response } from 'express';
 import type { OAuth2Client } from 'google-auth-library';
 import { google } from 'googleapis';
-import type { calendar_v3, gmail_v1 } from 'googleapis';
 
-import {
-  CalendarOAuthTokenDB,
-  GmailOAuthTokenDB
-} from '../db/oauthStore.js';
+import { CalendarOAuthTokenDB, GmailOAuthTokenDB } from '../db/oauthStore.js';
+
+import type { calendar_v3, gmail_v1 } from 'googleapis';
 
 export function isInvalidGrant(error: unknown): boolean {
   const e = error as {
@@ -34,9 +32,14 @@ abstract class GoogleOAuthSession {
     this.client.setCredentials({});
   }
 
-  async handleInvalidGrant(error: unknown, res: Response): Promise<boolean> {
+  async clearIfInvalidGrant(error: unknown): Promise<boolean> {
     if (!isInvalidGrant(error)) return false;
     await this.clearSession();
+    return true;
+  }
+
+  async rejectIfInvalidGrant(error: unknown, res: Response): Promise<boolean> {
+    if (!(await this.clearIfInvalidGrant(error))) return false;
     res.status(401).json({ error: this.revokedMessage });
     return true;
   }

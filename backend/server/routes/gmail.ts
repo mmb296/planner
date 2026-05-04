@@ -203,7 +203,7 @@ export function registerGmailRoutes(
       const saved = await syncGmailMessages(gmail);
       res.json({ saved });
     } catch (error) {
-      if (await session.handleInvalidGrant(error, res)) return;
+      if (await session.rejectIfInvalidGrant(error, res)) return;
       throw error;
     }
   });

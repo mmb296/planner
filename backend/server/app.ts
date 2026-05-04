@@ -7,7 +7,6 @@ import {
   renewExpiringCalendarWatches
 } from './calendarWatch.js';
 import { setupGmailAuth, setupGoogleCalendarAuth } from './googleAuth.js';
-import { isInvalidGrant } from './googleOAuthSession.js';
 import { applyMiddleware } from './middleware.js';
 import { registerGmailRoutes, syncGmailMessages } from './routes/gmail.js';
 import { registerGoogleCalendarRoutes } from './routes/googleCalendar.js';
@@ -42,26 +41,20 @@ export async function initializeApp(port: string | number) {
       .then((synced) => {
         console.log(`[gmail pipeline] synced ${synced} new messages`);
       })
-      .catch((e) => {
-        if (isInvalidGrant(e)) {
-          void gmailSession.clearSession();
+      .catch(async (e) => {
+        if (await gmailSession.clearIfInvalidGrant(e))
           console.warn('[gmail pipeline] Gmail OAuth invalid — skipping sync');
-        } else {
-          console.error('[gmail pipeline] sync error:', e);
-        }
+        else console.error('[gmail pipeline] sync error:', e);
       });
   }
   registerGoogleCalendarRoutes(app, calendarSession);
   registerCalendarSseRoute(app);
   registerCalendarWebhookRoute(app, calendarSession);
-  void renewExpiringCalendarWatches(calendarSession).catch((e) => {
-    if (isInvalidGrant(e)) {
-      void calendarSession.clearSession();
+  void renewExpiringCalendarWatches(calendarSession).catch(async (e) => {
+    if (await calendarSession.clearIfInvalidGrant(e))
       console.warn(
         '[calendar watch] Calendar OAuth invalid — skipping watch renewal'
       );
-    } else {
-      console.error('[calendar watch] startup renew failed:', e);
-    }
+    else console.error('[calendar watch] startup renew failed:', e);
   });
 }

@@ -19,7 +19,7 @@ export function registerGoogleCalendarRoutes(
       const { data } = await cal.calendarList.list();
       res.json(data.items || []);
     } catch (error) {
-      if (await session.handleInvalidGrant(error, res)) return;
+      if (await session.rejectIfInvalidGrant(error, res)) return;
       throw error;
     }
   });
@@ -78,7 +78,7 @@ export function registerGoogleCalendarRoutes(
 
       res.json(allEvents);
     } catch (error) {
-      if (await session.handleInvalidGrant(error, res)) return;
+      if (await session.rejectIfInvalidGrant(error, res)) return;
       throw error;
     }
   });
