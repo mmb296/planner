@@ -83,16 +83,21 @@ const AppointmentSuggestions: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
     const fetch = async () => {
       try {
-        setSuggestions(await getSuggestions());
+        const data = await getSuggestions();
+        if (!cancelled) setSuggestions(data);
       } catch (err) {
-        setError((err as Error).message);
+        if (!cancelled) setError((err as Error).message);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
     fetch();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const remove = (messageId: string) =>
