@@ -19,6 +19,16 @@ export type CalendarEvent = {
   };
 };
 
+export type AppointmentSuggestion = {
+  messageId: string;
+  subject: string;
+  title?: string;
+  date?: string;
+  time?: string;
+  location?: string;
+  description?: string;
+};
+
 export type Task = {
   id: number;
   title: string;
