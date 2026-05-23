@@ -6,6 +6,7 @@ import {
   registerCalendarWebhookRoute,
   renewExpiringCalendarWatches
 } from './calendarWatch.js';
+import { renewExpiringGmailWatch } from './gmailWatch.js';
 import { setupGmailAuth, setupGoogleCalendarAuth } from './googleAuth.js';
 import { applyMiddleware } from './middleware.js';
 import { registerGmailRoutes, syncGmailMessages } from './routes/gmail.js';
@@ -47,6 +48,13 @@ export async function initializeApp(port: string | number) {
         else console.error('[gmail pipeline] sync error:', e);
       });
   }
+  void renewExpiringGmailWatch(gmailSession).catch(async (e) => {
+    if (await gmailSession.clearIfInvalidGrant(e))
+      console.warn(
+        '[gmail watch] Gmail OAuth invalid — skipping watch renewal'
+      );
+    else console.error('[gmail watch] startup renew failed:', e);
+  });
   registerGoogleCalendarRoutes(app, calendarSession);
   registerCalendarSseRoute(app);
   registerCalendarWebhookRoute(app, calendarSession);
