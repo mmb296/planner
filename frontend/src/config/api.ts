@@ -17,6 +17,7 @@ export const API_ENDPOINTS = {
   CALENDAR_EVENTS_STREAM: `${API_BASE_URL}/api/calendar/stream`,
   CALENDAR_DISCONNECT: `${API_BASE_URL}/api/calendar/auth`,
   GMAIL_SUGGESTIONS: `${API_BASE_URL}/api/ai/appointments/suggestions`,
+  GMAIL_STREAM: `${API_BASE_URL}/api/gmail/stream`,
   GMAIL_SUGGESTION_ACCEPT: (messageId: string) =>
     `${API_BASE_URL}/api/gmail/messages/${messageId}/accept`,
   GMAIL_SUGGESTION_DISMISS: (messageId: string) =>

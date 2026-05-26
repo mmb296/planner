@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
+import { API_ENDPOINTS } from '../../config/api';
 import {
   acceptSuggestion,
   dismissSuggestion,
@@ -98,6 +99,30 @@ const AppointmentSuggestions: React.FC = () => {
     return () => {
       cancelled = true;
     };
+  }, []);
+
+  useEffect(() => {
+    const es = new EventSource(API_ENDPOINTS.GMAIL_STREAM);
+    es.onmessage = (event) => {
+      try {
+        const payload = JSON.parse(event.data);
+        if (
+          payload.type === 'suggestions_updated' &&
+          Array.isArray(payload.suggestions)
+        ) {
+          setSuggestions((prev) => {
+            const existingIds = new Set(prev.map((s) => s.messageId));
+            const incoming = (
+              payload.suggestions as AppointmentSuggestion[]
+            ).filter((s) => !existingIds.has(s.messageId));
+            return incoming.length > 0 ? [...prev, ...incoming] : prev;
+          });
+        }
+      } catch {
+        // malformed SSE payload — ignore
+      }
+    };
+    return () => es.close();
   }, []);
 
   const remove = (messageId: string) =>
