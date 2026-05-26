@@ -3,7 +3,8 @@ import React, { useEffect, useState } from 'react';
 import {
   acceptSuggestion,
   dismissSuggestion,
-  getSuggestions
+  getSuggestions,
+  subscribeToSuggestions
 } from '../../services/gmailApi';
 import { AppointmentSuggestion } from '../../types';
 import styles from './AppointmentSuggestions.module.css';
@@ -98,6 +99,16 @@ const AppointmentSuggestions: React.FC = () => {
     return () => {
       cancelled = true;
     };
+  }, []);
+
+  useEffect(() => {
+    return subscribeToSuggestions((incoming) => {
+      setSuggestions((prev) => {
+        const existingIds = new Set(prev.map((s) => s.messageId));
+        const newOnes = incoming.filter((s) => !existingIds.has(s.messageId));
+        return newOnes.length > 0 ? [...prev, ...newOnes] : prev;
+      });
+    });
   }, []);
 
   const remove = (messageId: string) =>
