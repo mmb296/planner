@@ -30,6 +30,13 @@ const AI_MODEL = process.env.AI_MODEL || 'gemini-3-flash-preview';
 
 type Header = { name?: string; value?: string };
 
+export class GeminiNotConfiguredError extends Error {
+  constructor() {
+    super('GEMINI_API_KEY is not configured');
+    this.name = 'GeminiNotConfiguredError';
+  }
+}
+
 export const APPOINTMENT_KEYWORDS = [
   'appointment',
   'meeting',
@@ -184,21 +191,16 @@ If an email does not contain a potential appointment, do not call the tool for i
 Emails:
 ${emailBlocks.join('\n\n')}`;
 
-  try {
-    const model = gemini!.getGenerativeModel({
-      model: AI_MODEL,
-      tools: [proposeAppointmentTool]
-    });
-    const response = await model.generateContent(prompt);
-    const parts = response.response.candidates?.[0]?.content?.parts ?? [];
+  const model = gemini!.getGenerativeModel({
+    model: AI_MODEL,
+    tools: [proposeAppointmentTool]
+  });
+  const response = await model.generateContent(prompt);
+  const parts = response.response.candidates?.[0]?.content?.parts ?? [];
 
-    return parts
-      .filter((p) => p.functionCall?.name === 'propose_appointment')
-      .map((p) => p.functionCall!.args as AppointmentSuggestion);
-  } catch (error) {
-    console.error('Error extracting appointment details:', error);
-    return [];
-  }
+  return parts
+    .filter((p) => p.functionCall?.name === 'propose_appointment')
+    .map((p) => p.functionCall!.args as AppointmentSuggestion);
 }
 
 export async function syncGmailMessages(
@@ -252,6 +254,26 @@ export async function syncGmailMessages(
   return savedCount;
 }
 
+export async function runAppointmentPipeline(): Promise<
+  AppointmentSuggestion[]
+> {
+  if (!gemini) throw new GeminiNotConfiguredError();
+
+  const messages = await GmailDB.getUnactionedMessages();
+  const suggestions = (await extractAppointmentDetailsBatch(messages)).filter(
+    (s) => s.title && s.date
+  );
+
+  const appointmentIds = new Set(suggestions.map((s) => s.messageId));
+  for (const message of messages) {
+    if (!appointmentIds.has(message.id)) {
+      await GmailDB.setSuggestionStatus(message.id, 'dismissed');
+    }
+  }
+
+  return suggestions;
+}
+
 export function registerGmailRoutes(
   app: express.Express,
   session: GmailOAuthSession,
@@ -273,25 +295,16 @@ export function registerGmailRoutes(
   });
 
   app.get('/api/ai/appointments/suggestions', async (req, res) => {
-    if (!gemini) {
-      return res
-        .status(500)
-        .json({ error: 'GEMINI_API_KEY not configured on the server' });
-    }
-
-    const messages = await GmailDB.getUnactionedMessages();
-    const suggestions = (await extractAppointmentDetailsBatch(messages)).filter(
-      (s) => s.title && s.date
-    );
-
-    const appointmentIds = new Set(suggestions.map((s) => s.messageId));
-    for (const message of messages) {
-      if (!appointmentIds.has(message.id)) {
-        await GmailDB.setSuggestionStatus(message.id, 'dismissed');
+    try {
+      const suggestions = await runAppointmentPipeline();
+      res.json({ count: suggestions.length, suggestions });
+    } catch (e) {
+      if (e instanceof GeminiNotConfiguredError) {
+        return res.status(503).json({ error: e.message });
       }
+      console.error('[gmail pipeline] Gemini call failed:', e);
+      return res.status(502).json({ error: 'AI service error' });
     }
-
-    res.json({ count: suggestions.length, suggestions });
   });
 
   app.post('/api/gmail/messages/:messageId/accept', async (req, res) => {

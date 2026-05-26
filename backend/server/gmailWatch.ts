@@ -3,7 +3,12 @@ import type { Express, Request, Response } from 'express';
 import { GmailDB } from '../db/gmailStore.js';
 import { GmailWatchDB } from '../db/gmailWatchStore.js';
 import { GmailOAuthSession } from './googleOAuthSession.js';
-import { extractDetails, isAppointmentRelated } from './routes/gmail.js';
+import {
+  extractDetails,
+  GeminiNotConfiguredError,
+  isAppointmentRelated,
+  runAppointmentPipeline
+} from './routes/gmail.js';
 
 import type { gmail_v1 } from 'googleapis';
 
@@ -149,6 +154,22 @@ export async function processGmailHistory(
   console.log(
     `[gmail watch] History processed; ${savedCount} new message(s) saved`
   );
+
+  if (savedCount > 0) {
+    try {
+      const suggestions = await runAppointmentPipeline();
+      console.log(
+        `[gmail watch] Pipeline complete; ${suggestions.length} suggestion(s) ready`
+      );
+    } catch (e) {
+      if (e instanceof GeminiNotConfiguredError) {
+        console.warn('[gmail watch]', e.message);
+      } else {
+        console.error('[gmail watch] Pipeline failed:', e);
+      }
+    }
+  }
+
   return savedCount;
 }
 
