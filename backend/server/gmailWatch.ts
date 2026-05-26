@@ -1,5 +1,9 @@
+import type { Express, Request, Response } from 'express';
+
+import { GmailDB } from '../db/gmailStore.js';
 import { GmailWatchDB } from '../db/gmailWatchStore.js';
 import { GmailOAuthSession } from './googleOAuthSession.js';
+import { extractDetails, isAppointmentRelated } from './routes/gmail.js';
 
 import type { gmail_v1 } from 'googleapis';
 
@@ -76,4 +80,110 @@ export async function renewExpiringGmailWatch(
   }
 
   await registerGmailWatch(gmail);
+}
+
+/**
+ * Fetches all history events since the last stored historyId, upserts any new
+ * inbox messages, and advances the stored historyId.
+ * Returns the number of new messages saved.
+ */
+export async function processGmailHistory(
+  gmail: gmail_v1.Gmail
+): Promise<number> {
+  const row = await GmailWatchDB.get();
+  if (!row?.history_id) {
+    console.warn('[gmail watch] No stored historyId — skipping history fetch');
+    return 0;
+  }
+
+  let savedCount = 0;
+  let pageToken: string | undefined;
+  let latestHistoryId: string | undefined;
+
+  do {
+    const resp = await gmail.users.history.list({
+      userId: 'me',
+      startHistoryId: row.history_id,
+      historyTypes: ['messageAdded'],
+      labelId: 'INBOX',
+      maxResults: 100,
+      pageToken
+    });
+
+    const { history = [], nextPageToken, historyId } = resp.data;
+    if (historyId) latestHistoryId = historyId;
+
+    for (const record of history) {
+      for (const added of record.messagesAdded ?? []) {
+        const msgId = added.message?.id;
+        if (!msgId) continue;
+
+        const full = await gmail.users.messages.get({
+          userId: 'me',
+          id: msgId
+        });
+        const details = extractDetails(full.data);
+
+        if (!isAppointmentRelated(details.subject)) continue;
+
+        await GmailDB.upsertMessage({
+          id: msgId,
+          thread_id: details.threadId || undefined,
+          subject: details.subject,
+          from_address: details.from,
+          snippet: details.snippet,
+          internal_date_ms: details.internalDateMs,
+          body_text: details.bodyText || undefined
+        });
+        savedCount++;
+      }
+    }
+
+    pageToken = nextPageToken ?? undefined;
+  } while (pageToken);
+
+  if (latestHistoryId) {
+    await GmailWatchDB.advanceHistoryId(latestHistoryId);
+  }
+
+  console.log(
+    `[gmail watch] History processed; ${savedCount} new message(s) saved`
+  );
+  return savedCount;
+}
+
+export function registerGmailWebhookRoute(
+  app: Express,
+  session: GmailOAuthSession
+): void {
+  app.post('/api/gmail/webhook', (req: Request, res: Response) => {
+    // Respond immediately — Pub/Sub retries if it doesn't get a 2xx quickly.
+    res.status(200).end();
+
+    const message = req.body?.message;
+    if (!message?.data) return;
+
+    let notification: { emailAddress?: string; historyId?: string };
+    try {
+      notification = JSON.parse(
+        Buffer.from(message.data, 'base64').toString('utf-8')
+      );
+    } catch {
+      console.error('[gmail watch] Failed to decode Pub/Sub payload');
+      return;
+    }
+
+    console.log(
+      `[gmail watch] Notification received; historyId=${notification.historyId}`
+    );
+
+    const gmail = session.getGmailClient();
+    if (!gmail) return;
+
+    setImmediate(() => {
+      processGmailHistory(gmail).catch((e) =>
+        console.error('[gmail watch] History processing failed:', e)
+      );
+    });
+  });
 }

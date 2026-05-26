@@ -49,6 +49,13 @@ export const GmailWatchDB = {
     };
   },
 
+  async advanceHistoryId(historyId: string): Promise<void> {
+    await dbRun(
+      `UPDATE gmail_watch SET history_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = 1`,
+      [historyId]
+    );
+  },
+
   /** Overwrite watch registration metadata after a successful watch() call. */
   async save(params: {
     history_id: string;

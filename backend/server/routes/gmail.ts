@@ -30,7 +30,26 @@ const AI_MODEL = process.env.AI_MODEL || 'gemini-3-flash-preview';
 
 type Header = { name?: string; value?: string };
 
-function extractDetails(payload: gmail_v1.Schema$Message) {
+export const APPOINTMENT_KEYWORDS = [
+  'appointment',
+  'meeting',
+  'confirmation',
+  'interview',
+  'your visit',
+  'scheduled',
+  'booking',
+  'reminder'
+];
+
+export function isAppointmentRelated(
+  subject: string | null | undefined
+): boolean {
+  if (!subject) return false;
+  const lower = subject.toLowerCase();
+  return APPOINTMENT_KEYWORDS.some((kw) => lower.includes(kw));
+}
+
+export function extractDetails(payload: gmail_v1.Schema$Message) {
   const headers = (payload?.payload?.headers || []) as Header[];
   const subject = headers.find(
     (h) => h.name?.toLowerCase() === 'subject'
@@ -192,8 +211,9 @@ export async function syncGmailMessages(
   let pageToken: string | undefined = undefined;
   let savedCount = 0;
 
-  const baseQuery =
-    'subject:(appointment OR meeting OR confirmation OR interview OR "your visit" OR scheduled OR booking OR reminder)';
+  const baseQuery = `subject:(${APPOINTMENT_KEYWORDS.map((kw) =>
+    kw.includes(' ') ? `"${kw}"` : kw
+  ).join(' OR ')})`;
   const query =
     queryFromMs > 0
       ? `${baseQuery} after:${Math.floor(queryFromMs / 1000)}`

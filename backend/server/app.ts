@@ -6,7 +6,10 @@ import {
   registerCalendarWebhookRoute,
   renewExpiringCalendarWatches
 } from './calendarWatch.js';
-import { renewExpiringGmailWatch } from './gmailWatch.js';
+import {
+  registerGmailWebhookRoute,
+  renewExpiringGmailWatch
+} from './gmailWatch.js';
 import { setupGmailAuth, setupGoogleCalendarAuth } from './googleAuth.js';
 import { applyMiddleware } from './middleware.js';
 import { registerGmailRoutes, syncGmailMessages } from './routes/gmail.js';
@@ -55,6 +58,7 @@ export async function initializeApp(port: string | number) {
       );
     else console.error('[gmail watch] startup renew failed:', e);
   });
+  registerGmailWebhookRoute(app, gmailSession);
   registerGoogleCalendarRoutes(app, calendarSession);
   registerCalendarSseRoute(app);
   registerCalendarWebhookRoute(app, calendarSession);
