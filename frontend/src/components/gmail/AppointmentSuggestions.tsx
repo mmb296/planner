@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 
-import { API_ENDPOINTS } from '../../config/api';
 import {
   acceptSuggestion,
   dismissSuggestion,
-  getSuggestions
+  getSuggestions,
+  subscribeToSuggestions
 } from '../../services/gmailApi';
 import { AppointmentSuggestion } from '../../types';
 import styles from './AppointmentSuggestions.module.css';
@@ -102,27 +102,13 @@ const AppointmentSuggestions: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const es = new EventSource(API_ENDPOINTS.GMAIL_STREAM);
-    es.onmessage = (event) => {
-      try {
-        const payload = JSON.parse(event.data);
-        if (
-          payload.type === 'suggestions_updated' &&
-          Array.isArray(payload.suggestions)
-        ) {
-          setSuggestions((prev) => {
-            const existingIds = new Set(prev.map((s) => s.messageId));
-            const incoming = (
-              payload.suggestions as AppointmentSuggestion[]
-            ).filter((s) => !existingIds.has(s.messageId));
-            return incoming.length > 0 ? [...prev, ...incoming] : prev;
-          });
-        }
-      } catch {
-        // malformed SSE payload — ignore
-      }
-    };
-    return () => es.close();
+    return subscribeToSuggestions((incoming) => {
+      setSuggestions((prev) => {
+        const existingIds = new Set(prev.map((s) => s.messageId));
+        const newOnes = incoming.filter((s) => !existingIds.has(s.messageId));
+        return newOnes.length > 0 ? [...prev, ...newOnes] : prev;
+      });
+    });
   }, []);
 
   const remove = (messageId: string) =>
