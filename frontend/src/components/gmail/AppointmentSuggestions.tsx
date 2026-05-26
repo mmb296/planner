@@ -106,7 +106,7 @@ const AppointmentSuggestions: React.FC = () => {
       setSuggestions((prev) => {
         const existingIds = new Set(prev.map((s) => s.messageId));
         const newOnes = incoming.filter((s) => !existingIds.has(s.messageId));
-        return newOnes.length > 0 ? [...prev, ...newOnes] : prev;
+        return newOnes.length > 0 ? [...newOnes, ...prev] : prev;
       });
     });
   }, []);
