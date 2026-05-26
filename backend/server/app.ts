@@ -2,6 +2,7 @@ import dotenv from 'dotenv';
 import express from 'express';
 
 import { registerCalendarSseRoute } from './calendarSse.js';
+import { registerGmailSseRoute } from './gmailSse.js';
 import {
   registerCalendarWebhookRoute,
   renewExpiringCalendarWatches
@@ -59,6 +60,7 @@ export async function initializeApp(port: string | number) {
     else console.error('[gmail watch] startup renew failed:', e);
   });
   registerGmailWebhookRoute(app, gmailSession);
+  registerGmailSseRoute(app);
   registerGoogleCalendarRoutes(app, calendarSession);
   registerCalendarSseRoute(app);
   registerCalendarWebhookRoute(app, calendarSession);

@@ -2,6 +2,7 @@ import type { Express, Request, Response } from 'express';
 
 import { GmailDB } from '../db/gmailStore.js';
 import { GmailWatchDB } from '../db/gmailWatchStore.js';
+import { broadcastSuggestionsUpdated } from './gmailSse.js';
 import { GmailOAuthSession } from './googleOAuthSession.js';
 import {
   extractDetails,
@@ -161,6 +162,7 @@ export async function processGmailHistory(
       console.log(
         `[gmail watch] Pipeline complete; ${suggestions.length} suggestion(s) ready`
       );
+      if (suggestions.length > 0) broadcastSuggestionsUpdated(suggestions);
     } catch (e) {
       if (e instanceof GeminiNotConfiguredError) {
         console.warn('[gmail watch]', e.message);
