@@ -6,11 +6,12 @@
 
 ## Session Start
 
-Before doing anything else, read these files in order:
+Before doing anything else:
 
-1. `context.md` — current focus and where we left off
-2. `decisions.md` — architectural decisions and reasoning (skim for relevant context)
-3. If on the `personal` branch (`git branch --show-current`), also read `context-personal.md`
+1. Read `context.md` — current focus and where we left off
+2. Read `decisions.md` — architectural decisions and reasoning (skim for relevant context)
+3. If on the `personal` branch, also read `context-personal.md`
+4. Run `git log personal..main --oneline` — if there are unmerged commits, flag them before we start
 
 ## Session End
 
