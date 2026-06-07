@@ -9,7 +9,6 @@ export const API_ENDPOINTS = {
   PERIOD_DAYS_TOGGLE: `${API_BASE_URL}/api/period-days/toggle`,
   PERIOD_DAYS_RANGE: `${API_BASE_URL}/api/period-days/range`,
   PERIOD_DAYS_PREDICTION: `${API_BASE_URL}/api/period-days/prediction`,
-  COUNTDOWN: `${API_BASE_URL}/api/countdown`,
   CALENDAR_AUTH_START: `${API_BASE_URL}/auth/google/calendar`,
   CALENDAR_STATUS: `${API_BASE_URL}/api/calendar/status`,
   CALENDAR_LIST: `${API_BASE_URL}/api/calendar/calendars`,
