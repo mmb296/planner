@@ -3,24 +3,15 @@ import React from 'react';
 import { CalendarEvent } from '../../types';
 import { formatWeekdayDate, getStartTime } from '../../utils/dateTime';
 import styles from './Day.module.css';
-import Dot from './Dot';
 import Event from './Event';
 
 type DayProps = {
   label: string;
   date: Date;
   events: CalendarEvent[];
-  isPeriodDay: boolean;
-  onDotToggle: (date: Date) => void;
 };
 
-const Day: React.FC<DayProps> = ({
-  label,
-  date,
-  events,
-  isPeriodDay,
-  onDotToggle
-}) => {
+const Day: React.FC<DayProps> = ({ label, date, events }) => {
   const sortedEvents = [...events].sort(
     (a, b) => getStartTime(a) - getStartTime(b)
   );
@@ -29,10 +20,7 @@ const Day: React.FC<DayProps> = ({
     <li>
       <div className={styles.dayHeader}>
         <span className={styles.dayLabel}>{label}</span>
-        <div className={styles.dayHeaderRight}>
-          <span className={styles.dayDate}>{formatWeekdayDate(date)}</span>
-          <Dot isPeriodDay={isPeriodDay} onClick={() => onDotToggle(date)} />
-        </div>
+        <span className={styles.dayDate}>{formatWeekdayDate(date)}</span>
       </div>
       <ul>
         {sortedEvents.length > 0 ? (

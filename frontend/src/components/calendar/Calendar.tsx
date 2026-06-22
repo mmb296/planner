@@ -1,48 +1,20 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 
 import { API_ENDPOINTS } from '../../config/api';
 import { useCalendarContext } from '../../context/CalendarContext';
-import { usePeriodDays } from '../../hooks/usePeriodDays';
-import { usePeriodPrediction } from '../../hooks/usePeriodPrediction';
 import {
   filterAndGroupEventsByDay,
   getDayLabel
 } from '../../services/calendarService';
-import {
-  formatDateString,
-  formatLongDate,
-  formatPredictionDate,
-  getFutureDate,
-  getTodayDate
-} from '../../utils/dateTime';
-import PeriodModal from '../periods/PeriodModal';
+import { formatLongDate, getFutureDate } from '../../utils/dateTime';
 import styles from './Calendar.module.css';
-import CalendarIcon from './CalendarIcon';
 import Day from './Day';
 import DaysSelect from './DaysSelect';
 
 const Calendar: React.FC = () => {
-  const [showPeriodModal, setShowPeriodModal] = useState(false);
   const { state, dispatch } = useCalendarContext();
   const { status, calendars, selectedCalendarIds, allEvents, numDays } = state;
   const isAuthenticated = status === 'authenticated';
-
-  const {
-    periodDays,
-    togglePeriodDay,
-    refetch: refetchPeriodDays
-  } = usePeriodDays(getTodayDate(), getFutureDate(numDays - 1));
-  const { prediction, refetch: refetchPrediction } = usePeriodPrediction();
-
-  useEffect(() => {
-    if (!showPeriodModal) {
-      refetchPeriodDays();
-    }
-  }, [showPeriodModal, refetchPeriodDays]);
-
-  useEffect(() => {
-    refetchPrediction();
-  }, [periodDays.size, refetchPrediction]);
 
   const eventsByDay = filterAndGroupEventsByDay(
     allEvents,
@@ -88,17 +60,12 @@ const Calendar: React.FC = () => {
           .sort((a, b) => a[0] - b[0])
           .map(([daysOut, events]) => {
             const date = getFutureDate(daysOut);
-            const dateStr = formatDateString(date);
             return (
               <Day
                 key={daysOut}
                 label={getDayLabel(daysOut)}
                 date={date}
                 events={events}
-                isPeriodDay={periodDays.has(dateStr)}
-                onDotToggle={(date) => {
-                  togglePeriodDay(formatDateString(date));
-                }}
               />
             );
           })}
@@ -128,42 +95,8 @@ const Calendar: React.FC = () => {
           />
         )}
       </header>
-      <div className={styles.predictionBanner}>
-        {prediction && prediction.nextPeriodDate ? (
-          <div className={styles.predictionContent}>
-            <span className={styles.predictionLabel}>
-              Next period predicted:
-            </span>
-            <span className={styles.predictionDate}>
-              {formatPredictionDate(prediction.nextPeriodDate)}
-            </span>
-            {prediction.averageCycleLength && (
-              <span className={styles.predictionCycle}>
-                (avg {prediction.averageCycleLength} day cycle)
-              </span>
-            )}
-          </div>
-        ) : (
-          <div className={styles.predictionContent}>
-            <span className={styles.predictionLabel}>
-              No prediction available
-            </span>
-          </div>
-        )}
-        <button
-          onClick={() => setShowPeriodModal(true)}
-          className={styles.periodCalendarButton}
-          title="Open period calendar"
-        >
-          <CalendarIcon className={styles.periodCalendarIcon} />
-        </button>
-      </div>
       {calendarList}
       {eventsContent}
-      <PeriodModal
-        isOpen={showPeriodModal}
-        onClose={() => setShowPeriodModal(false)}
-      />
     </div>
   );
 };

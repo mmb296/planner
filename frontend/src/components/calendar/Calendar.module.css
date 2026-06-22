@@ -66,24 +66,6 @@
   border-color: var(--calendar-color);
 }
 
-.periodCalendarButton {
-  background: transparent;
-  border: none;
-  padding: 4px;
-  display: flex;
-  transition: opacity 0.2s;
-}
-
-.periodCalendarButton:hover {
-  opacity: 0.8;
-}
-
-.periodCalendarIcon {
-  width: 24px;
-  height: 24px;
-  fill: var(--period-color);
-}
-
 .placeholder {
   margin-top: 16px;
   padding: 20px;
@@ -116,38 +98,6 @@
   background-color: #3367d6;
 }
 
-.predictionBanner {
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 12px 16px;
-  margin-top: 16px;
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
 .calendarListSection {
   margin-top: 16px;
-}
-
-.predictionContent {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.predictionLabel {
-  font-weight: 500;
-  color: #666;
-}
-
-.predictionDate {
-  font-weight: 600;
-  color: var(--period-color);
-}
-
-.predictionCycle {
-  color: #666;
-  font-size: 13px;
 }
