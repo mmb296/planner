@@ -2,7 +2,7 @@
 
 ## Vault Context Files
 
-`/Users/madalynbaehre/Notes/projects/scheduling-agent/`
+Personal Obsidian vault path — check memory (reference type) for the current location, or ask the user.
 
 ## Session Start
 
