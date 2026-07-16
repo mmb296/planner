@@ -1,10 +1,11 @@
 # Planner
 
-A personal planning app that brings together Google Calendar and Gmail.
+A personal planning app that brings together Google Calendar, task management and Gmail.
 
 ## Features
 
 - **Google Calendar** — View events across multiple calendars with color-coded display and real-time push notification sync
+- **Tasks** — Create recurring tasks with customizable repeat intervals and track completions
 - **Gmail** — Syncs appointment-related emails on startup and runs a human-in-the-loop pipeline using Gemini function calling to surface appointment suggestions (title, date, time, location) for user confirmation before creating a Google Calendar event
 
 ## Tech Stack
