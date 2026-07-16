@@ -17,7 +17,6 @@ import { registerGmailRoutes, syncGmailMessages } from './routes/gmail.js';
 import { registerGoogleCalendarRoutes } from './routes/googleCalendar.js';
 import { registerSettingsRoutes } from './routes/settings.js';
 import { registerPeriodDaysRoutes } from './routes/periodDays.js';
-import { registerTaskRoutes } from './routes/tasks.js';
 
 dotenv.config();
 
@@ -32,7 +31,6 @@ app.get('/', (req, res) => {
 });
 
 // Register routes that don't depend on auth
-registerTaskRoutes(app);
 registerSettingsRoutes(app);
 registerPeriodDaysRoutes(app);
 
