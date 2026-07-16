@@ -15,7 +15,6 @@ import { setupGmailAuth, setupGoogleCalendarAuth } from './googleAuth.js';
 import { applyMiddleware } from './middleware.js';
 import { registerGmailRoutes, syncGmailMessages } from './routes/gmail.js';
 import { registerGoogleCalendarRoutes } from './routes/googleCalendar.js';
-import { registerTaskRoutes } from './routes/tasks.js';
 
 dotenv.config();
 
@@ -28,9 +27,6 @@ applyMiddleware(app);
 app.get('/', (req, res) => {
   res.json({ message: 'Planner API is running!' });
 });
-
-// Register routes that don't depend on auth
-registerTaskRoutes(app);
 
 export async function initializeApp(port: string | number) {
   const gmailSession = await setupGmailAuth(app, port);
