@@ -15,7 +15,6 @@ import { setupGmailAuth, setupGoogleCalendarAuth } from './googleAuth.js';
 import { applyMiddleware } from './middleware.js';
 import { registerGmailRoutes, syncGmailMessages } from './routes/gmail.js';
 import { registerGoogleCalendarRoutes } from './routes/googleCalendar.js';
-import { registerPeriodDaysRoutes } from './routes/periodDays.js';
 import { registerSettingsRoutes } from './routes/settings.js';
 import { registerTaskRoutes } from './routes/tasks.js';
 
@@ -33,7 +32,6 @@ app.get('/', (req, res) => {
 
 // Register routes that don't depend on auth
 registerTaskRoutes(app);
-registerPeriodDaysRoutes(app);
 registerSettingsRoutes(app);
 
 export async function initializeApp(port: string | number) {
