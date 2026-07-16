@@ -13,7 +13,33 @@
   color: #1b3899;
 }
 
+.dayHeaderRight {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .dayDate {
   font-weight: 500;
   font-size: 18px;
+}
+
+.dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid #ccc;
+  background: transparent;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.dot:hover {
+  border-color: var(--period-color);
+  transform: scale(1.1);
+}
+
+.dot.dotFilled {
+  background-color: var(--period-color);
+  border-color: var(--period-color);
 }

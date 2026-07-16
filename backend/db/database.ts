@@ -3,6 +3,7 @@ import { createCountdownTable } from './countdownStore.js';
 import { createGmailTable } from './gmailStore.js';
 import { createGmailWatchTable } from './gmailWatchStore.js';
 import { createOauthTable } from './oauthStore.js';
+import { createPeriodDaysTable } from './periodDaysStore.js';
 import { createTaskTables } from './tasksStore.js';
 
 // Initialize database with tables
@@ -14,6 +15,7 @@ export async function initDatabase() {
     await createOauthTable();
     await createCalendarWatchTable();
     await createCountdownTable();
+    await createPeriodDaysTable();
 
     console.log('Database initialized successfully');
   } catch (error) {
